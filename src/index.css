@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Comfortaa:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Comfortaa', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  --dark-bg: #0F0F23;
+  --dark-blue: #1E1B4B;
+  --playzenha-blue: #3B82F6;
+  --playzenha-yellow: #FDE047;
+  --success-green: #10B981;
+  --danger-red: #EF4444;
+
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: var(--dark-bg);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+@layer base {
+  body {
+    margin: 0;
+    padding: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    background-color: var(--dark-bg);
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .font-fredoka {
+    font-family: 'Fredoka One', cursive;
+  }
+
+  .font-comfortaa {
+    font-family: 'Comfortaa', sans-serif;
+  }
+
+  /* Botão personalizado do tema */
+  .game-button {
+    @apply bg-gradient-to-r from-playzenha-yellow to-yellow-400 text-dark-bg font-fredoka font-bold rounded-2xl transition-all duration-200;
+  }
+
+  .game-button:hover {
+    @apply from-yellow-400 to-playzenha-yellow scale-105 -translate-y-1 shadow-lg;
+  }
+
+  .yellow-accent {
+    @apply bg-playzenha-yellow text-dark-bg rounded-2xl transition-all duration-200;
+  }
+
+  .yellow-accent:hover {
+    @apply bg-yellow-400 scale-105;
+  }
+}
