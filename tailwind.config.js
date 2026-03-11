@@ -9,8 +9,8 @@ export default {
       colors: {
         'dark-bg': '#0F0F23',
         'dark-blue': '#1E1B4B',
-        'playzenha-blue': '#3B82F6',
-        'playzenha-yellow': '#FDE047',
+        'playzenha-blue': '#004bad', // Updated to Brand Blue
+        'playzenha-yellow': '#ffbb00', // Updated to Brand Yellow
         'success-green': '#10B981',
         'danger-red': '#EF4444',
       },

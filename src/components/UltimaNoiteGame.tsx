@@ -1,0 +1,943 @@
+import React, { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { 
+  ArrowLeft, Users, Moon, Sun, Shield, Search, 
+  AlertTriangle, Skull, MessageCircle, CheckCircle
+} from 'lucide-react'
+import GameButton from './GameButton'
+
+interface UltimaNoiteGameProps {
+  onBackToHome: () => void
+}
+
+type Role = 'Lobo' | 'Anjo' | 'Detetive' | 'Cidadão' | 'Mediador'
+type Phase = 
+  | 'setup' 
+  | 'role-distribution-start'
+  | 'role-reveal'
+  | 'night-intro'
+  | 'night-angel' 
+  | 'night-wolf' 
+  | 'night-detective'
+  | 'morning' 
+  | 'discussion' 
+  | 'voting-start'
+  | 'voting'
+  | 'voting-suspense' // New Phase
+  | 'voting-results'
+  | 'game-over'
+
+interface Player {
+  id: number
+  name: string
+  role: Role
+  isAlive: boolean
+  votes: number
+}
+
+const ROLES_CONFIG = {
+  Lobo: { color: 'text-red-500', bg: 'bg-red-500/20', border: 'border-red-500', icon: '🐺' },
+  Anjo: { color: 'text-cyan-400', bg: 'bg-cyan-400/20', border: 'border-cyan-400', icon: '👼' },
+  Detetive: { color: 'text-yellow-400', bg: 'bg-yellow-400/20', border: 'border-yellow-400', icon: '🕵️' },
+  Cidadão: { color: 'text-gray-300', bg: 'bg-gray-500/20', border: 'border-gray-500', icon: '👥' },
+  Mediador: { color: 'text-purple-400', bg: 'bg-purple-500/20', border: 'border-purple-400', icon: '🗣️' },
+}
+
+const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
+  const [phase, setPhase] = useState<Phase>('setup')
+  const [players, setPlayers] = useState<Player[]>([])
+  const [playerNames, setPlayerNames] = useState<string[]>(['', '', '', '', '', '']) // Min 6
+  const [mediatorIndex, setMediatorIndex] = useState<number | null>(null)
+  const [currentPlayerIdx, setCurrentPlayerIdx] = useState(0)
+  
+  // Game State
+  const [wolfKill, setWolfKill] = useState<number | null>(null)
+  const [angelSave, setAngelSave] = useState<number | null>(null)
+  const [investigatedRole, setInvestigatedRole] = useState<Role | null>(null)
+  const [discussionTime, setDiscussionTime] = useState(120) // seconds
+  const [timeLeft, setTimeLeft] = useState(0)
+  const [winner, setWinner] = useState<'Lobos' | 'Cidadãos' | null>(null)
+  
+  const [selectedVote, setSelectedVote] = useState<number | null>(null)
+  const [showErrorModal, setShowErrorModal] = useState<string | null>(null)
+  const [showMediatorInfo, setShowMediatorInfo] = useState(false)
+  
+  // Settings
+  const [settings, setSettings] = useState({
+    wolvesCount: 1,
+    hasAngel: true,
+    hasDetective: true,
+    hasMediator: false
+  })
+
+  // Timer Effect
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>
+    if (phase === 'discussion' && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft((prev) => prev - 1)
+      }, 1000)
+    }
+    return () => clearInterval(interval)
+  }, [phase, timeLeft])
+
+  // Show Mediator Tutorial on First Load (Setup Phase)
+  useEffect(() => {
+      if (phase === 'setup') {
+          // Small delay for better UX
+          const timer = setTimeout(() => setShowMediatorInfo(true), 500)
+          return () => clearTimeout(timer)
+      }
+  }, []) // Empty deps = run once on mount (which starts at setup)
+
+  // --- Setup Helpers ---
+
+  const updatePlayerName = (idx: number, val: string) => {
+    const newNames = [...playerNames]
+    newNames[idx] = val
+    setPlayerNames(newNames)
+  }
+
+  const addPlayerSlot = () => {
+    if (playerNames.length < 16) setPlayerNames([...playerNames, ''])
+  }
+
+  const removePlayerSlot = (idx: number) => {
+    if (playerNames.length > 6) {
+        setPlayerNames(playerNames.filter((_, i) => i !== idx))
+        if (mediatorIndex === idx) setMediatorIndex(null)
+        if (mediatorIndex && mediatorIndex > idx) setMediatorIndex(mediatorIndex - 1)
+    } else {
+        updatePlayerName(idx, '')
+        if (mediatorIndex === idx) setMediatorIndex(null)
+    }
+  }
+
+  const startGameSetup = () => {
+    // 1. Gather Active Players & Mediator
+    const activePlayers: Player[] = []
+    let assignedMediator: Player | undefined = undefined
+    
+    let validCount = 0
+    const usedNames = new Set<string>()
+
+    for (let i = 0; i < playerNames.length; i++) {
+        const rawName = playerNames[i].trim()
+        if (!rawName) continue
+
+        const upperName = rawName.toUpperCase()
+        if (usedNames.has(upperName)) {
+            setShowErrorModal(`O nome "${rawName}" já está em uso!`)
+            return
+        }
+        usedNames.add(upperName)
+        validCount++
+
+        const newPlayer: Player = {
+            id: 0, // Will assign proper ID later
+            name: upperName,
+            role: 'Cidadão', // Placeholder
+            isAlive: true,
+            votes: 0
+        }
+
+        if (i === mediatorIndex) {
+            newPlayer.role = 'Mediador'
+            assignedMediator = newPlayer
+        } else {
+            activePlayers.push(newPlayer)
+        }
+    }
+
+    if (!assignedMediator) {
+        setShowErrorModal("É obrigatório escolher um MEDIADOR antes de iniciar!")
+        // Optional: show mediator info automatically if they forget
+        setTimeout(() => setShowMediatorInfo(true), 1500) 
+        return
+    }
+
+    if (validCount < 6) {
+        setShowErrorModal("É necessário no mínimo 6 participantes (incluindo o mediador).")
+        return
+    }
+
+    // Update settings based on mediator existence
+    if (assignedMediator) {
+        setSettings(s => ({ ...s, hasMediator: true }))
+    } else {
+        setSettings(s => ({ ...s, hasMediator: false }))
+    }
+
+    // Assign IDs to active players consistently
+    activePlayers.forEach((p, idx) => p.id = idx)
+
+    // Assign Roles Logic for ACTIVE players only
+    let availableRoles: Role[] = Array(settings.wolvesCount).fill('Lobo')
+    if (settings.hasAngel) availableRoles.push('Anjo')
+    if (settings.hasDetective) availableRoles.push('Detetive')
+    
+    const remainingSlots = activePlayers.length - availableRoles.length
+    if (remainingSlots < 0) {
+        setShowErrorModal("Muitas funções especiais para poucos jogadores! Reduza os papéis.")
+        return
+    }
+    availableRoles = [...availableRoles, ...Array(remainingSlots).fill('Cidadão')]
+    
+    // Shuffle Roles
+    availableRoles = availableRoles.sort(() => Math.random() - 0.5)
+    
+    // Assign roles
+    activePlayers.forEach((p, i) => p.role = availableRoles[i])
+
+    // Shuffle Players Order (for gameplay sequence)
+    const shuffledActivePlayers = activePlayers.sort(() => Math.random() - 0.5)
+    
+    setPlayers(shuffledActivePlayers)
+    setPhase('role-distribution-start')
+    setCurrentPlayerIdx(0)
+  }
+
+  // --- Interaction Handlers ---
+
+  const handleNextRoleReveal = () => {
+    if (currentPlayerIdx < players.length - 1) {
+      setCurrentPlayerIdx(prev => prev + 1)
+      setPhase('role-distribution-start')
+    } else {
+      setPhase('night-intro')
+      setTimeout(() => startNightPhase(), 4000)
+    }
+  }
+
+  const startNightPhase = () => {
+    setWolfKill(null)
+    setAngelSave(null)
+    setInvestigatedRole(null)
+    
+    if (settings.hasAngel) setPhase('night-angel')
+    else setPhase('night-wolf')
+  }
+
+  const handleNightAction = (targetId: number | null) => {
+    if (phase === 'night-angel') {
+      setAngelSave(targetId)
+      setPhase('night-wolf')
+    } else if (phase === 'night-wolf') {
+      setWolfKill(targetId)
+      if (settings.hasDetective) {
+          setPhase('night-detective')
+      } else {
+          finishNight(targetId)
+      }
+    } else if (phase === 'night-detective') {
+        if (targetId !== null) {
+            const target = players.find(p => p.id === targetId)
+            setInvestigatedRole(target?.role || 'Cidadão')
+            // Pause to show result
+            setTimeout(() => {
+                setInvestigatedRole(null) // Clear for next time
+                finishNight()
+            }, 3000)
+        } else {
+            finishNight()
+        }
+    }
+  }
+
+  const finishNight = (overrideWolfKill?: number | null) => {
+    // Calculate deaths
+    // If angel save == wolf kill -> no death
+    // Else -> wolf kill dies
+    const effectiveKill = overrideWolfKill !== undefined ? overrideWolfKill : wolfKill
+    let victimId = effectiveKill
+    if (angelSave === effectiveKill) victimId = null
+
+    if (victimId !== null) {
+        setPlayers(prev => prev.map(p => p.id === victimId ? { ...p, isAlive: false } : p))
+    }
+
+    setPhase('morning')
+  }
+
+  const startDiscussion = () => {
+    setTimeLeft(discussionTime)
+    setPhase('discussion')
+  }
+
+  const startVoting = () => {
+    // Reset votes
+    setPlayers(prev => prev.map(p => ({ ...p, votes: 0 })))
+    setSelectedVote(null) // Reset selection
+    // Only living players vote
+    // Find first living player index
+     const firstAliveIdx = players.findIndex(p => p.isAlive)
+    if (firstAliveIdx !== -1) {
+        setCurrentPlayerIdx(firstAliveIdx)
+        setPhase('voting')
+    } else {
+        // Should not happen unless game over logic failed earlier
+        handleNextRoundOrEnd()
+    }
+  }
+
+  const handleVoteSelection = (targetId: number) => {
+    setSelectedVote(targetId)
+  }
+
+  const submitVote = () => {
+    if (selectedVote === null) return
+
+    // Calculate updated state immediately to ensure correct flow
+    const updatedPlayers = players.map(p => p.id === selectedVote ? { ...p, votes: p.votes + 1 } : p)
+    setPlayers(updatedPlayers)
+    setSelectedVote(null) // Reset for next
+    
+    // Find next living voter
+    let nextIdx = currentPlayerIdx + 1
+    while (nextIdx < players.length && !players[nextIdx].isAlive) {
+        nextIdx++
+    }
+
+    if (nextIdx < players.length) {
+        setCurrentPlayerIdx(nextIdx)
+    } else {
+        // All votes cast
+        setPhase('voting-suspense')
+        setTimeout(() => {
+            finishVoting(updatedPlayers)
+        }, 1500)
+    }
+  }
+
+  const finishVoting = (finalPlayers: Player[]) => {
+    // Determine elimination using the passed state (crucial for accurate tally)
+    const sorted = [...finalPlayers].filter(p => p.isAlive).sort((a,b) => b.votes - a.votes)
+    const mostVoted = sorted[0]
+    
+    // Check for tie
+    const isTie = sorted.length > 1 && sorted[0].votes === sorted[1].votes
+    
+    if (!isTie && mostVoted) {
+        // Eliminate
+        const resolvedPlayers = finalPlayers.map(p => p.id === mostVoted.id ? { ...p, isAlive: false } : p)
+        setPlayers(resolvedPlayers)
+        
+        const possibleWinner = getWinner(resolvedPlayers)
+        if (possibleWinner) setWinner(possibleWinner)
+    } else {
+        const possibleWinner = getWinner(finalPlayers)
+        if (possibleWinner) setWinner(possibleWinner)
+    }
+    
+    setPhase('voting-results')
+  }
+
+  const getWinner = (currentPlayers: Player[] = players) => {
+    const liveWolves = currentPlayers.filter(p => p.isAlive && p.role === 'Lobo').length
+    const liveGood = currentPlayers.filter(p => p.isAlive && p.role !== 'Lobo').length
+    
+    if (liveWolves === 0) return 'Cidadãos'
+    if (liveWolves >= liveGood) return 'Lobos'
+    return null
+  }
+
+  const handleNextRoundOrEnd = () => {
+      const winner = getWinner()
+      if (winner) {
+          setWinner(winner)
+          setPhase('game-over')
+      } else {
+          setPhase('night-intro')
+          setTimeout(() => startNightPhase(), 3000)
+      }
+  }
+
+  // --- Renders ---
+
+  return (
+    <div className="min-h-screen bg-black text-white font-fredoka overflow-hidden relative selection:bg-red-500 selection:text-white">
+        {/* Header - Minimalist */}
+        {phase !== 'night-intro' && !phase.startsWith('night-') && (
+            <nav className="absolute top-0 w-full p-4 flex justify-between items-center z-50">
+                <button onClick={onBackToHome} className="p-2 bg-white/10 rounded-full hover:bg-white/20">
+                    <ArrowLeft size={24} />
+                </button>
+                <div className="flex items-center gap-2">
+                    <Moon className="w-5 h-5 text-purple-400" />
+                    <span className="text-xl tracking-wider">ÚLTIMA NOITE</span>
+                </div>
+                <div className="w-10" />
+            </nav>
+        )}
+
+        <AnimatePresence mode="wait">
+            
+            {/* SETUP PHASE */}
+            {phase === 'setup' && (
+                <motion.div key="setup" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="pt-20 px-6 h-screen flex flex-col">
+                    <div className="text-center mb-6 relative">
+                        <h1 className="text-4xl mb-2 text-purple-400 drop-shadow-lg flex items-center justify-center gap-3">
+                            Quem vai jogar?
+                            <button 
+                                onClick={() => setShowMediatorInfo(true)}
+                                className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs text-gray-400 border border-white/20 animate-pulse"
+                            >
+                                <MessageCircle size={16} />
+                            </button>
+                        </h1>
+                        <p className="text-gray-400 text-sm">Mínimo de 6 jogadores</p>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto space-y-3 mb-4 custom-scrollbar">
+                        {playerNames.map((name, i) => (
+                             <div key={i} className="flex gap-2">
+                                <div className="w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center font-bold text-gray-500 border border-white/10 shrink-0">{i+1}</div>
+                                <input 
+                                    className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-lg px-4 text-base md:text-lg focus:border-purple-500 outline-none transition-colors"
+                                    placeholder="Nome jogador"
+                                    value={name}
+                                    onChange={(e) => updatePlayerName(i, e.target.value)}
+                                />
+                                <button 
+                                    onClick={() => setMediatorIndex(mediatorIndex === i ? null : i)}
+                                    className={`p-3 transition-colors ${mediatorIndex === i ? 'text-purple-400 bg-purple-500/20 rounded-lg' : 'text-gray-600 hover:text-purple-400'}`}
+                                    title="Definir como Mediador"
+                                >
+                                    <MessageCircle className="w-5 h-5 fill-current" />
+                                </button>
+                                <button onClick={() => removePlayerSlot(i)} className="p-3 text-red-500/50 hover:text-red-500 shrink-0"><AlertTriangle size={20}/></button>
+                             </div>
+                        ))}
+                        {playerNames.length < 16 && (
+                            <button onClick={addPlayerSlot} className="w-full py-3 border-2 border-dashed border-white/10 rounded-lg text-gray-500 hover:text-white hover:border-white/30 font-bold transition-all">
+                                + Adicionar Jogador
+                            </button>
+                        )}
+                    </div>
+
+                     {/* Settings Mini-Panel */}
+                     <div className="bg-white/5 p-4 rounded-xl mb-4 border border-white/10">
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="text-sm text-gray-400 font-sans">Lobos</span>
+                            <div className="flex gap-3 items-center">
+                                <button onClick={() => setSettings(s => ({...s, wolvesCount: Math.max(1, s.wolvesCount-1)}))} className="w-8 h-8 rounded bg-white/10">-</button>
+                                <span className="font-bold">{settings.wolvesCount}</span>
+                                <button onClick={() => setSettings(s => ({...s, wolvesCount: Math.min(3, s.wolvesCount+1)}))} className="w-8 h-8 rounded bg-white/10">+</button>
+                            </div>
+                        </div>
+                        <div className="flex gap-2 mb-2">
+                            <button onClick={() => setSettings(s => ({...s, hasAngel: !s.hasAngel}))} className={`flex-1 py-2 rounded text-xs font-bold transition-colors ${settings.hasAngel ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50' : 'bg-white/5 text-gray-500'}`}>Anjo</button>
+                            <button onClick={() => setSettings(s => ({...s, hasDetective: !s.hasDetective}))} className={`flex-1 py-2 rounded text-xs font-bold transition-colors ${settings.hasDetective ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50' : 'bg-white/5 text-gray-500'}`}>Detetive</button>
+                        </div>
+                        <div className="flex justify-between items-center text-xs text-gray-400">
+                             <span>Discussão: {discussionTime / 60} min</span>
+                             <div className="flex gap-2">
+                                <button onClick={() => setDiscussionTime(Math.max(60, discussionTime - 60))} className="w-6 h-6 bg-white/10 rounded">-</button>
+                                <button onClick={() => setDiscussionTime(Math.min(300, discussionTime + 60))} className="w-6 h-6 bg-white/10 rounded">+</button>
+                             </div>
+                        </div>
+                     </div>
+
+                    <GameButton 
+                        onClick={startGameSetup} 
+                        disabled={playerNames.filter(n => n.trim()).length < 6}
+                        className="w-full py-4 text-xl shadow-lg shadow-purple-500/20 mb-6"
+                    >
+                        CONTINUAR
+                    </GameButton>
+                </motion.div>
+            )}
+
+            {/* ROLE DISTRIBUTION START */}
+            {phase === 'role-distribution-start' && (
+                <motion.div key="role-start" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen flex flex-col justify-center items-center px-6 text-center bg-black">
+                     <div className="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center mb-6 animate-pulse">
+                        <Users className="w-10 h-10 text-white" />
+                     </div>
+                     <h2 className="text-2xl text-gray-400 mb-2 font-sans px-4">
+                        {settings.hasMediator ? "Mediador, chame" : "Passe o celular para"}
+                     </h2>
+                     <h1 className="text-4xl xs:text-5xl text-white mb-12 font-bold text-shadow max-w-full break-words px-4 leading-tight">{players[currentPlayerIdx].name}</h1>
+                     <GameButton onClick={() => setPhase('role-reveal')} className="w-full max-w-xs">
+                        {settings.hasMediator ? "REVELAR FUNÇÃO" : "SOU EU, REVELAR"}
+                     </GameButton>
+                </motion.div>
+            )}
+
+            {/* ROLE REVEAL */}
+            {phase === 'role-reveal' && (
+                <motion.div key="role-reveal" initial={{scale:0.9, opacity:0}} animate={{scale:1, opacity:1}} exit={{scale:0.9, opacity:0}} className="h-screen flex flex-col justify-center items-center px-6 text-center bg-gray-900 border-8 border-gray-800">
+                     <span className="text-6xl mb-6">{ROLES_CONFIG[players[currentPlayerIdx].role].icon}</span>
+                     <h2 className="text-xl text-gray-400 font-sans mb-2">
+                        {settings.hasMediator ? `Função de ${players[currentPlayerIdx].name}:` : "Seu papel é"}
+                     </h2>
+                     <h1 className={`text-6xl font-bold mb-8 ${ROLES_CONFIG[players[currentPlayerIdx].role].color} font-sans uppercase tracking-widest`}>
+                        {players[currentPlayerIdx].role}
+                     </h1>
+                     <p className="text-gray-500 mb-12 max-w-xs mx-auto text-sm font-sans leading-relaxed">
+                        {players[currentPlayerIdx].role === 'Lobo' && "Elimine os cidadãos à noite sem ser descoberto."}
+                        {players[currentPlayerIdx].role === 'Anjo' && "Proteja um jogador a cada noite."}
+                        {players[currentPlayerIdx].role === 'Detetive' && "Descubra quem são os lobos investigando jogadores."}
+                        {players[currentPlayerIdx].role === 'Cidadão' && "Descubra e vote nos lobos durante o dia."}
+                     </p>
+                     
+                     <div onClick={handleNextRoleReveal} className="w-20 h-20 rounded-full border-4 border-white/20 flex items-center justify-center animate-pulse cursor-pointer tap-highlight-transparent active:scale-95 transition-transform">
+                        <CheckCircle className="w-8 h-8 text-white" />
+                     </div>
+                     <span className="text-xs text-gray-600 mt-4 uppercase tracking-widest">
+                        {settings.hasMediator ? "Próximo Jogador" : "Toque para esconder"}
+                     </span>
+                </motion.div>
+            )}
+
+            {/* NIGHT INTRO */}
+            {phase === 'night-intro' && (
+                <motion.div key="night-intro" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen bg-black flex flex-col items-center justify-center">
+                    <Moon className="w-32 h-32 text-purple-900 animate-pulse mb-8" />
+                    <h1 className="text-4xl text-purple-800 font-light tracking-[0.2em] uppercase">Cidade Dorme...</h1>
+                    <p className="text-gray-700 mt-4 font-sans text-sm animate-bounce">Fechem os olhos</p>
+                </motion.div>
+            )}
+
+            {/* ANGEL PHASE */}
+            {phase === 'night-angel' && (
+                <ActionPhase 
+                    key="angel-phase"
+                    role="Anjo" 
+                    title="Anjo, acorde..." 
+                    subtitle="Quem você quer proteger hoje?"
+                    players={players}
+                    onAction={handleNightAction}
+                    color="cyan"
+                />
+            )}
+
+            {/* WOLF PHASE */}
+            {phase === 'night-wolf' && (
+                <ActionPhase 
+                    key="wolf-phase"
+                    role="Lobo" 
+                    title="Lobos, acordem..." 
+                    subtitle="Escolham quem será eliminado."
+                    players={players.filter(p => p.role !== 'Lobo')}
+                    onAction={handleNightAction}
+                    color="red"
+                />
+            )}
+
+            {/* DETECTIVE PHASE */}
+            {phase === 'night-detective' && (
+                <div key="detective-phase-wrapper" className="h-screen bg-black flex flex-col px-6 py-12">
+                   {!investigatedRole ? (
+                       <ActionPhase 
+                         key="detective-phase"
+                         role="Detetive"
+                         title="Detetive..."
+                         subtitle="Investigue um suspeito."
+                         players={players.filter(p => p.role !== 'Detetive')}
+                         onAction={handleNightAction}
+                         color="yellow"
+                         embedded={true}
+                       />
+                   ) : (
+                       <div className="flex-1 flex flex-col items-center justify-center text-center">
+                           <Search className="w-16 h-16 text-yellow-500 mb-6" />
+                           <h2 className="text-2xl text-white mb-4">Resultado:</h2>
+                           <h1 className={`text-5xl font-bold ${
+                               investigatedRole === 'Lobo' ? 'text-red-500' : 'text-green-500'
+                           }`}>
+                               {investigatedRole === 'Lobo' ? 'É UM LOBO!' : 'INOCENTE'}
+                           </h1>
+                       </div>
+                   )}
+                </div>
+            )}
+
+            {/* MORNING RESULTS */}
+            {phase === 'morning' && (
+                <motion.div key="morning" initial={{opacity:0, scale: 0.95}} animate={{opacity:1, scale: 1}} className="h-screen bg-gradient-to-br from-blue-900 to-black flex flex-col items-center justify-center px-6 text-center">
+                    <Sun className="w-24 h-24 text-yellow-400 mb-8 animate-spin-slow" />
+                    <h1 className="text-4xl font-bold text-white mb-6">O sol nasceu!</h1>
+                    
+                    <div className="bg-black/30 w-full p-8 rounded-2xl backdrop-blur-md border border-white/10 mb-8">
+                        {players.filter(p => !p.isAlive && p.id === wolfKill && wolfKill !== angelSave).length > 0 ? (
+                            <>
+                                <Skull className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                                <p className="text-xl text-gray-200">Infelizmente,</p>
+                                <h2 className="text-3xl text-red-400 font-bold mt-2">
+                                    {players.find(p => p.id === wolfKill)?.name} morreu.
+                                </h2>
+                            </>
+                        ) : (
+                            <>
+                                <Shield className="w-12 h-12 text-green-400 mx-auto mb-4" />
+                                <h2 className="text-2xl text-green-300 font-bold">Ninguém morreu!</h2>
+                                <p className="text-gray-400 text-sm mt-2">A noite foi tranquila.</p>
+                            </>
+                        )}
+                    </div>
+
+                    <GameButton onClick={startDiscussion} className="w-full max-w-xs shadow-lg shadow-yellow-500/20">
+                        INICIAR DISCUSSÃO
+                    </GameButton>
+                </motion.div>
+            )}
+
+            {/* DISCUSSION */}
+            {phase === 'discussion' && (
+                <motion.div key="discussion" className="h-screen flex flex-col items-center justify-center bg-gray-900 px-6">
+                    <div className="relative w-64 h-64 flex items-center justify-center mb-12">
+                         <svg className="absolute w-full h-full transform -rotate-90">
+                             <circle cx="128" cy="128" r="120" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-gray-800" />
+                             <circle cx="128" cy="128" r="120" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-purple-500 transition-all duration-1000" 
+                                strokeDasharray={2 * Math.PI * 120}
+                                strokeDashoffset={2 * Math.PI * 120 * (1 - timeLeft / discussionTime)}
+                             />
+                         </svg>
+                         <div className="text-6xl font-bold font-mono">{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</div>
+                    </div>
+                    
+                    <h2 className="text-2xl text-white mb-8 text-center uppercase tracking-widest">Tempo de debate</h2>
+                    
+                    <GameButton onClick={startVoting} variant="danger" className="w-full max-w-sm">
+                        ENCERRAR E VOTAR
+                    </GameButton>
+                </motion.div>
+            )}
+
+            {/* VOTING START/PASS */}
+            {phase === 'voting' && (
+                <motion.div key="voting" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen flex flex-col bg-black">
+                     <div className="flex-1 flex flex-col justify-center items-center px-6 text-center">
+                        <div className="w-20 h-20 bg-red-900/30 border-2 border-red-500/50 rounded-full flex items-center justify-center mb-6">
+                            <VoteIcon className="w-8 h-8 text-red-500" />
+                        </div>
+                        <h2 className="text-gray-400 mb-2">Passe o celular para</h2>
+                        <h1 className="text-4xl text-white font-bold mb-10">{players[currentPlayerIdx].name}</h1>
+                        <p className="text-xs text-gray-500 uppercase tracking-widest mb-8">Votação Presencial</p>
+                     </div>
+                     
+                     <div className="bg-gray-900 p-6 rounded-t-3xl border-t border-white/10 max-h-[60vh] overflow-hidden flex flex-col items-center">
+                        <h3 className="text-center text-white mb-4 font-bold">Quem é o Lobo?</h3>
+                        <div className="w-full overflow-y-auto custom-scrollbar space-y-2 pb-20">
+                            {players.map(p => p.id !== players[currentPlayerIdx].id && (
+                                <button
+                                    key={p.id}
+                                    onClick={() => handleVoteSelection(p.id)}
+                                    className={`w-full p-4 rounded-xl flex items-center justify-between border transition-all group ${
+                                        selectedVote === p.id 
+                                        ? 'bg-red-500/20 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' 
+                                        : 'bg-white/5 border-white/5 hover:bg-white/10'
+                                    } ${!p.isAlive ? 'opacity-50 grayscale' : ''}`}
+                                >
+                                    <div className="flex flex-col items-start">
+                                        <span className={`font-bold text-lg ${selectedVote === p.id ? 'text-red-400' : 'text-gray-300'}`}>{p.name}</span>
+                                        {!p.isAlive && <span className="text-xs text-red-500 font-bold uppercase">MORTO</span>}
+                                    </div>
+                                    <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-colors ${
+                                        selectedVote === p.id 
+                                        ? 'bg-red-500 border-red-500' 
+                                        : 'border-white/20'
+                                    }`}>
+                                        <div className={`w-2 h-2 bg-white rounded-full ${selectedVote === p.id ? 'opacity-100' : 'opacity-0'}`} />
+                                    </div>
+                                </button>
+                            ))}
+                            {/* Skip Vote Option */}
+                            <button 
+                                onClick={() => handleVoteSelection(-1)} 
+                                className={`w-full py-3 text-sm font-bold uppercase tracking-wider transition-colors border rounded-xl ${
+                                    selectedVote === -1 ? 'bg-white/10 text-white border-white/30' : 'text-gray-500 border-transparent hover:text-white'
+                                }`}
+                            >
+                                Pular Voto
+                            </button>
+                        </div>
+                        
+                        {/* Confirm Button Floating */}
+                        <div className="fixed bottom-6 left-0 right-0 px-6 z-50 flex justify-center">
+                             <AnimatePresence>
+                                {selectedVote !== null && (
+                                    <motion.div
+                                        initial={{ y: 100, opacity: 0 }}
+                                        animate={{ y: 0, opacity: 1 }}
+                                        exit={{ y: 100, opacity: 0 }}
+                                        className="w-full max-w-sm"
+                                    >
+                                        <GameButton 
+                                            onClick={submitVote} 
+                                            variant="danger" 
+                                            className="w-full shadow-2xl shadow-red-900/50 border-2 border-red-500"
+                                        >
+                                            CONFIRMAR VOTO
+                                        </GameButton>
+                                    </motion.div>
+                                )}
+                             </AnimatePresence>
+                        </div>
+                     </div>
+                </motion.div>
+            )}
+            {/* SUSPENSE SCREEN */}
+            {phase === 'voting-suspense' && (
+                <motion.div key="suspense" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen bg-black flex flex-col items-center justify-center">
+                    <motion.div 
+                        initial={{ scale: 0.8, opacity: 0.5 }}
+                        animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 0.5, repeat: Infinity }}
+                        className="w-32 h-32 bg-red-900/20 rounded-full flex items-center justify-center mb-8"
+                    >
+                        <VoteIcon className="w-16 h-16 text-red-600" />
+                    </motion.div>
+                    <h1 className="text-3xl font-bold text-white tracking-widest uppercase animate-pulse">Contabilizando...</h1>
+                </motion.div>
+            )}
+            {/* VOTING RESULTS */}
+            {phase === 'voting-results' && (
+                <motion.div key="voting-results" className="h-screen bg-black flex flex-col items-center justify-center px-6">
+                     <h1 className="text-3xl text-white mb-8 font-bold">Resultado da Votação</h1>
+                     
+                     <div className="w-full max-w-sm space-y-3 mb-8 max-h-[50vh] overflow-y-auto custom-scrollbar">
+                         {[...players].sort((a,b) => b.votes - a.votes).map((p) => (
+                             <div key={p.id} className={`flex items-center justify-between p-4 rounded-lg bg-white/10 ${!p.isAlive ? 'opacity-50' : ''}`}>
+                                 <div className="flex items-center gap-3">
+                                     <span className="font-bold text-lg">{p.name}</span>
+                                     {!p.isAlive && <Skull size={16} className="text-red-500" />}
+                                 </div>
+                                 <div className="flex items-center gap-2">
+                                     <span className="text-2xl font-bold">{p.votes}</span>
+                                     <span className="text-xs text-gray-400 uppercase">votos</span>
+                                 </div>
+                             </div>
+                         ))}
+                     </div>
+                    
+                     <div className="flex gap-4 w-full justify-center">
+                         <GameButton onClick={handleNextRoundOrEnd} className="w-full max-w-xs">
+                             {getWinner() ? "VER RESULTADO FINAL" : "CONTINUAR O JOGO"}
+                         </GameButton>
+                     </div>
+                </motion.div>
+            )}
+
+            {/* GAME OVER */}
+            {phase === 'game-over' && (
+                <motion.div key="gameover" className={`h-screen flex flex-col items-center justify-center px-6 text-center ${winner === 'Lobos' ? 'bg-red-950' : 'bg-blue-950'}`}>
+                    {winner === 'Lobos' ? <WolfIcon size={64} /> : <Shield size={64} />}
+                    <h2 className="text-xl text-white/70 mt-4 uppercase tracking-[0.3em]">Vencedores</h2>
+                    <h1 className="text-6xl font-bold text-white mb-8 drop-shadow-xl">{winner}</h1>
+                    
+                    <p className="max-w-xs text-gray-300 mb-12 font-sans leading-relaxed">
+                        {winner === 'Lobos' 
+                            ? "A cidade foi dizimada. Os lobos dominaram tudo." 
+                            : "A cidade está segura novamente. Todos os lobos foram eliminados."}
+                    </p>
+
+                    <div className="space-y-4 w-full max-w-xs">
+                        <GameButton onClick={() => setPhase('setup')} variant="secondary" className="w-full">
+                            JOGAR NOVAMENTE
+                        </GameButton>
+                        <button onClick={onBackToHome} className="text-sm font-bold opacity-60 hover:opacity-100 transition-opacity">
+                            VOLTAR AO MENU
+                        </button>
+                    </div>
+                </motion.div>
+            )}
+
+            {/* ERROR MODAL */}
+            {showErrorModal && (
+                <motion.div 
+                    initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+                    className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6"
+                    onClick={() => setShowErrorModal(null)}
+                >
+                     <motion.div 
+                        initial={{scale:0.9}} animate={{scale:1}} 
+                        className="bg-gray-900 border border-red-500/30 p-6 rounded-2xl w-full max-w-sm text-center shadow-2xl shadow-red-900/20"
+                        onClick={e => e.stopPropagation()}
+                     >
+                        <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
+                            <AlertTriangle size={32} />
+                        </div>
+                        <h3 className="text-xl font-bold text-white mb-2">Atenção!</h3>
+                        <p className="text-gray-300 mb-6">{showErrorModal}</p>
+                        <button 
+                            onClick={() => setShowErrorModal(null)}
+                            className="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl transition-colors"
+                        >
+                            Entendi
+                        </button>
+                     </motion.div>
+                </motion.div>
+            )}
+
+            {/* MEDIATOR INFO MODAL */}
+            {showMediatorInfo && (
+                <motion.div 
+                    initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+                    className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6"
+                    onClick={() => setShowMediatorInfo(false)}
+                >
+                     <motion.div 
+                        initial={{scale:0.9}} animate={{scale:1}} 
+                        className="bg-gray-900 border border-purple-500/30 p-6 rounded-3xl w-full max-w-sm text-center shadow-2xl relative overflow-hidden"
+                        onClick={e => e.stopPropagation()}
+                     >
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500" />
+                        
+                        <div className="w-20 h-20 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-purple-400 animate-pulse">
+                            <MessageCircle size={40} />
+                        </div>
+                        
+                        <h3 className="text-2xl font-bold text-white mb-2">O Mediador</h3>
+                        <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+                            <strong className="text-purple-400">É OBRIGATÓRIO</strong> escolher alguém para ser o mediador da partida!
+                            <br/><br/>
+                            Essa pessoa <strong className="text-white">NÃO JOGA</strong> (não recebe papel de Lobo ou Cidadão). Ela apenas organiza a noite e narra os acontecimentos.
+                            <br/><br/>
+                            Clique no ícone de balão <MessageCircle size={14} className="inline mx-1"/> ao lado do nome da pessoa para selecioná-la.
+                        </p>
+                        
+                        <button 
+                            onClick={() => setShowMediatorInfo(false)}
+                            className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition-colors shadow-lg shadow-purple-900/50"
+                        >
+                            Entendi, vou escolher!
+                        </button>
+                     </motion.div>
+                </motion.div>
+            )}
+
+        </AnimatePresence>
+    </div>
+  )
+}
+
+// --- Subcomponents ---
+
+const ActionPhase = ({ title, subtitle, players, onAction, color, embedded = false }: any) => {
+    const [selectedId, setSelectedId] = useState<number | null>(null)
+    const [isExiting, setIsExiting] = useState(false)
+
+    // Helper to get color classes because dynamic purging fails
+    const getColors = () => {
+        switch(color) {
+            case 'red': return {
+                bg: 'bg-red-500', 
+                border: 'border-red-500', 
+                text: 'text-red-400',
+                bgLight: 'bg-red-500/10',
+                borderLight: 'border-red-500/30',
+                shadow: 'shadow-red-500/20'
+            }
+            case 'cyan': return {
+                bg: 'bg-cyan-500', 
+                border: 'border-cyan-500', 
+                text: 'text-cyan-400',
+                bgLight: 'bg-cyan-500/10',
+                borderLight: 'border-cyan-500/30',
+                shadow: 'shadow-cyan-500/20'
+            }
+            case 'yellow': return {
+                bg: 'bg-yellow-500', 
+                border: 'border-yellow-500', 
+                text: 'text-yellow-400',
+                bgLight: 'bg-yellow-500/10',
+                borderLight: 'border-yellow-500/30',
+                shadow: 'shadow-yellow-500/20'
+            }
+            default: return { // Default (e.g. purple)
+                bg: 'bg-purple-500', 
+                border: 'border-purple-500', 
+                text: 'text-purple-400',
+                bgLight: 'bg-purple-500/10',
+                borderLight: 'border-purple-500/30',
+                shadow: 'shadow-purple-500/20'
+            }
+        }
+    }
+
+    const theme = getColors()
+
+    const handleSelect = (id: number) => {
+        if (isExiting) return
+        setSelectedId(id)
+    }
+
+    const handleConfirm = () => {
+        if (isExiting) return
+        setIsExiting(true)
+        setTimeout(() => {
+            onAction(selectedId)
+        }, 1000)
+    }
+
+    return (
+        <motion.div 
+            initial={{opacity: 0, y: 20}} 
+            animate={{opacity: 1, y: 0}} 
+            exit={{opacity: 0}}
+            className={embedded ? "" : "h-screen bg-black flex flex-col pt-12"}
+        >
+            <div className="px-6 mb-6">
+                <div className={`inline-block px-3 py-1 rounded border mb-4 text-xs font-bold uppercase tracking-widest ${theme.text} ${theme.borderLight} ${theme.bgLight}`}>
+                    Fase Noturna
+                </div>
+                <h1 className={`text-4xl font-bold text-white mb-2`}>{title}</h1>
+                <p className="text-gray-400">{subtitle}</p>
+            </div>
+
+            <div className={`flex-1 overflow-y-auto px-4 pb-8 grid grid-cols-2 gap-3 content-start transition-opacity duration-1000 ${isExiting ? 'opacity-0' : 'opacity-100'}`}>
+                {players.map((p: Player) => {
+                    return p.isAlive && (
+                    <button 
+                        key={p.id}
+                        onClick={() => handleSelect(p.id)}
+                        className={`aspect-square rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all group relative duration-300
+                            ${selectedId === p.id 
+                                ? `bg-white/10 ${theme.border} scale-105 shadow-[0_0_15px_rgba(255,255,255,0.1)]` 
+                                : `bg-white/5 border-white/10 hover:bg-white/10`
+                            }
+                        `}
+                    >   
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl shadow-lg transition-transform ${
+                            selectedId === p.id ? `${theme.bg} text-white scale-110` : 'bg-white/5 text-gray-500'
+                        }`}>
+                            {p.name.charAt(0)}
+                        </div>
+                        <span className={`font-bold text-sm truncate w-full px-2 text-center ${selectedId === p.id ? 'text-white' : 'text-gray-400'}`}>{p.name}</span>
+                    </button>
+                    )
+                })}
+            </div>
+            
+            {/* Action Bar */}
+            <AnimatePresence>
+                {selectedId !== null && !isExiting && (
+                    <motion.div 
+                        initial={{y: 100}} animate={{y: 0}} exit={{y: 100}}
+                        className={`absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black via-black/90 to-transparent flex justify-center pb-8`}
+                    >
+                        <GameButton 
+                            onClick={handleConfirm}
+                            variant="primary" // Generic style, let logic handle
+                            className={`w-full max-w-xs shadow-lg ${theme.shadow} border ${theme.borderLight} text-white`}
+                        >
+                            CONFIRMAR ESCOLHA
+                        </GameButton>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </motion.div>
+    )
+}
+
+// Icons
+const WolfIcon = ({size}: {size:number}) => (
+    <div style={{fontSize: size}}>🐺</div>
+)
+const VoteIcon = ({className}: {className: string}) => (
+    <MessageCircle className={className} />
+)
+
+export default UltimaNoiteGame

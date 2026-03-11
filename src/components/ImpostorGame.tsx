@@ -1,22 +1,34 @@
 import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence, PanInfo } from 'framer-motion'
-import { ArrowLeft, Users, EyeOff, X } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { 
+  ArrowLeft, Users, AlertTriangle, 
+  CheckCircle, HelpCircle, Clock, Skull, Crown
+} from 'lucide-react'
 import GameButton from './GameButton'
-import GameIcon from './GameIcon'
 
 interface ImpostorGameProps {
   onBackToHome: () => void
 }
 
-type GameState = 'setup' | 'reveal' | 'voting' | 'results'
+type Phase = 
+  | 'setup' 
+  | 'role-distribution-start'
+  | 'role-reveal'
+  | 'game-start'
+  | 'discussion' // Timer running
+  | 'voting-intro' 
+  | 'voting'
+  | 'voting-results' // Who died/Was ejected
+  | 'game-over'
+
+type Role = 'Impostor' | 'Cidadão'
 
 interface Player {
   id: number
   name: string
-  isImpostor: boolean
-  hasRevealed: boolean
-  votes: number
+  role: Role
   isAlive: boolean
+  votes: number
 }
 
 const THEMES = [
@@ -27,664 +39,417 @@ const THEMES = [
 ]
 
 const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
-  const [gameState, setGameState] = useState<GameState>('setup')
+  // State
+  const [phase, setPhase] = useState<Phase>('setup')
+  const [playerNames, setPlayerNames] = useState<string[]>(['', '', '']) // Min 3
   const [players, setPlayers] = useState<Player[]>([])
-  const [currentTheme, setCurrentTheme] = useState('')
-  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0)
-  const [isCardRevealed, setIsCardRevealed] = useState(false)
-  const [playerNames, setPlayerNames] = useState<string[]>([''])
-  const [votingResults, setVotingResults] = useState<{player: Player, votes: number}[]>([])
-  const [gameResult, setGameResult] = useState<'players-win' | 'impostor-wins' | null>(null)
-  const [cardY, setCardY] = useState(0)
-  const [totalVotes, setTotalVotes] = useState(0)
-  const [showMinPlayersModal, setShowMinPlayersModal] = useState(false)
+  const [currentPlayerIdx, setCurrentPlayerIdx] = useState(0)
+  
+  // Game Data
+  const [theme, setTheme] = useState('')
+  const [discussionTime, setDiscussionTime] = useState(180) // 3 mins default
+  const [timeLeft, setTimeLeft] = useState(0)
+  
+  // Voting
+  const [selectedVote, setSelectedVote] = useState<number | null>(null)
+  
+  // Results
+  const [winner, setWinner] = useState<'Impostor' | 'Cidadãos' | null>(null)
+  const [eliminatedPlayer, setEliminatedPlayer] = useState<Player | null>(null)
 
-  // Prevenir scroll quando o card está aberto
+  // Timer Effect
   useEffect(() => {
-    if (isCardRevealed) {
-      document.body.style.overflow = 'hidden'
+    let interval: ReturnType<typeof setInterval>
+    if (phase === 'discussion' && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft((prev) => prev - 1)
+      }, 1000)
+    } else if (phase === 'discussion' && timeLeft === 0) {
+        setPhase('voting-intro')
+    }
+    return () => clearInterval(interval)
+  }, [phase, timeLeft])
+
+
+  // --- Helper Functions ---
+
+  const addPlayerSlot = () => {
+    if (playerNames.length < 16) setPlayerNames([...playerNames, ''])
+  }
+
+  const removePlayerSlot = (idx: number) => {
+    if (playerNames.length > 3) {
+        setPlayerNames(playerNames.filter((_, i) => i !== idx))
     } else {
-      document.body.style.overflow = 'auto'
-    }
-
-    return () => {
-      document.body.style.overflow = 'auto'
-    }
-  }, [isCardRevealed])
-
-  const setupGame = () => {
-    if (playerNames.filter(name => name.trim()).length < 3) {
-      setShowMinPlayersModal(true)
-      return
-    }
-
-    const validNames = playerNames.filter(name => name.trim())
-    const impostorIndex = Math.floor(Math.random() * validNames.length)
-    const theme = THEMES[Math.floor(Math.random() * THEMES.length)]
-    
-    const gamePlayers: Player[] = validNames.map((name, index) => ({
-      id: index,
-      name: name.trim(),
-      isImpostor: index === impostorIndex,
-      hasRevealed: false,
-      votes: 0,
-      isAlive: true
-    }))
-
-    setPlayers(gamePlayers)
-    setCurrentTheme(theme)
-    setGameState('reveal')
-    setCurrentPlayerIndex(0)
-    setIsCardRevealed(false)
-    setCardY(0)
-  }
-
-  const handleCardDrag = (_event: any, info: PanInfo) => {
-    if (info.offset.y < -100 && !isCardRevealed) {
-      setIsCardRevealed(true)
-      setCardY(-window.innerHeight * 0.8)
+        const newNames = [...playerNames]
+        newNames[idx] = ''
+        setPlayerNames(newNames)
     }
   }
 
-  const closeCard = () => {
-    setIsCardRevealed(false)
-    setCardY(0)
-  }
-
-  const nextPlayer = () => {
-    const updatedPlayers = [...players]
-    updatedPlayers[currentPlayerIndex].hasRevealed = true
-    setPlayers(updatedPlayers)
-
-    if (currentPlayerIndex < players.length - 1) {
-      setCurrentPlayerIndex(currentPlayerIndex + 1)
-      setIsCardRevealed(false)
-      setCardY(0)
-    } else {
-      setGameState('voting')
-      setTotalVotes(0)
-    }
-  }
-
-  const castVote = (playerId: number) => {
-    if (totalVotes < players.length) {
-      setPlayers(prev => prev.map(player => 
-        player.id === playerId 
-          ? { ...player, votes: player.votes + 1 }
-          : player
-      ))
-      setTotalVotes(totalVotes + 1)
-    }
-  }
-
-  const finishVoting = () => {
-    const sortedByVotes = [...players].sort((a, b) => b.votes - a.votes)
-    const mostVoted = sortedByVotes[0]
-    const impostor = players.find(p => p.isImpostor)!
-    
-    setVotingResults(sortedByVotes.map(player => ({
-      player,
-      votes: player.votes
-    })))
-
-    // Nova lógica de vitória
-    if (mostVoted.isImpostor) {
-      setGameResult('players-win')
-    } else {
-      // Remove o jogador mais votado
-      const alivePlayers = players.filter(p => p.id !== mostVoted.id && p.isAlive)
-      if (alivePlayers.length <= 2 && impostor.isAlive) {
-        setGameResult('impostor-wins')
-      } else {
-        // Continue o jogo (implementar rounds futuros)
-        setGameResult('impostor-wins') // Por agora, impostor ganha
-      }
-    }
-    
-    setGameState('results')
-  }
-
-  const addPlayer = () => {
-    if (playerNames.length < 10) {
-      setPlayerNames([...playerNames, ''])
-    }
-  }
-
-  const updatePlayerName = (index: number, name: string) => {
+  const updatePlayerName = (idx: number, val: string) => {
     const newNames = [...playerNames]
-    newNames[index] = name
+    newNames[idx] = val
     setPlayerNames(newNames)
   }
 
-  const removePlayer = (index: number) => {
-    if (playerNames.length > 1) {
-      setPlayerNames(playerNames.filter((_, i) => i !== index))
+  const startGameSetup = () => {
+    // Validate names
+    const activeNames: string[] = []
+    const usedNames = new Set<string>()
+
+    for (const name of playerNames) {
+        const trimmed = name.trim()
+        if (!trimmed) continue
+        
+        if (usedNames.has(trimmed.toUpperCase())) {
+            alert(`O nome "${trimmed}" já está em uso!`)
+            return
+        }
+        usedNames.add(trimmed.toUpperCase())
+        activeNames.push(trimmed.toUpperCase()) // Uppercase convention
     }
+
+    if (activeNames.length < 3) {
+        alert("Mínimo de 3 jogadores para o Impostor.")
+        return
+    }
+
+    // Role Assignment
+    const impostorIdx = Math.floor(Math.random() * activeNames.length)
+    const selectedTheme = THEMES[Math.floor(Math.random() * THEMES.length)]
+
+    const newPlayers: Player[] = activeNames.map((name, i) => ({
+        id: i,
+        name,
+        role: i === impostorIdx ? 'Impostor' : 'Cidadão',
+        isAlive: true,
+        votes: 0
+    }))
+
+    setPlayers(newPlayers)
+    setTheme(selectedTheme)
+    setCurrentPlayerIdx(0)
+    setPhase('role-distribution-start')
   }
 
-  const resetGame = () => {
-    setGameState('setup')
-    setPlayers([])
-    setCurrentTheme('')
-    setCurrentPlayerIndex(0)
-    setIsCardRevealed(false)
-    setPlayerNames([''])
-    setVotingResults([])
-    setGameResult(null)
-    setCardY(0)
-    setTotalVotes(0)
-    setShowMinPlayersModal(false)
+  // --- Game Flow ---
+
+  const handleNextRoleReveal = () => {
+      if (currentPlayerIdx < players.length - 1) {
+          setCurrentPlayerIdx(prev => prev + 1)
+          setPhase('role-distribution-start')
+      } else {
+          setPhase('game-start')
+          setTimeout(() => {
+              setTimeLeft(discussionTime)
+              setPhase('discussion')
+          }, 3000)
+      }
   }
+
+  const startVoting = () => {
+      // Reset votes
+      setPlayers(prev => prev.map(p => ({...p, votes: 0})))
+      setSelectedVote(null)
+      setPhase('voting')
+  }
+
+  const submitVote = () => {
+      if (selectedVote === null) return
+      
+      const votedPlayer = players.find(p => p.id === selectedVote)
+      if (!votedPlayer) return
+
+      handleElimination(votedPlayer)
+  }
+
+  const handleElimination = (player: Player) => {
+      setEliminatedPlayer(player)
+      
+      // Check Win Condition
+      if (player.role === 'Impostor') {
+          setWinner('Cidadãos')
+      } else {
+          // Wrong Vote = Impostor Wins
+          setWinner('Impostor')
+      }
+      setPhase('voting-results')
+  }
+
+  const restartGame = () => {
+      setPhase('setup')
+      setWinner(null)
+      setEliminatedPlayer(null)
+      setPlayers([])
+      // Keep playerNames from previous game to ease restart
+  }
+
+  // --- Renders ---
 
   return (
-    <div className="min-h-screen bg-dark-bg text-white relative overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="fixed top-8 left-8 opacity-10 z-0">
-        <img src="/Assets/PNG/Blue/Default/star_outline.png" alt="" className="w-12 h-12" />
-      </div>
-      <div className="fixed top-16 right-12 opacity-5 z-0">
-        <img src="/Assets/PNG/Yellow/Default/arrow_decorative_n.png" alt="" className="w-16 h-16" />
-      </div>
-      <div className="fixed bottom-12 left-16 opacity-5 z-0">
-        <img src="/Assets/PNG/Green/Default/star.png" alt="" className="w-10 h-10" />
-      </div>
-      <div className="fixed bottom-20 right-8 opacity-10 z-0">
-        <img src="/Assets/PNG/Red/Default/arrow_decorative_s.png" alt="" className="w-14 h-14" />
-      </div>
-      {/* Modal de erro - Mínimo de jogadores */}
-      {showMinPlayersModal && (
-        <motion.div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          onClick={() => setShowMinPlayersModal(false)}
-        >
-          <motion.div
-            className="bg-dark-blue rounded-2xl p-8 max-w-sm w-full border-2 border-danger-red/30 relative"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="text-center">
-              <div className="w-16 h-16 bg-danger-red/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-3xl">⚠️</span>
-              </div>
-              <h3 className="font-fredoka text-2xl text-white mb-4">
-                Ops! Faltam Jogadores
-              </h3>
-              <p className="font-comfortaa text-gray-300 mb-6 leading-relaxed">
-                Você precisa de <span className="text-playzenha-yellow font-bold">pelo menos 3 jogadores</span> para começar uma partida do Impostor!
-              </p>
-              <GameButton
-                onClick={() => setShowMinPlayersModal(false)}
-                variant="primary"
-                className="w-full py-3 px-6 text-lg font-bold"
-              >
-                <GameIcon type="checkmark" variant="dark" size="md" />
-                Entendi!
-              </GameButton>
+    <div className="min-h-screen bg-gray-900 text-white font-sans overflow-hidden relative selection:bg-purple-500 selection:text-white">
+        
+        {/* Header */}
+        <nav className="absolute top-0 w-full p-4 flex justify-between items-center z-50">
+            <button onClick={onBackToHome} className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
+                <ArrowLeft size={24} />
+            </button>
+            <div className="flex items-center gap-2">
+                <span className="text-2xl">🕵️‍♂️</span>
+                <span className="text-xl font-bold tracking-wider">IMPOSTOR</span>
             </div>
-          </motion.div>
-        </motion.div>
-      )}
+            <div className="w-10" />
+        </nav>
 
-      {/* Header */}
-      <motion.div
-        className="flex items-center justify-between p-6 bg-dark-blue border-b border-gray-700 relative z-10"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <button
-          onClick={onBackToHome}
-          className="flex items-center gap-2 text-white/80 hover:text-white transition-colors"
-        >
-          <ArrowLeft className="w-6 h-6" />
-          <span className="font-comfortaa">Voltar</span>
-        </button>
-        <h1 className="font-fredoka text-2xl md:text-4xl text-white">🕵️‍♂️ IMPOSTOR</h1>
-        <div></div>
-      </motion.div>
+        <AnimatePresence mode="wait">
 
-      <AnimatePresence mode="wait">
-        {/* Setup Phase */}
-        {gameState === 'setup' && (
-          <motion.div
-            key="setup"
-            className="p-6"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-          >
-            <div className="max-w-md mx-auto bg-gradient-to-br from-dark-blue/80 to-gray-900/80 backdrop-blur-lg rounded-3xl p-8 border-2 border-playzenha-blue/40 shadow-2xl relative overflow-hidden">
-              {/* Decorative game elements */}
-              <div className="absolute top-4 left-4 opacity-20">
-                <img src="/Assets/PNG/Blue/Default/star.png" alt="" className="w-6 h-6" />
-              </div>
-              <div className="absolute top-6 right-6 opacity-15">
-                <img src="/Assets/PNG/Yellow/Default/star_outline.png" alt="" className="w-5 h-5" />
-              </div>
-              <div className="absolute bottom-4 left-6 opacity-10">
-                <img src="/Assets/PNG/Green/Default/star.png" alt="" className="w-4 h-4" />
-              </div>
-              <div className="absolute bottom-6 right-4 opacity-20">
-                <img src="/Assets/PNG/Red/Default/star_outline.png" alt="" className="w-5 h-5" />
-              </div>
-              
-              <div className="text-center mb-8 relative z-10">
-                <div className="flex items-center justify-center gap-3 mb-4">
-                  <img src="/Assets/PNG/Extra/Default/icon_play_light.png" alt="" className="w-8 h-8 opacity-60" />
-                  <h2 className="font-fredoka text-2xl md:text-3xl text-white">
-                    Quem vai jogar?
-                  </h2>
-                  <img src="/Assets/PNG/Extra/Default/icon_play_light.png" alt="" className="w-8 h-8 opacity-60 transform scale-x-[-1]" />
-                </div>
-                <p className="font-comfortaa text-gray-300">
-                  Digite os nomes (mínimo 3 pessoas)
-                </p>
-                <div className="flex justify-center mt-3">
-                  <img src="/Assets/PNG/Extra/Default/divider.png" alt="" className="w-32 h-2 opacity-30" />
-                </div>
-              </div>
-
-              <div className="space-y-4 mb-8 relative z-10">
-                {playerNames.map((name, index) => (
-                  <motion.div
-                    key={index}
-                    className="flex gap-3 items-center"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <div className="flex items-center gap-2 flex-1">
-                      <div className="w-6 h-6 flex-shrink-0 opacity-40">
-                        <img src="/Assets/PNG/Blue/Default/icon_circle.png" alt="" className="w-full h-full" />
-                      </div>
-                      <div className="relative flex-1 bg-dark-bg/60 rounded-xl border border-playzenha-blue/30 p-3">
-                        <input
-                          type="text"
-                          value={name}
-                          onChange={(e) => updatePlayerName(index, e.target.value)}
-                          placeholder={`Jogador ${index + 1}`}
-                          className="w-full bg-transparent text-white font-comfortaa placeholder-gray-400 outline-none border-none"
-                        />
-                      </div>
+            {/* SETUP PHASE */}
+            {phase === 'setup' && (
+                <motion.div key="setup" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="pt-24 px-6 h-screen flex flex-col">
+                    <div className="text-center mb-6">
+                        <h1 className="text-3xl md:text-4xl mb-2 font-bold text-white flex items-center justify-center gap-2">
+                           Quem vai jogar?
+                        </h1>
+                        <p className="text-gray-400 text-sm">Mínimo de 3 jogadores</p>
                     </div>
-                    {playerNames.length > 1 && (
-                      <GameButton
-                        onClick={() => removePlayer(index)}
-                        variant="danger"
-                        size="sm"
-                        className="w-12 h-12 flex-shrink-0 flex items-center justify-center"
-                      >
-                        <GameIcon type="cross" variant="light" size="sm" />
-                      </GameButton>
-                    )}
-                  </motion.div>
-                ))}
-              </div>
 
-              <div className="flex flex-col gap-4 relative z-10">
-                {playerNames.length < 10 && (
-                  <GameButton
-                    onClick={addPlayer}
-                    variant="secondary"
-                    className="flex items-center justify-center gap-3 relative overflow-hidden"
-                  >
-                    <div className="absolute left-4 opacity-30">
-                      <img src="/Assets/PNG/Green/Default/icon_circle.png" alt="" className="w-4 h-4" />
+                    <div className="flex-1 overflow-y-auto space-y-3 mb-4 custom-scrollbar">
+                        {playerNames.map((name, i) => (
+                             <div key={i} className="flex gap-2">
+                                <div className="w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center font-bold text-gray-400 border border-white/10 shrink-0">{i+1}</div>
+                                <input 
+                                    className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-lg px-4 text-base focus:border-purple-500 outline-none transition-colors text-white"
+                                    placeholder="Nome do jogador"
+                                    value={name}
+                                    onChange={(e) => updatePlayerName(i, e.target.value)}
+                                />
+                                <button onClick={() => removePlayerSlot(i)} className="p-3 text-red-500/50 hover:text-red-500 shrink-0 transition-colors">
+                                    <AlertTriangle size={20}/>
+                                </button>
+                             </div>
+                        ))}
+                        {playerNames.length < 16 && (
+                            <button onClick={addPlayerSlot} className="w-full py-3 border-2 border-dashed border-white/10 rounded-lg text-gray-500 hover:text-white hover:border-white/30 font-bold transition-all">
+                                + Adicionar Jogador
+                            </button>
+                        )}
                     </div>
-                    <Users className="w-5 h-5" />
-                    Adicionar Jogador
-                    <div className="absolute right-4 opacity-30">
-                      <img src="/Assets/PNG/Blue/Default/arrow_basic_e_small.png" alt="" className="w-4 h-4" />
-                    </div>
-                  </GameButton>
-                )}
-                
-                <div className="relative">
-                  <GameButton
-                    onClick={setupGame}
-                    variant="primary"
-                    size="lg"
-                    className="font-bold flex items-center justify-center gap-3 w-full"
-                  >
-                    <GameIcon type="play" variant="dark" size="lg" />
-                    COMEÇAR JOGO
-                    <img src="/Assets/PNG/Extra/Default/icon_arrow_up_dark.png" alt="" className="w-5 h-5 opacity-70" />
-                  </GameButton>
-                  {/* Decorative elements around main button */}
-                  <div className="absolute -left-6 top-1/2 transform -translate-y-1/2 opacity-20">
-                    <img src="/Assets/PNG/Yellow/Default/arrow_decorative_e.png" alt="" className="w-8 h-8" />
-                  </div>
-                  <div className="absolute -right-6 top-1/2 transform -translate-y-1/2 opacity-20">
-                    <img src="/Assets/PNG/Blue/Default/arrow_decorative_w.png" alt="" className="w-8 h-8" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
 
-        {/* Reveal Phase - Nova mecânica de arraste */}
-        {gameState === 'reveal' && (
-          <motion.div
-            key="reveal"
-            className="relative h-screen"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            {/* Informações do jogador atual */}
-            <div className="p-6 text-center">
-              <h2 className="font-fredoka text-xl md:text-2xl text-white mb-2">
-                Vez de: <span className="text-playzenha-yellow">{players[currentPlayerIndex]?.name}</span>
-              </h2>
-              <p className="font-comfortaa text-gray-300 text-sm md:text-base">
-                Arraste o card para cima para revelar seu papel
-              </p>
-            </div>
+                     {/* Time Settings */}
+                     <div className="bg-white/5 p-4 rounded-xl mb-4 border border-white/10">
+                        <div className="flex justify-between items-center text-sm text-gray-300">
+                             <div className="flex items-center gap-2">
+                                <Clock size={16} />
+                                <span>Tempo de Discussão</span>
+                             </div>
+                             <div className="flex gap-3 items-center">
+                                <button onClick={() => setDiscussionTime(Math.max(60, discussionTime - 60))} className="w-8 h-8 rounded bg-white/10 hover:bg-white/20">-</button>
+                                <span className="font-mono w-12 text-center">{discussionTime / 60}min</span>
+                                <button onClick={() => setDiscussionTime(Math.min(600, discussionTime + 60))} className="w-8 h-8 rounded bg-white/10 hover:bg-white/20">+</button>
+                             </div>
+                        </div>
+                     </div>
 
-            {/* Card draggable */}
-            <motion.div
-              className="absolute bottom-0 left-0 right-0"
-              drag="y"
-              dragConstraints={{ top: -window.innerHeight * 0.8, bottom: 0 }}
-              onDragEnd={handleCardDrag}
-              animate={{ y: cardY }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            >
-              {/* Handle para arrastar */}
-              <div className="px-6 pb-2">
-                <div className="w-12 h-1 bg-gray-600 rounded-full mx-auto mb-4"></div>
-              </div>
-
-              {/* Card content */}
-              <div className={`min-h-screen rounded-t-3xl p-6 border-t-4 ${
-                !isCardRevealed 
-                  ? 'bg-gray-800 border-gray-600'
-                  : players[currentPlayerIndex]?.isImpostor
-                    ? 'bg-gradient-to-br from-danger-red/20 to-red-900/30 border-danger-red animate-pulse'
-                    : 'bg-gradient-to-br from-success-green/20 to-green-900/30 border-success-green'
-              }`}>
-                
-                {!isCardRevealed ? (
-                  <motion.div
-                    className="text-center pt-20"
-                    initial={{ scale: 0.8 }}
-                    animate={{ scale: 1 }}
-                  >
-                    <EyeOff className="w-20 h-20 mx-auto mb-6 text-gray-400" />
-                    <h3 className="font-fredoka text-2xl md:text-3xl text-gray-300 mb-4">
-                      ARRASTE PARA REVELAR
-                    </h3>
-                    <p className="font-comfortaa text-gray-500">
-                      Seu papel secreto aguarda...
-                    </p>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    className="text-center pt-20"
-                    initial={{ scale: 0, rotateY: 180 }}
-                    animate={{ scale: 1, rotateY: 0 }}
-                    transition={{ type: "spring", stiffness: 100 }}
-                  >
-                    {/* Botão fechar */}
-                    <button
-                      onClick={closeCard}
-                      className="absolute top-6 right-6 w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center text-white hover:bg-gray-600 transition-colors"
+                    <GameButton 
+                        onClick={startGameSetup} 
+                        disabled={playerNames.filter(n => n.trim()).length < 3}
+                        className="w-full py-4 text-xl shadow-lg shadow-purple-900/40 mb-6 font-bold"
                     >
-                      <X className="w-6 h-6" />
-                    </button>
-
-                    {players[currentPlayerIndex]?.isImpostor ? (
-                      <div>
-                        <div className="text-8xl mb-6">🔥</div>
-                        <h3 className="font-fredoka text-3xl md:text-4xl text-danger-red mb-4">
-                          VOCÊ É O IMPOSTOR!
-                        </h3>
-                        <div className="bg-danger-red/20 rounded-2xl p-6 mb-6 border border-danger-red/30">
-                          <p className="font-comfortaa text-white/90 text-lg leading-relaxed">
-                            Escute as dicas dos outros e tente descobrir o tema. 
-                            <br />
-                            <strong className="text-danger-red">Finja que sabe do que estão falando!</strong>
-                          </p>
-                        </div>
-                        <div className="bg-red-900/20 rounded-xl p-4 border border-red-500/30">
-                          <p className="font-comfortaa text-sm text-red-300">
-                            💡 Dica: Seja genérico e observe as reações
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="text-8xl mb-6">✅</div>
-                        <h3 className="font-fredoka text-2xl md:text-3xl text-white mb-6">SEU TEMA É:</h3>
-                        <div className="bg-playzenha-yellow rounded-2xl p-6 mb-6 transform -rotate-1 border-4 border-yellow-500">
-                          <h4 className="font-fredoka text-3xl md:text-4xl text-dark-bg">
-                            {currentTheme}
-                          </h4>
-                        </div>
-                        <div className="bg-success-green/20 rounded-2xl p-6 mb-6 border border-success-green/30">
-                          <p className="font-comfortaa text-white/90 text-lg leading-relaxed">
-                            Dê dicas que provem que você sabe o tema, 
-                            <br />
-                            <strong className="text-success-green">mas sem ser óbvio demais!</strong>
-                          </p>
-                        </div>
-                        <div className="bg-green-900/20 rounded-xl p-4 border border-green-500/30">
-                          <p className="font-comfortaa text-sm text-green-300">
-                            💡 Dica: Seja criativo mas não entregue o tema
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    <GameButton
-                      onClick={nextPlayer}
-                      variant="primary"
-                      size="lg"
-                      className="mt-8 w-full max-w-sm mx-auto flex items-center justify-center gap-3"
-                    >
-                      <GameIcon 
-                        type={currentPlayerIndex < players.length - 1 ? "arrow_down" : "checkmark"} 
-                        variant="dark" 
-                        size="md" 
-                      />
-                      {currentPlayerIndex < players.length - 1 ? 'PRÓXIMO JOGADOR' : 'CONTINUAR'}
+                        COMEÇAR
                     </GameButton>
-                  </motion.div>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
+                </motion.div>
+            )}
 
-        {/* Voting Phase */}
-        {gameState === 'voting' && (
-          <motion.div
-            key="voting"
-            className="p-6"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-          >
-            <div className="max-w-2xl mx-auto">
-              <div className="text-center mb-8">
-                <div className="text-6xl mb-4">🗳️</div>
-                <h2 className="font-fredoka text-2xl md:text-3xl text-white mb-4">VOTAÇÃO</h2>
-                <p className="font-comfortaa text-gray-300 mb-4">
-                  Quem vocês acham que é o impostor?
-                </p>
-                <div className="bg-playzenha-yellow/20 rounded-xl p-4 border border-playzenha-yellow/30">
-                  <p className="font-comfortaa text-playzenha-yellow">
-                    Votos: {totalVotes} / {players.length}
-                  </p>
-                </div>
-              </div>
+            {/* ROLE DISTRIBUTION START */}
+            {phase === 'role-distribution-start' && (
+                <motion.div key="role-start" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen flex flex-col justify-center items-center px-6 text-center bg-black">
+                     <div className="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center mb-6 animate-pulse border border-white/20">
+                        <Users className="w-10 h-10 text-white" />
+                     </div>
+                     <h2 className="text-xl text-gray-400 mb-2 font-light">
+                        Passe o celular para
+                     </h2>
+                     <h1 className="text-5xl text-white mb-12 font-bold tracking-tight px-2 break-words max-w-full">{players[currentPlayerIdx].name}</h1>
+                     <GameButton onClick={() => setPhase('role-reveal')} className="w-full max-w-xs shadow-purple-500/20 shadow-lg">
+                        REVELAR PAPEL
+                     </GameButton>
+                </motion.div>
+            )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                {players.filter(p => p.isAlive).map((player, index) => (
-                  <motion.button
-                    key={player.id}
-                    onClick={() => castVote(player.id)}
-                    disabled={totalVotes >= players.length}
-                    className={`bg-gray-800 hover:bg-gray-700 border-2 border-gray-600 hover:border-playzenha-yellow rounded-2xl p-6 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                      totalVotes >= players.length ? 'hover:bg-gray-800 hover:border-gray-600' : ''
-                    }`}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    whileHover={totalVotes < players.length ? { scale: 1.02 } : {}}
-                    whileTap={totalVotes < players.length ? { scale: 0.98 } : {}}
-                  >
-                    <div className="text-4xl mb-2">👤</div>
-                    <h3 className="font-fredoka text-xl text-white mb-2">{player.name}</h3>
-                    <div className="bg-playzenha-yellow/20 rounded-lg px-3 py-1 inline-block">
-                      <span className="font-comfortaa text-sm text-playzenha-yellow">
-                        {player.votes} votos
-                      </span>
+            {/* ROLE REVEAL */}
+            {phase === 'role-reveal' && (
+                <motion.div key="role-reveal" initial={{scale:0.9, opacity:0}} animate={{scale:1, opacity:1}} exit={{scale:0.9, opacity:0}} className="h-screen flex flex-col justify-center items-center px-6 text-center bg-gray-900 border-[10px] border-gray-800">
+                     
+                     {players[currentPlayerIdx].role === 'Impostor' ? (
+                         <>
+                            <div className="text-8xl mb-6">🤫</div>
+                            <h2 className="text-2xl text-red-400 font-bold mb-2 uppercase tracking-widest">
+                                Você é o
+                            </h2>
+                            <h1 className="text-5xl md:text-6xl font-black text-red-500 mb-8 drop-shadow-red">
+                                IMPOSTOR
+                            </h1>
+                            <p className="text-gray-400 mb-12 max-w-xs mx-auto text-sm leading-relaxed bg-white/5 p-4 rounded-xl border border-white/10">
+                                Seu objetivo: <br/> 
+                                <span className="text-white font-bold">Descubra o tema</span> ouvindo a conversa ou <span className="text-white font-bold">engane a todos</span> para não ser votado.
+                            </p>
+                         </>
+                     ) : (
+                         <>
+                            <div className="text-8xl mb-6">🎯</div>
+                            <h2 className="text-2xl text-green-400 font-bold mb-2 uppercase tracking-widest">
+                                Tema da Rodada
+                            </h2>
+                            <h1 className="text-5xl md:text-6xl font-black text-white mb-8 border-b-4 border-green-500 pb-2">
+                                {theme}
+                            </h1>
+                            <p className="text-gray-400 mb-12 max-w-xs mx-auto text-sm leading-relaxed bg-white/5 p-4 rounded-xl border border-white/10">
+                                Você é um Cidadão. <br/>
+                                <span className="text-white font-bold">Encontre o impostor</span> que não sabe qual é este tema!
+                            </p>
+                         </>
+                     )}
+                     
+                     <button 
+                        onClick={handleNextRoleReveal} 
+                        className="w-24 h-24 rounded-full border-4 border-white/20 flex items-center justify-center animate-pulse hover:bg-white/10 transition-colors active:scale-95"
+                     >
+                        <CheckCircle className="w-10 h-10 text-white" />
+                     </button>
+                     <span className="text-xs text-gray-500 mt-4 uppercase tracking-widest font-bold">
+                        Toque para esconder
+                     </span>
+                </motion.div>
+            )}
+
+            {/* GAME START INTRO */}
+            {phase === 'game-start' && (
+                <motion.div key="game-start" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen bg-black flex flex-col items-center justify-center text-center">
+                    <HelpCircle className="w-32 h-32 text-purple-600 animate-bounce mb-8" />
+                    <h1 className="text-4xl text-white font-bold tracking-wider uppercase mb-4">Investiguem!</h1>
+                    <p className="text-gray-500 text-lg">Façam perguntas sobre o tema...</p>
+                </motion.div>
+            )}
+
+            {/* DISCUSSION */}
+            {phase === 'discussion' && (
+                <motion.div key="discussion" className="h-screen flex flex-col items-center justify-center bg-gray-900 px-6">
+                    <h2 className="text-2xl text-gray-400 mb-8 uppercase tracking-widest font-bold">Tempo Restante</h2>
+                    
+                    <div className="relative w-72 h-72 flex items-center justify-center mb-12">
+                         <svg className="absolute w-full h-full transform -rotate-90">
+                             <circle cx="144" cy="144" r="130" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-gray-800" />
+                             <circle cx="144" cy="144" r="130" stroke="currentColor" strokeWidth="12" fill="transparent" className={`transition-all duration-1000 ${timeLeft < 30 ? 'text-red-500' : 'text-purple-500'}`}
+                                strokeDasharray={2 * Math.PI * 130}
+                                strokeDashoffset={2 * Math.PI * 130 * (1 - timeLeft / discussionTime)}
+                             />
+                         </svg>
+                         <div className="text-7xl font-bold font-mono text-white">
+                             {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                         </div>
                     </div>
-                  </motion.button>
-                ))}
-              </div>
+                    
+                    <div className="flex flex-col gap-4 w-full max-w-sm">
+                        <GameButton onClick={() => setPhase('voting-intro')} variant="primary" className="w-full">
+                            VOTAR AGORA
+                        </GameButton>
+                        <button onClick={() => setTimeLeft(prev => prev + 60)} className="text-sm text-gray-500 hover:text-white transition-colors">
+                            + 1 Minuto
+                        </button>
+                    </div>
+                </motion.div>
+            )}
 
-              {totalVotes >= players.length && (
-                <div className="text-center">
-                  <motion.button
-                    onClick={finishVoting}
-                    className="bg-gradient-to-r from-danger-red to-red-600 text-white font-fredoka text-lg font-bold py-4 px-8 rounded-xl"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.5 }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    🎊 REVELAR RESULTADO
-                  </motion.button>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
+            {/* VOTING INTRO */}
+            {phase === 'voting-intro' && (
+                <motion.div key="voting-intro" onClick={startVoting} initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen bg-red-900/20 flex flex-col items-center justify-center text-center px-6 cursor-pointer">
+                    <AlertTriangle className="w-24 h-24 text-red-500 mb-6 animate-pulse" />
+                    <h1 className="text-4xl font-black text-white uppercase mb-4">Hora de Votar</h1>
+                    <p className="text-red-300 text-lg max-w-md">Quem vocês acham que é o <strong>Impostor</strong>?</p>
+                    <p className="mt-12 text-sm text-gray-500 animate-bounce">Toque para continuar</p>
+                </motion.div>
+            )}
 
-        {/* Results Phase */}
-        {gameState === 'results' && (
-          <motion.div
-            key="results"
-            className="p-6"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-          >
-            <div className="max-w-2xl mx-auto text-center">
-              <motion.div
-                className="mb-8"
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: "spring", stiffness: 100, delay: 0.2 }}
-              >
-                <div className="text-8xl mb-4">
-                  {gameResult === 'players-win' ? '🎉' : '😈'}
-                </div>
-                <h2 className={`font-fredoka text-3xl md:text-4xl mb-4 ${
-                  gameResult === 'players-win' 
-                    ? 'text-success-green' 
-                    : 'text-danger-red'
-                }`}>
-                  {gameResult === 'players-win' ? 'JOGADORES VENCERAM!' : 'IMPOSTOR VENCEU!'}
-                </h2>
-                <p className="font-comfortaa text-gray-300 text-lg">
-                  {gameResult === 'players-win' 
-                    ? 'Parabéns! Vocês descobriram o impostor!' 
-                    : 'O impostor conseguiu enganar todo mundo!'}
-                </p>
-              </motion.div>
+            {/* VOTING LIST */}
+            {phase === 'voting' && (
+                <motion.div key="voting" className="pt-24 px-6 h-screen flex flex-col bg-gray-900">
+                    <h2 className="text-center text-2xl font-bold text-white mb-2">Quem foi o escolhido?</h2>
+                    <p className="text-center text-gray-500 text-sm mb-6">Selecione quem a maioria votou.</p>
 
-              {/* Reveal Impostor */}
-              <motion.div
-                className="bg-gradient-to-br from-danger-red/20 to-red-900/30 rounded-3xl p-6 border border-danger-red/50 mb-8"
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                <h3 className="font-fredoka text-xl md:text-2xl text-white mb-4">O IMPOSTOR ERA:</h3>
-                <div className="bg-danger-red/30 rounded-2xl p-4 transform -rotate-1 border border-danger-red/50">
-                  <h4 className="font-fredoka text-2xl md:text-3xl text-white">
-                    🔥 {players.find(p => p.isImpostor)?.name}
-                  </h4>
-                </div>
-              </motion.div>
+                    <div className="flex-1 overflow-y-auto custom-scrollbar mb-4 space-y-3">
+                        {players.map((player) => (
+                            <button
+                                key={player.id}
+                                onClick={() => setSelectedVote(player.id)}
+                                className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all ${
+                                    selectedVote === player.id 
+                                    ? 'bg-red-500/20 border-red-500 scale-[1.02]' 
+                                    : 'bg-white/5 border-white/10 hover:bg-white/10'
+                                }`}
+                            >
+                                <div className="flex items-center gap-4">
+                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${selectedVote === player.id ? 'bg-red-500 text-white' : 'bg-gray-800 text-gray-400'}`}>
+                                         {player.name.charAt(0)}
+                                     </div>
+                                     <span className="text-lg font-medium text-white">{player.name}</span>
+                                </div>
+                                {selectedVote === player.id && <Skull className="text-red-500" />}
+                            </button>
+                        ))}
+                    </div>
 
-              {/* Theme Reveal */}
-              <motion.div
-                className="bg-gradient-to-br from-playzenha-yellow/20 to-yellow-900/30 rounded-3xl p-6 border border-playzenha-yellow/50 mb-8"
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 }}
-              >
-                <h3 className="font-fredoka text-xl md:text-2xl text-white mb-4">O TEMA SECRETO ERA:</h3>
-                <div className="bg-playzenha-yellow rounded-2xl p-4 transform rotate-1 border-4 border-yellow-500">
-                  <h4 className="font-fredoka text-2xl md:text-3xl text-dark-bg">
-                    🎯 {currentTheme}
-                  </h4>
-                </div>
-              </motion.div>
+                    <div className="pb-8">
+                        <GameButton 
+                            onClick={submitVote} 
+                            disabled={selectedVote === null}
+                            variant="danger"
+                            className="w-full shadow-lg shadow-red-900/20"
+                        >
+                            CONFIRMAR VOTO
+                        </GameButton>
+                    </div>
+                </motion.div>
+            )}
 
-              {/* Voting Results */}
-              <motion.div
-                className="bg-gray-800/50 rounded-3xl p-6 border border-gray-600 mb-8"
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.9 }}
-              >
-                <h3 className="font-fredoka text-lg md:text-xl text-white mb-4">RESULTADOS DA VOTAÇÃO:</h3>
-                <div className="space-y-3">
-                  {votingResults.map((result, index) => (
-                    <motion.div
-                      key={result.player.id}
-                      className={`flex justify-between items-center p-3 rounded-xl ${
-                        result.player.isImpostor 
-                          ? 'bg-danger-red/20 border border-danger-red/30' 
-                          : 'bg-gray-700/50 border border-gray-600'
-                      }`}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 1 + index * 0.1 }}
-                    >
-                      <span className="font-comfortaa text-white">
-                        {result.player.isImpostor ? '🔥' : '✅'} {result.player.name}
-                      </span>
-                      <span className="font-fredoka text-playzenha-yellow">
-                        {result.votes} votos
-                      </span>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
+            {/* RESULTS */}
+            {phase === 'voting-results' && winner && (
+                <motion.div key="results" initial={{opacity:0}} animate={{opacity:1}} className="h-screen flex flex-col items-center justify-center p-6 text-center bg-black">
+                     
+                     <div className="mb-8 relative">
+                         <div className={`absolute inset-0 blur-3xl rounded-full opacity-20 ${winner === 'Cidadãos' ? 'bg-green-500' : 'bg-red-500'}`} />
+                         {winner === 'Cidadãos' ? (
+                             <Crown className="w-32 h-32 text-green-400 relative z-10" />
+                         ) : (
+                             <Skull className="w-32 h-32 text-red-500 relative z-10" />
+                         )}
+                     </div>
 
-              <div className="flex flex-col md:flex-row gap-4 justify-center">
-                <GameButton
-                  onClick={resetGame}
-                  variant="secondary"
-                  size="lg"
-                  className="flex items-center justify-center gap-3"
-                >
-                  <GameIcon type="repeat" variant="light" size="md" />
-                  JOGAR NOVAMENTE
-                </GameButton>
-                
-                <GameButton
-                  onClick={onBackToHome}
-                  variant="primary"
-                  size="lg"
-                  className="flex items-center justify-center gap-3"
-                >
-                  <GameIcon type="arrow_up" variant="dark" size="md" />
-                  VOLTAR AO MENU
-                </GameButton>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                     <h2 className="text-gray-400 text-xl uppercase tracking-widest mb-2 font-bold">Vencedores</h2>
+                     <h1 className={`text-5xl md:text-6xl font-black mb-8 ${winner === 'Cidadãos' ? 'text-green-500' : 'text-red-500'}`}>
+                         {winner.toUpperCase()}
+                     </h1>
+
+                     <div className="bg-white/10 p-6 rounded-2xl border border-white/10 max-w-sm w-full mb-8 backdrop-blur-md">
+                         <p className="text-gray-400 text-sm mb-2">O impostor era:</p>
+                         <p className="text-3xl font-bold text-white mb-4">
+                             {players.find(p => p.role === 'Impostor')?.name}
+                         </p>
+                         <div className="h-px bg-white/10 w-full my-4" />
+                         <p className="text-gray-400 text-sm mb-1">O tema era:</p>
+                         <p className="text-xl text-playzenha-blue font-bold">
+                             {theme}
+                         </p>
+                     </div>
+
+                     <GameButton onClick={restartGame} className="w-full max-w-xs">
+                         JOGAR DE NOVO
+                     </GameButton>
+
+                </motion.div>
+            )}
+
+        </AnimatePresence>
     </div>
   )
 }

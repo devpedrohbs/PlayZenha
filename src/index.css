@@ -3,6 +3,44 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .glass-panel {
+    @apply bg-white/5 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl;
+  }
+  
+  .glass-button {
+    @apply bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl transition-all duration-300;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float 4s ease-in-out 2s infinite;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #0F0F23;
+}
+::-webkit-scrollbar-thumb {
+  background: #1E1B4B;
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3B82F6;
+}
+
 :root {
   font-family: 'Comfortaa', sans-serif;
   line-height: 1.5;
@@ -10,8 +48,8 @@
 
   --dark-bg: #0F0F23;
   --dark-blue: #1E1B4B;
-  --playzenha-blue: #3B82F6;
-  --playzenha-yellow: #FDE047;
+  --playzenha-blue: #004bad;
+  --playzenha-yellow: #ffbb00;
   --success-green: #10B981;
   --danger-red: #EF4444;
 
