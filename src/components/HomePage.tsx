@@ -268,11 +268,16 @@ const HomePage: React.FC<HomePageProps> = ({ onStartGame }) => {
                         </div>
 
                         <div className="flex gap-2">
-                            <GameButton variant="primary" onClick={() => onStartGame('impostor')} className="flex-1 shadow-lg group-hover:shadow-playzenha-blue/30">
+                          <GameButton variant="primary" onClick={() => onStartGame('impostor')} className="flex-1 shadow-lg group-hover:shadow-playzenha-blue/30">
                                 JOGAR
                             </GameButton>
-                            <button onClick={() => setShowRules('impostor')} className="px-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white text-gray-400 transition-colors" title="Regras">
-                                <BookOpen className="w-6 h-6" />
+                          <button
+                            onClick={() => setShowRules('impostor')}
+                            className="px-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white text-gray-300 transition-colors font-bold text-sm tracking-wide uppercase inline-flex items-center gap-2"
+                            title="Regras"
+                          >
+                            <BookOpen className="w-4 h-4" />
+                            Regras
                             </button>
                         </div>
                     </div>
@@ -300,11 +305,16 @@ const HomePage: React.FC<HomePageProps> = ({ onStartGame }) => {
                         </div>
 
                         <div className="flex gap-2">
-                            <GameButton variant="secondary" onClick={() => onStartGame('ultima-noite')} className="flex-1 shadow-lg shadow-purple-900/20 hover:shadow-purple-500/30 border-purple-500/30 text-white">
+                          <GameButton variant="secondary" onClick={() => onStartGame('ultima-noite')} className="flex-1 shadow-lg shadow-purple-900/20 hover:shadow-purple-500/30 border-purple-500/30 text-white">
                                 JOGAR
                             </GameButton>
-                            <button onClick={() => setShowRules('ultima-noite')} className="px-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white text-gray-400 transition-colors" title="Regras">
-                                <BookOpen className="w-6 h-6" />
+                          <button
+                            onClick={() => setShowRules('ultima-noite')}
+                            className="px-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white text-gray-300 transition-colors font-bold text-sm tracking-wide uppercase inline-flex items-center gap-2"
+                            title="Regras"
+                          >
+                            <BookOpen className="w-4 h-4" />
+                            Regras
                             </button>
                         </div>
                     </div>

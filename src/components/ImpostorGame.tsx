@@ -35,7 +35,11 @@ const THEMES = [
   'Sushi', 'Lua', 'Copa do Mundo', 'Praia', 'Netflix', 'Pizza', 'Academia', 
   'Carnaval', 'Black Friday', 'Festa Junina', 'Aniversário', 'Trabalho',
   'Escola', 'Hospital', 'Aeroporto', 'Shopping', 'Igreja', 'Parque',
-  'Cinema', 'Restaurante', 'Uber', 'Instagram', 'TikTok', 'WhatsApp'
+    'Cinema', 'Restaurante', 'Uber', 'Instagram', 'TikTok', 'WhatsApp',
+    'Padaria', 'Churrasco', 'Barbearia', 'Salão de Beleza', 'Farmácia', 'Banco',
+    'Rodoviária', 'Metrô', 'Elevador', 'Condomínio', 'Casamento', 'Formatura',
+    'Natal', 'Ano Novo', 'Páscoa', 'Halloween', 'Videogame', 'YouTube',
+    'Spotify', 'Bicicleta', 'Academia', 'Feira', 'Pet Shop', 'Supermercado'
 ]
 
 const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
