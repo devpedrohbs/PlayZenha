@@ -32,14 +32,21 @@ interface Player {
 }
 
 const THEMES = [
-  'Sushi', 'Lua', 'Copa do Mundo', 'Praia', 'Netflix', 'Pizza', 'Academia', 
+   'Lua', 'Copa do Mundo', 'Praia', 'Netflix', 'Pizza', 
   'Carnaval', 'Black Friday', 'Festa Junina', 'Aniversário', 'Trabalho',
-  'Escola', 'Hospital', 'Aeroporto', 'Shopping', 'Igreja', 'Parque',
-    'Cinema', 'Restaurante', 'Uber', 'Instagram', 'TikTok', 'WhatsApp',
-    'Padaria', 'Churrasco', 'Barbearia', 'Salão de Beleza', 'Farmácia', 'Banco',
-    'Rodoviária', 'Metrô', 'Elevador', 'Condomínio', 'Casamento', 'Formatura',
-    'Natal', 'Ano Novo', 'Páscoa', 'Halloween', 'Videogame', 'YouTube',
-    'Spotify', 'Bicicleta', 'Academia', 'Feira', 'Pet Shop', 'Supermercado'
+  'Escola', 'Hospital', 'Shopping', 'Igreja', 'Cinema', 'Uber', 'Instagram', 'TikTok', 'WhatsApp',
+    'Padaria', 'Churrasco', 'Barbearia', 'Salão de Beleza', 'Farmácia','Rodoviária',
+    'Metrô', 'Elevador', 'Formatura',
+    'Natal', 'Ano Novo', 'Halloween', 'Videogame', 'YouTube',
+    'Spotify', 'Bicicleta', 'Feira', 'Pet Shop', 'Supermercado',
+    'Academia', 'Aeroporto', 'Acampamento', 'Parque de Diversões', 'Museu',
+    'Teatro', 'Restaurante', 'Lanchonete', 'Sorveteria', 'Cafeteria',
+    'Biblioteca', 'Delegacia', 'Tribunal', 'Banco', 'Correios',
+    'Posto de Gasolina', 'Oficina', 'Condomínio', 'Hotel', 'Pousada',
+    'Cruzeiro', 'Praça', 'Floresta', 'Montanha', 'Deserto',
+    'Ilha', 'Cachoeira', 'Piquenique', 'Parque Aquático', 'Karaokê',
+    'Show', 'Festival', 'Casamento', 'Reunião', 'Home Office',
+    'Delivery', 'Loja de Roupas', 'Trânsito'
 ]
 
 const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
