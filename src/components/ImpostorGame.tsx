@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
-  ArrowLeft, Users, AlertTriangle, 
+    ArrowLeft, Users, AlertTriangle, Trash2, 
   CheckCircle, HelpCircle, Clock, Skull, Crown
 } from 'lucide-react'
 import GameButton from './GameButton'
@@ -49,12 +49,22 @@ const THEMES = [
     'Delivery', 'Loja de Roupas', 'Trânsito'
 ]
 
+const shuffleArray = <T,>(arr: T[]): T[] => {
+    const shuffled = [...arr]
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    }
+    return shuffled
+}
+
 const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
   // State
   const [phase, setPhase] = useState<Phase>('setup')
   const [playerNames, setPlayerNames] = useState<string[]>(['', '', '']) // Min 3
   const [players, setPlayers] = useState<Player[]>([])
-  const [currentPlayerIdx, setCurrentPlayerIdx] = useState(0)
+    const [revealOrder, setRevealOrder] = useState<number[]>([])
+    const [currentRevealStep, setCurrentRevealStep] = useState(0)
   
   // Game Data
   const [theme, setTheme] = useState('')
@@ -66,7 +76,7 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
   
   // Results
   const [winner, setWinner] = useState<'Impostor' | 'Cidadãos' | null>(null)
-  const [eliminatedPlayer, setEliminatedPlayer] = useState<Player | null>(null)
+    const currentPlayerForReveal = players.find(p => p.id === revealOrder[currentRevealStep])
 
   // Timer Effect
   useEffect(() => {
@@ -140,15 +150,16 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
 
     setPlayers(newPlayers)
     setTheme(selectedTheme)
-    setCurrentPlayerIdx(0)
+        setRevealOrder(shuffleArray(newPlayers.map(player => player.id)))
+        setCurrentRevealStep(0)
     setPhase('role-distribution-start')
   }
 
   // --- Game Flow ---
 
   const handleNextRoleReveal = () => {
-      if (currentPlayerIdx < players.length - 1) {
-          setCurrentPlayerIdx(prev => prev + 1)
+      if (currentRevealStep < revealOrder.length - 1) {
+          setCurrentRevealStep(prev => prev + 1)
           setPhase('role-distribution-start')
       } else {
           setPhase('game-start')
@@ -176,8 +187,6 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
   }
 
   const handleElimination = (player: Player) => {
-      setEliminatedPlayer(player)
-      
       // Check Win Condition
       if (player.role === 'Impostor') {
           setWinner('Cidadãos')
@@ -191,8 +200,9 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
   const restartGame = () => {
       setPhase('setup')
       setWinner(null)
-      setEliminatedPlayer(null)
       setPlayers([])
+      setRevealOrder([])
+      setCurrentRevealStep(0)
       // Keep playerNames from previous game to ease restart
   }
 
@@ -236,7 +246,7 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
                                     onChange={(e) => updatePlayerName(i, e.target.value)}
                                 />
                                 <button onClick={() => removePlayerSlot(i)} className="p-3 text-red-500/50 hover:text-red-500 shrink-0 transition-colors">
-                                    <AlertTriangle size={20}/>
+                                    <Trash2 size={20}/>
                                 </button>
                              </div>
                         ))}
@@ -281,8 +291,8 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
                      <h2 className="text-xl text-gray-400 mb-2 font-light">
                         Passe o celular para
                      </h2>
-                     <h1 className="text-5xl text-white mb-12 font-bold tracking-tight px-2 break-words max-w-full">{players[currentPlayerIdx].name}</h1>
-                     <GameButton onClick={() => setPhase('role-reveal')} className="w-full max-w-xs shadow-purple-500/20 shadow-lg">
+                            <h1 className="text-5xl text-white mb-12 font-bold tracking-tight px-2 break-words max-w-full">{currentPlayerForReveal?.name ?? '---'}</h1>
+                            <GameButton onClick={() => setPhase('role-reveal')} disabled={!currentPlayerForReveal} className="w-full max-w-xs shadow-purple-500/20 shadow-lg">
                         REVELAR PAPEL
                      </GameButton>
                 </motion.div>
@@ -292,7 +302,7 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
             {phase === 'role-reveal' && (
                 <motion.div key="role-reveal" initial={{scale:0.9, opacity:0}} animate={{scale:1, opacity:1}} exit={{scale:0.9, opacity:0}} className="h-screen flex flex-col justify-center items-center px-6 text-center bg-gray-900 border-[10px] border-gray-800">
                      
-                     {players[currentPlayerIdx].role === 'Impostor' ? (
+                     {currentPlayerForReveal?.role === 'Impostor' ? (
                          <>
                             <div className="text-8xl mb-6">🤫</div>
                             <h2 className="text-2xl text-red-400 font-bold mb-2 uppercase tracking-widest">

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GameView } from '../App'
-import { Users, Zap, ArrowRight, Clock, Gamepad2, Trophy, Coins, Star, Crown, Moon, BookOpen, X } from 'lucide-react'
+import { Users, Zap, ArrowRight, Clock, Gamepad2, Trophy, Coins, Star, Crown, Moon, BookOpen, X, Smartphone, ShieldCheck, BrainCircuit } from 'lucide-react'
 import GameButton from './GameButton'
 import GameIcon from './GameIcon'
 
@@ -10,7 +10,7 @@ interface HomePageProps {
 }
 
 const HomePage: React.FC<HomePageProps> = ({ onStartGame }) => {
-  const [showRules, setShowRules] = useState<'impostor' | 'ultima-noite' | null>(null)
+  const [showRules, setShowRules] = useState<'impostor' | 'ultima-noite' | 'contato' | 'quem-sou-eu' | null>(null)
   return (
     <div className="min-h-screen bg-dark-bg text-white font-comfortaa overflow-x-hidden">
       
@@ -248,7 +248,7 @@ const HomePage: React.FC<HomePageProps> = ({ onStartGame }) => {
                 <h2 className="font-fredoka text-4xl py-6 text-white">Escolha sua Resenha</h2>
              </div>
 
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 {/* Impostor Game Card */}
                 <div className="group relative bg-gradient-to-br from-playzenha-blue/10 to-dark-blue/50 rounded-[2rem] p-8 border border-white/10 overflow-hidden hover:border-playzenha-yellow/50 transition-all duration-300 hover:-translate-y-2">
                     <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity transform group-hover:rotate-12">
@@ -319,6 +319,80 @@ const HomePage: React.FC<HomePageProps> = ({ onStartGame }) => {
                         </div>
                     </div>
                 </div>
+
+                  {/* Contato Game Card */}
+                  <div className="group relative bg-gradient-to-br from-emerald-900/20 to-black/50 rounded-[2rem] p-8 border border-white/10 overflow-hidden hover:border-emerald-400/50 transition-all duration-300 hover:-translate-y-2">
+                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity transform group-hover:rotate-12">
+                      <Smartphone className="w-32 h-32 text-emerald-400" />
+                    </div>
+
+                    <div className="relative z-10">
+                      <span className="bg-emerald-500 text-black font-bold px-3 py-1 rounded-lg text-xs uppercase tracking-wider mb-4 inline-block">Sincronia & Palavra</span>
+                      <div className="flex items-center gap-2 mb-4">
+                        <h3 className="font-fredoka text-3xl text-white group-hover:text-emerald-300 transition-colors">Contato</h3>
+                        <span className="bg-emerald-500 text-black text-[10px] font-black px-2 py-0.5 rounded">NOVO</span>
+                      </div>
+                      <p className="text-gray-300 mb-6 leading-relaxed min-h-20">
+                        Dois jogadores tentam pensar na mesma palavra enquanto o juiz valida o contato. A cada acerto, uma nova letra é liberada.
+                      </p>
+
+                      <div className="flex gap-4 mb-4 text-sm font-bold text-gray-400">
+                         <div className="flex items-center gap-2"><Users className="w-4 h-4" /> 3 Jogadores</div>
+                         <div className="flex items-center gap-2"><Clock className="w-4 h-4" /> 8 min</div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <GameButton variant="secondary" onClick={() => onStartGame('contato')} className="flex-1 shadow-lg shadow-emerald-900/20 hover:shadow-emerald-400/20 border-emerald-400/30 text-white">
+                          JOGAR
+                        </GameButton>
+                        <button
+                        onClick={() => setShowRules('contato')}
+                        className="px-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white text-gray-300 transition-colors font-bold text-sm tracking-wide uppercase inline-flex items-center gap-2"
+                        title="Regras"
+                        >
+                        <BookOpen className="w-4 h-4" />
+                        Regras
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quem Sou Eu Game Card */}
+                  <div className="group relative bg-gradient-to-br from-yellow-700/20 to-black/50 rounded-[2rem] p-8 border border-white/10 overflow-hidden hover:border-playzenha-yellow/60 transition-all duration-300 hover:-translate-y-2">
+                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity transform group-hover:rotate-12">
+                      <BrainCircuit className="w-32 h-32 text-playzenha-yellow" />
+                    </div>
+
+                    <div className="relative z-10">
+                      <span className="bg-playzenha-yellow text-dark-bg font-bold px-3 py-1 rounded-lg text-xs uppercase tracking-wider mb-4 inline-block">Adivinhação</span>
+                      <div className="flex items-center gap-2 mb-4">
+                        <h3 className="font-fredoka text-3xl text-white group-hover:text-playzenha-yellow transition-colors">Quem Sou Eu</h3>
+                        <span className="bg-playzenha-yellow text-dark-bg text-[10px] font-black px-2 py-0.5 rounded">NOVO</span>
+                      </div>
+                      <p className="text-gray-300 mb-6 leading-relaxed min-h-20">
+                        Escreva personagens em segredo e adivinhe com o celular na testa. Acerte antes do tempo acabar.
+                      </p>
+
+                      <div className="flex gap-4 mb-4 text-sm font-bold text-gray-400">
+                        <div className="flex items-center gap-2"><Users className="w-4 h-4" /> 2-10 Jogadores</div>
+                        <div className="flex items-center gap-2"><Clock className="w-4 h-4" /> 5-12 min</div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <GameButton variant="primary" onClick={() => onStartGame('quem-sou-eu')} className="flex-1 shadow-lg shadow-playzenha-yellow/20 hover:shadow-playzenha-yellow/30">
+                          JOGAR
+                        </GameButton>
+                        <button
+                          onClick={() => setShowRules('quem-sou-eu')}
+                          className="px-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white text-gray-300 transition-colors font-bold text-sm tracking-wide uppercase inline-flex items-center gap-2"
+                          title="Regras"
+                        >
+                          <BookOpen className="w-4 h-4" />
+                          Regras
+                        </button>
+                      </div>
+                    </div>
+                  </div>
              </div>
         </div>
       </section>
@@ -358,12 +432,26 @@ const HomePage: React.FC<HomePageProps> = ({ onStartGame }) => {
             >
               {/* Header */}
               <div className={`p-6 border-b border-white/5 flex justify-between items-center ${
-                showRules === 'impostor' ? 'bg-playzenha-blue/10' : 'bg-purple-900/20'
+                showRules === 'impostor'
+                  ? 'bg-playzenha-blue/10'
+                  : showRules === 'contato'
+                    ? 'bg-emerald-900/20'
+                    : showRules === 'quem-sou-eu'
+                      ? 'bg-yellow-900/20'
+                      : 'bg-purple-900/20'
               }`}>
                 <div className="flex items-center gap-3">
                   {showRules === 'impostor' ? (
                     <div className="p-2 bg-playzenha-blue rounded-xl">
                       <Zap size={24} className="text-white" />
+                    </div>
+                  ) : showRules === 'contato' ? (
+                    <div className="p-2 bg-emerald-500 rounded-xl">
+                      <Smartphone size={24} className="text-black" />
+                    </div>
+                  ) : showRules === 'quem-sou-eu' ? (
+                    <div className="p-2 bg-playzenha-yellow rounded-xl">
+                      <BrainCircuit size={24} className="text-dark-bg" />
                     </div>
                   ) : (
                     <div className="p-2 bg-purple-600 rounded-xl">
@@ -371,7 +459,13 @@ const HomePage: React.FC<HomePageProps> = ({ onStartGame }) => {
                     </div>
                   )}
                   <h2 className="text-2xl font-fredoka font-bold">
-                    {showRules === 'impostor' ? 'Regras: Impostor' : 'Regras: Última Noite'}
+                    {showRules === 'impostor'
+                      ? 'Regras: Impostor'
+                      : showRules === 'contato'
+                        ? 'Regras: Contato'
+                        : showRules === 'quem-sou-eu'
+                          ? 'Regras: Quem Sou Eu'
+                          : 'Regras: Última Noite'}
                   </h2>
                 </div>
                 <button
@@ -413,6 +507,78 @@ const HomePage: React.FC<HomePageProps> = ({ onStartGame }) => {
                         <Zap size={18} /> Dicas
                       </h3>
                       <p>Seja sutil! Se sua dica for muito óbvia, o Impostor descobrirá a palavra secreta facilmente.</p>
+                    </section>
+                  </>
+                ) : showRules === 'contato' ? (
+                  <>
+                    <section>
+                      <h3 className="text-emerald-400 font-bold text-lg mb-3 flex items-center gap-2">
+                        <Trophy size={18} /> Objetivo
+                      </h3>
+                      <ul className="list-disc pl-5 space-y-2">
+                        <li><strong className="text-white">Adivinhadores:</strong> sincronizar respostas e descobrir a palavra final.</li>
+                        <li><strong className="text-white">Juiz:</strong> validar se o contato foi justo e confirmar a descoberta final.</li>
+                      </ul>
+                    </section>
+
+                    <section>
+                      <h3 className="text-emerald-400 font-bold text-lg mb-3 flex items-center gap-2">
+                        <Gamepad2 size={18} /> Como Jogar
+                      </h3>
+                      <ol className="list-decimal pl-5 space-y-3">
+                        <li>O app sorteia automaticamente 1 juiz e 2 adivinhadores.</li>
+                        <li>Somente o juiz vê a palavra completa. Os adivinhadores veem só letras liberadas (ex.: B _ _ _ _).</li>
+                        <li>Quando os dois acharem que chegaram na mesma palavra, apertam <strong className="text-white">CONTATO</strong>.</li>
+                        <li>Se o juiz validar, o app libera mais uma letra.</li>
+                        <li>Quando quiserem, os adivinhadores podem apertar <strong className="text-white">DESCOBRIR</strong> para tentar fechar a palavra.</li>
+                      </ol>
+                    </section>
+
+                    <section>
+                      <h3 className="text-emerald-400 font-bold text-lg mb-3 flex items-center gap-2">
+                        <ShieldCheck size={18} /> Regras Rápidas
+                      </h3>
+                      <ul className="list-disc pl-5 space-y-2">
+                        <li>Partida fixa de 3 jogadores.</li>
+                        <li>O modo de juiz rotativo pode ser ativado no setup.</li>
+                        <li>Palavras são escolhidas automaticamente pelo app a cada rodada.</li>
+                      </ul>
+                    </section>
+                  </>
+                ) : showRules === 'quem-sou-eu' ? (
+                  <>
+                    <section>
+                      <h3 className="text-playzenha-yellow font-bold text-lg mb-3 flex items-center gap-2">
+                        <Trophy size={18} /> Objetivo
+                      </h3>
+                      <ul className="list-disc pl-5 space-y-2">
+                        <li>Cada jogador adivinha uma unica vez o personagem da sua testa.</li>
+                        <li>Ganhar pontos acertando antes do timer terminar.</li>
+                      </ul>
+                    </section>
+
+                    <section>
+                      <h3 className="text-playzenha-yellow font-bold text-lg mb-3 flex items-center gap-2">
+                        <Gamepad2 size={18} /> Como Jogar
+                      </h3>
+                      <ol className="list-decimal pl-5 space-y-3">
+                        <li>Cadastre entre 2 e 10 jogadores.</li>
+                        <li>Cada pessoa escreve secretamente um personagem para outro jogador sorteado.</li>
+                        <li>Na vez do adivinhador, toque em Estou Pronto e aguarde o countdown.</li>
+                        <li>Durante o tempo, use os botoes ACERTEI ou DESISTIR.</li>
+                        <li>Antes de registrar, o app pede confirmacao e permite voltar com cooldown de 3 segundos.</li>
+                      </ol>
+                    </section>
+
+                    <section>
+                      <h3 className="text-playzenha-yellow font-bold text-lg mb-3 flex items-center gap-2">
+                        <ShieldCheck size={18} /> Regras Rapidas
+                      </h3>
+                      <ul className="list-disc pl-5 space-y-2">
+                        <li>A ordem de adivinhacao e sorteada aleatoriamente.</li>
+                        <li>Quando o tempo zera, conta como desistiu automaticamente.</li>
+                        <li>A tela tenta permanecer acesa com Wake Lock durante a adivinhacao.</li>
+                      </ul>
                     </section>
                   </>
                 ) : (
