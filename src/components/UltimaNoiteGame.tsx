@@ -355,14 +355,14 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
   // --- Renders ---
 
   return (
-    <div className="min-h-screen bg-black text-white font-fredoka overflow-hidden relative selection:bg-red-500 selection:text-white">
+    <div className="min-h-screen bg-dark-bg text-white font-fredoka overflow-hidden relative selection:bg-purple-500 selection:text-white">
         {/* Header - Minimalist */}
         {phase !== 'night-intro' && !phase.startsWith('night-') && (
             <nav className="absolute top-0 w-full p-4 flex justify-between items-center z-50">
                 <button onClick={onBackToHome} className="p-2 bg-white/10 rounded-full hover:bg-white/20">
                     <ArrowLeft size={24} />
                 </button>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 rounded-2xl border border-purple-400/30 bg-purple-500/10 px-4 py-2 shadow-lg shadow-purple-500/10">
                     <Moon className="w-5 h-5 text-purple-400" />
                     <span className="text-xl tracking-wider">ÚLTIMA NOITE</span>
                 </div>
@@ -375,7 +375,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
             {/* SETUP PHASE */}
             {phase === 'setup' && (
                 <motion.div key="setup" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="pt-20 px-6 h-screen flex flex-col">
-                    <div className="text-center mb-6 relative">
+                    <div className="text-center mb-6 relative rounded-3xl border border-purple-400/20 bg-purple-500/10 p-5 shadow-xl shadow-purple-500/10">
                         <h1 className="text-4xl mb-2 text-purple-400 drop-shadow-lg flex items-center justify-center gap-3">
                             Quem vai jogar?
                             <button 
@@ -393,7 +393,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
                              <div key={i} className="flex gap-2">
                                 <div className="w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center font-bold text-gray-500 border border-white/10 shrink-0">{i+1}</div>
                                 <input 
-                                    className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-lg px-4 text-base md:text-lg focus:border-purple-500 outline-none transition-colors"
+                                    className="flex-1 min-w-0 bg-white/5 border border-purple-400/20 rounded-lg px-4 text-base md:text-lg focus:border-purple-400 outline-none transition-colors"
                                     placeholder="Nome jogador"
                                     value={name}
                                     onChange={(e) => updatePlayerName(i, e.target.value)}
@@ -416,7 +416,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
                     </div>
 
                      {/* Settings Mini-Panel */}
-                     <div className="bg-white/5 p-4 rounded-xl mb-4 border border-white/10">
+                     <div className="bg-purple-500/10 p-4 rounded-xl mb-4 border border-purple-400/20">
                         <div className="flex justify-between items-center mb-2">
                             <span className="text-sm text-gray-400 font-sans">Lobos</span>
                             <div className="flex gap-3 items-center">
@@ -438,7 +438,8 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
                         </div>
                      </div>
 
-                    <GameButton 
+                    <GameButton
+                        theme="purple"
                         onClick={startGameSetup} 
                         disabled={playerNames.filter(n => n.trim()).length < 6}
                         className="w-full py-4 text-xl shadow-lg shadow-purple-500/20 mb-6"
@@ -450,7 +451,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
 
             {/* ROLE DISTRIBUTION START */}
             {phase === 'role-distribution-start' && (
-                <motion.div key="role-start" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen flex flex-col justify-center items-center px-6 text-center bg-black">
+                <motion.div key="role-start" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen flex flex-col justify-center items-center px-6 text-center bg-dark-bg">
                      <div className="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center mb-6 animate-pulse">
                         <Users className="w-10 h-10 text-white" />
                      </div>
@@ -458,7 +459,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
                         {settings.hasMediator ? "Mediador, chame" : "Passe o celular para"}
                      </h2>
                      <h1 className="text-4xl xs:text-5xl text-white mb-12 font-bold text-shadow max-w-full break-words px-4 leading-tight">{players[currentPlayerIdx].name}</h1>
-                     <GameButton onClick={() => setPhase('role-reveal')} className="w-full max-w-xs">
+                     <GameButton theme="purple" onClick={() => setPhase('role-reveal')} className="w-full max-w-xs">
                         {settings.hasMediator ? "REVELAR FUNÇÃO" : "SOU EU, REVELAR"}
                      </GameButton>
                 </motion.div>
@@ -466,7 +467,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
 
             {/* ROLE REVEAL */}
             {phase === 'role-reveal' && (
-                <motion.div key="role-reveal" initial={{scale:0.9, opacity:0}} animate={{scale:1, opacity:1}} exit={{scale:0.9, opacity:0}} className="h-screen flex flex-col justify-center items-center px-6 text-center bg-gray-900 border-8 border-gray-800">
+                <motion.div key="role-reveal" initial={{scale:0.9, opacity:0}} animate={{scale:1, opacity:1}} exit={{scale:0.9, opacity:0}} className="h-screen flex flex-col justify-center items-center px-6 text-center bg-playzenha-surface border-8 border-purple-500/30">
                      <span className="text-6xl mb-6">{ROLES_CONFIG[players[currentPlayerIdx].role].icon}</span>
                      <h2 className="text-xl text-gray-400 font-sans mb-2">
                         {settings.hasMediator ? `Função de ${players[currentPlayerIdx].name}:` : "Seu papel é"}
@@ -492,9 +493,9 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
 
             {/* NIGHT INTRO */}
             {phase === 'night-intro' && (
-                <motion.div key="night-intro" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen bg-black flex flex-col items-center justify-center">
-                    <Moon className="w-32 h-32 text-purple-900 animate-pulse mb-8" />
-                    <h1 className="text-4xl text-purple-800 font-light tracking-[0.2em] uppercase">Cidade Dorme...</h1>
+                <motion.div key="night-intro" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen bg-dark-bg flex flex-col items-center justify-center">
+                    <Moon className="w-32 h-32 text-purple-500 animate-pulse mb-8" />
+                    <h1 className="text-4xl text-purple-300 font-light tracking-[0.2em] uppercase">Cidade Dorme...</h1>
                     <p className="text-gray-700 mt-4 font-sans text-sm animate-bounce">Fechem os olhos</p>
                 </motion.div>
             )}
@@ -527,7 +528,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
 
             {/* DETECTIVE PHASE */}
             {phase === 'night-detective' && (
-                <div key="detective-phase-wrapper" className="h-screen bg-black flex flex-col px-6 py-12">
+                <div key="detective-phase-wrapper" className="h-screen bg-dark-bg flex flex-col px-6 py-12">
                    {!investigatedRole ? (
                        <ActionPhase 
                          key="detective-phase"
@@ -555,7 +556,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
 
             {/* MORNING RESULTS */}
             {phase === 'morning' && (
-                <motion.div key="morning" initial={{opacity:0, scale: 0.95}} animate={{opacity:1, scale: 1}} className="h-screen bg-gradient-to-br from-blue-900 to-black flex flex-col items-center justify-center px-6 text-center">
+                <motion.div key="morning" initial={{opacity:0, scale: 0.95}} animate={{opacity:1, scale: 1}} className="h-screen bg-gradient-to-br from-purple-950 via-playzenha-surface to-dark-bg flex flex-col items-center justify-center px-6 text-center">
                     <Sun className="w-24 h-24 text-yellow-400 mb-8 animate-spin-slow" />
                     <h1 className="text-4xl font-bold text-white mb-6">O sol nasceu!</h1>
                     
@@ -577,7 +578,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
                         )}
                     </div>
 
-                    <GameButton onClick={startDiscussion} className="w-full max-w-xs shadow-lg shadow-yellow-500/20">
+                    <GameButton theme="purple" onClick={startDiscussion} className="w-full max-w-xs shadow-lg shadow-purple-500/20">
                         INICIAR DISCUSSÃO
                     </GameButton>
                 </motion.div>
@@ -585,7 +586,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
 
             {/* DISCUSSION */}
             {phase === 'discussion' && (
-                <motion.div key="discussion" className="h-screen flex flex-col items-center justify-center bg-gray-900 px-6">
+                <motion.div key="discussion" className="h-screen flex flex-col items-center justify-center bg-playzenha-surface px-6">
                     <div className="relative w-64 h-64 flex items-center justify-center mb-12">
                          <svg className="absolute w-full h-full transform -rotate-90">
                              <circle cx="128" cy="128" r="120" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-gray-800" />
@@ -599,7 +600,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
                     
                     <h2 className="text-2xl text-white mb-8 text-center uppercase tracking-widest">Tempo de debate</h2>
                     
-                    <GameButton onClick={startVoting} variant="danger" className="w-full max-w-sm">
+                    <GameButton theme="purple" onClick={startVoting} variant="danger" className="w-full max-w-sm">
                         ENCERRAR E VOTAR
                     </GameButton>
                 </motion.div>
@@ -607,7 +608,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
 
             {/* VOTING START/PASS */}
             {phase === 'voting' && (
-                <motion.div key="voting" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen flex flex-col bg-black">
+                <motion.div key="voting" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen flex flex-col bg-dark-bg">
                      <div className="flex-1 flex flex-col justify-center items-center px-6 text-center">
                         <div className="w-20 h-20 bg-red-900/30 border-2 border-red-500/50 rounded-full flex items-center justify-center mb-6">
                             <VoteIcon className="w-8 h-8 text-red-500" />
@@ -617,7 +618,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
                         <p className="text-xs text-gray-500 uppercase tracking-widest mb-8">Votação Presencial</p>
                      </div>
                      
-                     <div className="bg-gray-900 p-6 rounded-t-3xl border-t border-white/10 max-h-[60vh] overflow-hidden flex flex-col items-center">
+                     <div className="bg-playzenha-surface p-6 rounded-t-3xl border-t border-purple-500/20 max-h-[60vh] overflow-hidden flex flex-col items-center">
                         <h3 className="text-center text-white mb-4 font-bold">Quem é o Lobo?</h3>
                         <div className="w-full overflow-y-auto custom-scrollbar space-y-2 pb-20">
                             {players.map(p => p.id !== players[currentPlayerIdx].id && (
@@ -664,7 +665,8 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
                                         exit={{ y: 100, opacity: 0 }}
                                         className="w-full max-w-sm"
                                     >
-                                        <GameButton 
+                                        <GameButton
+                                            theme="purple"
                                             onClick={submitVote} 
                                             variant="danger" 
                                             className="w-full shadow-2xl shadow-red-900/50 border-2 border-red-500"
@@ -680,7 +682,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
             )}
             {/* SUSPENSE SCREEN */}
             {phase === 'voting-suspense' && (
-                <motion.div key="suspense" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen bg-black flex flex-col items-center justify-center">
+                <motion.div key="suspense" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen bg-dark-bg flex flex-col items-center justify-center">
                     <motion.div 
                         initial={{ scale: 0.8, opacity: 0.5 }}
                         animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
@@ -694,7 +696,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
             )}
             {/* VOTING RESULTS */}
             {phase === 'voting-results' && (
-                <motion.div key="voting-results" className="h-screen bg-black flex flex-col items-center justify-center px-6">
+                <motion.div key="voting-results" className="h-screen bg-dark-bg flex flex-col items-center justify-center px-6">
                      <h1 className="text-3xl text-white mb-8 font-bold">Resultado da Votação</h1>
                      
                      <div className="w-full max-w-sm space-y-3 mb-8 max-h-[50vh] overflow-y-auto custom-scrollbar">
@@ -713,7 +715,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
                      </div>
                     
                      <div className="flex gap-4 w-full justify-center">
-                         <GameButton onClick={handleNextRoundOrEnd} className="w-full max-w-xs">
+                         <GameButton theme="purple" onClick={handleNextRoundOrEnd} className="w-full max-w-xs">
                              {getWinner() ? "VER RESULTADO FINAL" : "CONTINUAR O JOGO"}
                          </GameButton>
                      </div>
@@ -734,7 +736,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
                     </p>
 
                     <div className="space-y-4 w-full max-w-xs">
-                        <GameButton onClick={() => setPhase('setup')} variant="secondary" className="w-full">
+                        <GameButton theme="purple" onClick={() => setPhase('setup')} variant="secondary" className="w-full">
                             JOGAR NOVAMENTE
                         </GameButton>
                         <button onClick={onBackToHome} className="text-sm font-bold opacity-60 hover:opacity-100 transition-opacity">
@@ -780,7 +782,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
                 >
                      <motion.div 
                         initial={{scale:0.9}} animate={{scale:1}} 
-                        className="bg-gray-900 border border-purple-500/30 p-6 rounded-3xl w-full max-w-sm text-center shadow-2xl relative overflow-hidden"
+                        className="bg-playzenha-surface border border-purple-500/30 p-6 rounded-3xl w-full max-w-sm text-center shadow-2xl relative overflow-hidden"
                         onClick={e => e.stopPropagation()}
                      >
                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500" />
@@ -815,7 +817,19 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
 
 // --- Subcomponents ---
 
-const ActionPhase = ({ title, subtitle, players, onAction, color, embedded = false }: any) => {
+type ActionPhaseColor = 'red' | 'cyan' | 'yellow' | 'purple'
+
+interface ActionPhaseProps {
+    role?: string
+    title: string
+    subtitle: string
+    players: Player[]
+    onAction: (targetId: number | null) => void
+    color: ActionPhaseColor
+    embedded?: boolean
+}
+
+const ActionPhase = ({ title, subtitle, players, onAction, color, embedded = false }: ActionPhaseProps) => {
     const [selectedId, setSelectedId] = useState<number | null>(null)
     const [isExiting, setIsExiting] = useState(false)
 
@@ -877,7 +891,7 @@ const ActionPhase = ({ title, subtitle, players, onAction, color, embedded = fal
             initial={{opacity: 0, y: 20}} 
             animate={{opacity: 1, y: 0}} 
             exit={{opacity: 0}}
-            className={embedded ? "" : "h-screen bg-black flex flex-col pt-12"}
+            className={embedded ? "" : "h-screen bg-dark-bg flex flex-col pt-12"}
         >
             <div className="px-6 mb-6">
                 <div className={`inline-block px-3 py-1 rounded border mb-4 text-xs font-bold uppercase tracking-widest ${theme.text} ${theme.borderLight} ${theme.bgLight}`}>
@@ -918,7 +932,8 @@ const ActionPhase = ({ title, subtitle, players, onAction, color, embedded = fal
                         initial={{y: 100}} animate={{y: 0}} exit={{y: 100}}
                         className={`absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-black via-black/90 to-transparent flex justify-center pb-8`}
                     >
-                        <GameButton 
+                        <GameButton
+                            theme="purple"
                             onClick={handleConfirm}
                             variant="primary" // Generic style, let logic handle
                             className={`w-full max-w-xs shadow-lg ${theme.shadow} border ${theme.borderLight} text-white`}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, User, Lock, Mail, Github, Chrome, Eye, EyeOff } from 'lucide-react'
+import { ArrowLeft, User, Lock, Mail, Chrome, Eye, EyeOff } from 'lucide-react'
 import GameButton from './GameButton'
 
 interface LoginPageProps {

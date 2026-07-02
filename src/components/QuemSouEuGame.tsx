@@ -47,6 +47,16 @@ interface RoundResult {
   character: string
 }
 
+interface WakeLockSentinelLike {
+  release: () => Promise<void>
+}
+
+type WakeLockNavigator = {
+  wakeLock?: {
+    request: (type: 'screen') => Promise<WakeLockSentinelLike>
+  }
+}
+
 const shuffleArray = <T,>(arr: T[]): T[] => {
   const cloned = [...arr]
   for (let i = cloned.length - 1; i > 0; i--) {
@@ -96,7 +106,7 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
   const [results, setResults] = useState<RoundResult[]>([])
   const [lastRoundResult, setLastRoundResult] = useState<RoundResult | null>(null)
 
-  const wakeLockRef = useRef<any>(null)
+  const wakeLockRef = useRef<WakeLockSentinelLike | null>(null)
   const fallbackAudioRef = useRef<HTMLAudioElement | null>(null)
   const fallbackTickRef = useRef<number | null>(null)
 
@@ -309,9 +319,9 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
 
   const requestWakeLock = async () => {
     try {
-      const navAny = navigator as any
-      if (navAny.wakeLock?.request) {
-        wakeLockRef.current = await navAny.wakeLock.request('screen')
+      const wakeLockNavigator = navigator as unknown as WakeLockNavigator
+      if (wakeLockNavigator.wakeLock?.request) {
+        wakeLockRef.current = await wakeLockNavigator.wakeLock.request('screen')
       }
     } catch {
       wakeLockRef.current = null
@@ -429,14 +439,14 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
   }, [phase, pendingAction, resumeCountdown])
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white font-sans overflow-hidden relative selection:bg-playzenha-blue/50 selection:text-white">
+    <div className="min-h-screen bg-dark-bg text-white font-sans overflow-hidden relative selection:bg-playzenha-yellow/60 selection:text-dark-bg">
       <nav className="absolute top-0 w-full p-4 flex justify-between items-center z-50">
         <button onClick={onBackToHome} className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
           <ArrowLeft size={24} />
         </button>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 rounded-2xl border border-playzenha-yellow/30 bg-playzenha-yellow/10 px-4 py-2 shadow-lg shadow-playzenha-yellow/10">
           <span className="text-2xl">🧠</span>
-          <span className="text-xl font-bold tracking-wider">QUEM SOU EU</span>
+          <span className="text-xl font-bold tracking-wider text-yellow-100">QUEM SOU EU</span>
         </div>
         <div className="w-10" />
       </nav>
@@ -450,8 +460,8 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
             exit={{ opacity: 0 }}
             className="pt-24 px-6 h-screen flex flex-col"
           >
-            <div className="text-center mb-6">
-              <h1 className="text-3xl md:text-4xl font-black mb-2">Cadastro de Jogadores</h1>
+            <div className="text-center mb-6 rounded-3xl border border-playzenha-yellow/20 bg-playzenha-yellow/10 p-5 shadow-xl shadow-playzenha-yellow/10">
+              <h1 className="text-3xl md:text-4xl font-black mb-2 text-yellow-100">Cadastro de Jogadores</h1>
               <p className="text-gray-400 text-sm">Minimo 2, maximo 10 jogadores</p>
             </div>
 
@@ -462,7 +472,7 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
                     {idx + 1}
                   </div>
                   <input
-                    className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-lg px-4 text-base focus:border-playzenha-blue outline-none transition-colors text-white"
+                    className="flex-1 min-w-0 bg-white/5 border border-playzenha-yellow/20 rounded-lg px-4 text-base focus:border-playzenha-yellow outline-none transition-colors text-white"
                     placeholder="Nome do jogador"
                     value={name}
                     onChange={(e) => updatePlayerName(idx, e.target.value)}
@@ -492,7 +502,7 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
               )}
             </div>
 
-            <GameButton onClick={startWritingPhase} className="w-full py-4 text-lg mb-6">
+            <GameButton theme="yellow" onClick={startWritingPhase} className="w-full py-4 text-lg mb-6">
               INICIAR JOGO
             </GameButton>
           </motion.div>
@@ -504,7 +514,7 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="h-screen px-6 flex flex-col items-center justify-center text-center bg-black"
+            className="h-screen px-6 flex flex-col items-center justify-center text-center bg-dark-bg"
           >
             <div className="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center mb-6 animate-pulse border border-white/20">
               <Users className="w-10 h-10 text-white" />
@@ -516,7 +526,7 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
             <h1 className="text-5xl text-white mb-12 font-bold tracking-tight px-2 break-words max-w-full">
               {currentWriter.name}
             </h1>
-            <GameButton onClick={showWritingTarget} className="w-full max-w-xs">
+            <GameButton theme="yellow" onClick={showWritingTarget} className="w-full max-w-xs">
               REVELAR
             </GameButton>
           </motion.div>
@@ -538,23 +548,23 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
               <p className="text-gray-400 text-sm">Destino revelado apenas para voce.</p>
             </div>
 
-            <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-4 text-center">
+            <div className="bg-playzenha-yellow/10 border border-playzenha-yellow/20 rounded-xl p-4 mb-4 text-center shadow-xl shadow-playzenha-yellow/10">
               <p className="text-gray-400 text-xs uppercase tracking-[0.2em] mb-2">Voce vai escrever para</p>
               <p className="text-3xl font-black text-playzenha-yellow break-words">{currentTarget.name}</p>
             </div>
 
-            <div className="bg-black/30 border border-white/10 rounded-2xl p-4 mb-4">
+            <div className="bg-playzenha-yellow/10 border border-playzenha-yellow/20 rounded-2xl p-4 mb-4">
               <label className="text-xs uppercase tracking-[0.2em] text-gray-500 mb-3 block">Personagem / Celebridade</label>
               <input
                 value={currentCharacterInput}
                 onChange={(e) => setCurrentCharacterInput(e.target.value)}
                 placeholder="Ex.: HOMEM ARANHA"
-                className="w-full h-14 px-4 rounded-xl bg-white/5 border border-white/10 focus:border-playzenha-blue outline-none text-lg"
+                className="w-full h-14 px-4 rounded-xl bg-white/5 border border-playzenha-yellow/20 focus:border-playzenha-yellow outline-none text-lg"
                 autoFocus
               />
             </div>
 
-            <GameButton onClick={confirmCharacter} className="w-full py-4 text-lg mb-6 mt-auto">
+            <GameButton theme="yellow" onClick={confirmCharacter} className="w-full py-4 text-lg mb-6 mt-auto">
               <PenSquare className="w-5 h-5" /> CONFIRMAR
             </GameButton>
           </motion.div>
@@ -566,12 +576,12 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="h-screen px-6 flex flex-col items-center justify-center text-center bg-black"
+            className="h-screen px-6 flex flex-col items-center justify-center text-center bg-dark-bg"
           >
             <UserCircle2 className="w-24 h-24 text-playzenha-yellow mb-6" />
             <h1 className="text-4xl md:text-5xl font-black mb-3">Vez de {currentGuesser.name}!</h1>
             <p className="text-gray-300 mb-10">Passe o celular para ele e toque quando estiver pronto.</p>
-            <GameButton onClick={startRoundCountdown} className="w-full max-w-xs">
+            <GameButton theme="yellow" onClick={startRoundCountdown} className="w-full max-w-xs">
               ESTOU PRONTO
             </GameButton>
           </motion.div>
@@ -583,7 +593,7 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="h-screen px-6 flex flex-col items-center justify-center text-center bg-black"
+            className="h-screen px-6 flex flex-col items-center justify-center text-center bg-dark-bg"
           >
             <p className="text-gray-400 uppercase tracking-[0.2em] mb-6">Posicione o celular na testa</p>
             <motion.div
@@ -603,12 +613,12 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="h-screen relative bg-gray-900"
+            className="h-screen relative bg-playzenha-surface"
           >
             <div className={`absolute inset-0 bg-black z-10 ${isScreenMasked ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} />
 
             <div className="absolute top-20 left-0 right-0 text-center px-4 z-30">
-              <div className="inline-flex items-center gap-2 bg-black/40 border border-white/10 rounded-full px-4 py-2 text-sm text-gray-300">
+              <div className="inline-flex items-center gap-2 bg-playzenha-yellow/10 border border-playzenha-yellow/20 rounded-full px-4 py-2 text-sm text-yellow-100">
                 <Timer className="w-4 h-4" /> {timeLeft}s
               </div>
             </div>
@@ -657,17 +667,18 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
                     initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.95, opacity: 0 }}
-                    className="w-full max-w-sm rounded-2xl border border-white/10 bg-gray-900 p-6 text-center"
+                    className="w-full max-w-sm rounded-2xl border border-playzenha-yellow/20 bg-playzenha-surface p-6 text-center"
                   >
                     <h3 className="text-2xl font-black mb-2">Tem certeza?</h3>
                     <p className="text-gray-300 mb-6">
                       Opcao escolhida: <strong className="text-white uppercase">{pendingAction}</strong>
                     </p>
                     <div className="space-y-3">
-                      <GameButton onClick={() => finishRound(pendingAction)} className="w-full">
+                    <GameButton theme="yellow" onClick={() => finishRound(pendingAction)} className="w-full">
                         CONFIRMAR
                       </GameButton>
                       <GameButton
+                        theme="yellow"
                         onClick={() => {
                           setPendingAction(null)
                           setIsScreenMasked(true)
@@ -690,7 +701,7 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="absolute inset-0 bg-black flex items-center justify-center z-30"
+                  className="absolute inset-0 bg-dark-bg flex items-center justify-center z-30"
                 >
                   <motion.div
                     key={resumeCountdown}
@@ -713,7 +724,7 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="h-screen px-6 flex flex-col items-center justify-center text-center bg-black"
+            className="h-screen px-6 flex flex-col items-center justify-center text-center bg-dark-bg"
           >
             <div className="mb-6">
               {lastRoundResult.status === 'acertou' ? (
@@ -728,7 +739,7 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
               {players.find((p) => p.id === lastRoundResult.playerId)?.name}
             </h1>
 
-            <div className="w-full max-w-sm bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
+            <div className="w-full max-w-sm bg-playzenha-yellow/10 border border-playzenha-yellow/20 rounded-2xl p-6 mb-8 shadow-xl shadow-playzenha-yellow/10">
               <p className="text-gray-400 text-sm mb-1">Status</p>
               <p className={`text-3xl font-black mb-4 ${lastRoundResult.status === 'acertou' ? 'text-green-400' : 'text-red-400'}`}>
                 {lastRoundResult.status.toUpperCase()}
@@ -739,7 +750,7 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
               <p className="text-xl font-mono">{lastRoundResult.timeUsed}s</p>
             </div>
 
-            <GameButton onClick={nextRoundOrFinal} className="w-full max-w-sm">
+            <GameButton theme="yellow" onClick={nextRoundOrFinal} className="w-full max-w-sm">
               {guessStep < guessOrder.length - 1 ? 'PROXIMO JOGADOR' : 'VER PLACAR FINAL'}
             </GameButton>
           </motion.div>
@@ -758,7 +769,7 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
               <h1 className="text-4xl font-black">Placar Final</h1>
             </div>
 
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-4 text-center">
+            <div className="bg-playzenha-yellow/10 border border-playzenha-yellow/20 rounded-2xl p-4 mb-4 text-center shadow-xl shadow-playzenha-yellow/10">
               {bestPlayers.length > 0 ? (
                 <>
                   <p className="text-gray-400 text-xs uppercase tracking-[0.2em] mb-2">Menor tempo da partida</p>
@@ -806,7 +817,7 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
             </div>
 
             <div className="pb-8">
-              <GameButton onClick={resetGame} className="w-full py-4 text-lg">
+              <GameButton theme="yellow" onClick={resetGame} className="w-full py-4 text-lg">
                 <RotateCcw className="w-5 h-5" /> JOGAR NOVAMENTE
               </GameButton>
             </div>

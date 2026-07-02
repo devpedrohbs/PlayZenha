@@ -7,10 +7,14 @@ export default {
   theme: {
     extend: {
       colors: {
-        'dark-bg': '#0F0F23',
-        'dark-blue': '#1E1B4B',
-        'playzenha-blue': '#004bad', // Updated to Brand Blue
-        'playzenha-yellow': '#ffbb00', // Updated to Brand Yellow
+        'dark-bg': '#06132D',
+        'dark-blue': '#0D1B3D',
+        'playzenha-blue': '#0441F2',
+        'playzenha-yellow': '#FFC603',
+        'playzenha-surface': '#0D1B3D',
+        'playzenha-card': '#142857',
+        'playzenha-hover': '#1D3670',
+        'playzenha-muted': '#94A3B8',
         'success-green': '#10B981',
         'danger-red': '#EF4444',
       },

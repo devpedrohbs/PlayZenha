@@ -5,6 +5,7 @@ interface GameButtonProps {
   children: React.ReactNode;
   onClick?: () => void;
   variant?: 'primary' | 'secondary' | 'danger';
+  theme?: 'blue' | 'purple' | 'green' | 'yellow';
   size?: 'sm' | 'md' | 'lg';
   disabled?: boolean;
   className?: string;
@@ -14,6 +15,7 @@ const GameButton: React.FC<GameButtonProps> = ({
   children, 
   onClick, 
   variant = 'primary', 
+  theme,
   size = 'md',
   disabled = false,
   className = ''
@@ -45,6 +47,9 @@ const GameButton: React.FC<GameButtonProps> = ({
   };
 
   const getTextColor = () => {
+    if (theme === 'yellow' || theme === 'green') return 'text-dark-bg';
+    if (theme) return 'text-white';
+
     switch (variant) {
       case 'primary':
         return 'text-dark-bg';
@@ -57,19 +62,58 @@ const GameButton: React.FC<GameButtonProps> = ({
     }
   };
 
-  return (
-    <motion.button
-      onClick={onClick}
-      disabled={disabled}
-      className={`relative font-fredoka font-bold rounded-xl overflow-hidden ${getSizeClasses()} ${getTextColor()} ${className} ${
-        disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-      }`}
-      style={{
+  const getThemeClasses = () => {
+    switch (theme) {
+      case 'blue':
+        return 'bg-gradient-to-br from-playzenha-blue via-blue-600 to-blue-800 border border-blue-300/30 shadow-playzenha-blue/30';
+      case 'purple':
+        return 'bg-gradient-to-br from-purple-400 via-purple-600 to-purple-900 border border-purple-300/30 shadow-purple-500/30';
+      case 'green':
+        return 'bg-gradient-to-br from-emerald-300 via-emerald-400 to-emerald-700 border border-emerald-200/40 shadow-emerald-400/25';
+      case 'yellow':
+        return 'bg-gradient-to-br from-playzenha-yellow via-yellow-300 to-yellow-500 border border-yellow-100/50 shadow-playzenha-yellow/25';
+      default:
+        return '';
+    }
+  };
+
+  const getThemeBackground = () => {
+    switch (theme) {
+      case 'blue':
+        return 'linear-gradient(135deg, #0441F2 0%, #2563EB 52%, #1E3A8A 100%)';
+      case 'purple':
+        return 'linear-gradient(135deg, #C084FC 0%, #9333EA 52%, #581C87 100%)';
+      case 'green':
+        return 'linear-gradient(135deg, #6EE7B7 0%, #34D399 52%, #047857 100%)';
+      case 'yellow':
+        return 'linear-gradient(135deg, #FFC603 0%, #FDE047 52%, #EAB308 100%)';
+      default:
+        return undefined;
+    }
+  };
+
+  const themedStyle = theme
+    ? {
+        backgroundImage: getThemeBackground(),
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }
+    : {
         backgroundImage: `url('${getButtonAsset()}')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
-      }}
+      };
+
+  return (
+    <motion.button
+      onClick={onClick}
+      disabled={disabled}
+      className={`relative font-fredoka font-bold rounded-xl overflow-hidden shadow-lg ${getSizeClasses()} ${getTextColor()} ${getThemeClasses()} ${className} ${
+        disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+      }`}
+      style={themedStyle}
       whileHover={disabled ? {} : { scale: 1.05, y: -2 }}
       whileTap={disabled ? {} : { scale: 0.95 }}
       initial={{ opacity: 0, y: 20 }}
@@ -82,7 +126,8 @@ const GameButton: React.FC<GameButtonProps> = ({
       
       {/* Overlay para garantir legibilidade do texto */}
       <div className={`absolute inset-0 ${
-        variant === 'primary' ? 'bg-playzenha-yellow/20' : 
+        theme ? 'bg-white/5' :
+        variant === 'primary' ? 'bg-playzenha-yellow/20' :
         variant === 'secondary' ? 'bg-playzenha-blue/30' :
         'bg-danger-red/30'
       }`} />

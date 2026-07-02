@@ -175,14 +175,14 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToHome }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white font-sans overflow-hidden relative selection:bg-playzenha-blue/60 selection:text-white">
+    <div className="min-h-screen bg-dark-bg text-white font-sans overflow-hidden relative selection:bg-emerald-400/60 selection:text-white">
       <nav className="absolute top-0 w-full p-4 flex justify-between items-center z-50">
         <button onClick={onBackToHome} className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
           <ArrowLeft size={24} />
         </button>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 rounded-2xl border border-emerald-300/30 bg-emerald-400/10 px-4 py-2 shadow-lg shadow-emerald-400/10">
           <span className="text-2xl">📱</span>
-          <span className="text-xl font-bold tracking-wider">CONTATO</span>
+          <span className="text-xl font-bold tracking-wider text-emerald-100">CONTATO</span>
         </div>
         <div className="w-10" />
       </nav>
@@ -196,8 +196,8 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToHome }) => {
             exit={{ opacity: 0 }}
             className="pt-24 px-6 h-screen flex flex-col"
           >
-            <div className="text-center mb-6">
-              <h1 className="text-3xl md:text-4xl mb-2 font-bold">Cadastro de Jogadores</h1>
+            <div className="text-center mb-6 rounded-3xl border border-emerald-300/20 bg-emerald-400/10 p-5 shadow-xl shadow-emerald-400/10">
+              <h1 className="text-3xl md:text-4xl mb-2 font-bold text-emerald-100">Cadastro de Jogadores</h1>
               <p className="text-gray-400 text-sm">Jogo para exatamente 3 pessoas</p>
             </div>
 
@@ -210,20 +210,20 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToHome }) => {
                   <input
                     value={name}
                     onChange={(e) => updatePlayerName(i, e.target.value)}
-                    className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-lg px-4 text-base focus:border-playzenha-blue outline-none transition-colors text-white h-12"
+                    className="flex-1 min-w-0 bg-white/5 border border-emerald-300/20 rounded-lg px-4 text-base focus:border-emerald-300 outline-none transition-colors text-white h-12"
                     placeholder={`Nome do Jogador ${i + 1}`}
                   />
                 </div>
               ))}
             </div>
 
-            <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6">
+            <div className="bg-emerald-400/10 border border-emerald-300/20 rounded-xl p-4 mb-6">
               <div className="flex items-center justify-between">
                 <span className="text-gray-200 font-medium">Juiz rotativo por rodada</span>
                 <button
                   onClick={() => setRotateJudge((prev) => !prev)}
                   className={`w-14 h-8 rounded-full p-1 transition-colors ${
-                    rotateJudge ? 'bg-playzenha-blue' : 'bg-white/20'
+                    rotateJudge ? 'bg-emerald-400' : 'bg-white/20'
                   }`}
                   aria-label="Alternar juiz rotativo"
                 >
@@ -239,7 +239,7 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToHome }) => {
               </p>
             </div>
 
-            <GameButton onClick={startGame} className="w-full py-4 text-xl mb-6">
+            <GameButton theme="green" onClick={startGame} className="w-full py-4 text-xl mb-6">
               COMEÇAR
             </GameButton>
           </motion.div>
@@ -251,13 +251,13 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToHome }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="h-screen px-6 flex flex-col items-center justify-center text-center bg-black"
+            className="h-screen px-6 flex flex-col items-center justify-center text-center bg-dark-bg"
           >
             <div className="text-sm uppercase tracking-[0.25em] text-gray-500 mb-3">Rodada {round}</div>
             <h1 className="text-4xl font-black mb-8">Sorteio Concluído</h1>
 
-            <div className="w-full max-w-md bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
-              <div className="flex items-center gap-3 justify-center mb-4 text-playzenha-yellow">
+            <div className="w-full max-w-md bg-emerald-400/10 border border-emerald-300/20 rounded-2xl p-6 mb-8 shadow-xl shadow-emerald-400/10">
+              <div className="flex items-center gap-3 justify-center mb-4 text-emerald-300">
                 <ShieldCheck className="w-6 h-6" />
                 <span className="font-bold uppercase tracking-wider">Juiz</span>
               </div>
@@ -265,7 +265,7 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToHome }) => {
 
               <div className="h-px bg-white/10 mb-5" />
 
-              <div className="flex items-center gap-3 justify-center mb-4 text-playzenha-blue">
+              <div className="flex items-center gap-3 justify-center mb-4 text-emerald-300">
                 <Users className="w-6 h-6" />
                 <span className="font-bold uppercase tracking-wider">Adivinhadores</span>
               </div>
@@ -274,7 +274,7 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToHome }) => {
               </p>
             </div>
 
-            <GameButton onClick={() => setPhase('judge-word-start')} className="w-full max-w-xs">
+            <GameButton theme="green" onClick={() => setPhase('judge-word-start')} className="w-full max-w-xs">
               INICIAR RODADA
             </GameButton>
           </motion.div>
@@ -286,14 +286,14 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToHome }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="h-screen px-6 flex flex-col items-center justify-center text-center bg-black"
+            className="h-screen px-6 flex flex-col items-center justify-center text-center bg-dark-bg"
           >
             <div className="w-24 h-24 rounded-full bg-white/10 border border-white/20 flex items-center justify-center mb-6 animate-pulse">
               <Gavel className="w-10 h-10 text-white" />
             </div>
             <h2 className="text-gray-400 text-xl mb-2">Passe o celular para</h2>
             <h1 className="text-5xl font-black mb-10 break-words">{judge.name}</h1>
-            <GameButton onClick={() => setPhase('judge-word-reveal')} className="w-full max-w-xs">
+            <GameButton theme="green" onClick={() => setPhase('judge-word-reveal')} className="w-full max-w-xs">
               REVELAR PALAVRA
             </GameButton>
           </motion.div>
@@ -305,14 +305,14 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToHome }) => {
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            className="h-screen px-6 flex flex-col items-center justify-center text-center bg-gray-900"
+            className="h-screen px-6 flex flex-col items-center justify-center text-center bg-playzenha-surface"
           >
             <p className="text-sm uppercase tracking-[0.25em] text-gray-500 mb-4">Somente o juiz vê</p>
-            <h1 className="text-6xl md:text-7xl font-black text-playzenha-yellow mb-8">{currentWord}</h1>
+            <h1 className="text-6xl md:text-7xl font-black text-emerald-300 mb-8">{currentWord}</h1>
             <p className="text-gray-300 max-w-md mb-10">
               Memorize a palavra e devolva o celular para os adivinhadores.
             </p>
-            <GameButton onClick={() => setPhase('round-play')} className="w-full max-w-xs">
+            <GameButton theme="green" onClick={() => setPhase('round-play')} className="w-full max-w-xs">
               ENTENDI, PASSAR CELULAR
             </GameButton>
           </motion.div>
@@ -331,9 +331,9 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToHome }) => {
               <p className="text-gray-400 text-sm">Juiz da rodada: {judge.name}</p>
             </div>
 
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center mb-6">
+            <div className="bg-emerald-400/10 border border-emerald-300/20 rounded-2xl p-6 text-center mb-6 shadow-xl shadow-emerald-400/10">
               <p className="text-gray-400 text-xs uppercase tracking-[0.2em] mb-3">Palavra liberada</p>
-              <p className="text-4xl md:text-5xl font-black tracking-[0.25em] text-playzenha-blue break-all">{maskedWord}</p>
+              <p className="text-4xl md:text-5xl font-black tracking-[0.25em] text-emerald-300 break-all">{maskedWord}</p>
               <p className="text-gray-500 text-xs mt-4">
                 Letras liberadas: {revealedLetters}/{currentWord.length}
               </p>
@@ -347,6 +347,7 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToHome }) => {
 
             <div className="space-y-3 mt-auto pb-8">
               <GameButton
+                theme="green"
                 onClick={revealNextLetter}
                 variant="secondary"
                 disabled={revealedLetters >= currentWord.length}
@@ -355,6 +356,7 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToHome }) => {
                 <Eye className="w-5 h-5" /> REVELAR PROXIMA LETRA
               </GameButton>
               <GameButton
+                theme="green"
                 onClick={revealWholeWord}
                 variant="primary"
                 disabled={revealedLetters >= currentWord.length}
@@ -362,7 +364,7 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToHome }) => {
               >
                 <EyeOff className="w-5 h-5" /> REVELAR PALAVRA INTEIRA
               </GameButton>
-              <GameButton onClick={() => { setRoundWinner('Adivinhadores'); setPhase('round-result') }} variant="primary" className="w-full py-4 text-lg">
+              <GameButton theme="green" onClick={() => { setRoundWinner('Adivinhadores'); setPhase('round-result') }} variant="primary" className="w-full py-4 text-lg">
                 FINALIZAR RODADA
               </GameButton>
             </div>
@@ -375,30 +377,30 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToHome }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="h-screen px-6 flex flex-col items-center justify-center text-center bg-gray-900"
+            className="h-screen px-6 flex flex-col items-center justify-center text-center bg-playzenha-surface"
           >
             <div className="mb-6">
               {roundWinner === 'Adivinhadores' ? (
-                <Crown className="w-24 h-24 text-playzenha-yellow mx-auto" />
+                <Crown className="w-24 h-24 text-emerald-300 mx-auto" />
               ) : (
-                <ShieldCheck className="w-24 h-24 text-playzenha-blue mx-auto" />
+                <ShieldCheck className="w-24 h-24 text-emerald-300 mx-auto" />
               )}
             </div>
 
             <h2 className="text-gray-400 text-xl uppercase tracking-widest mb-2">Vencedor da Rodada</h2>
             <h1 className="text-5xl font-black mb-8">{roundWinner}</h1>
 
-            <div className="w-full max-w-sm bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
+            <div className="w-full max-w-sm bg-emerald-400/10 border border-emerald-300/20 rounded-2xl p-6 mb-8 shadow-xl shadow-emerald-400/10">
               <p className="text-gray-400 text-sm mb-1">Palavra da rodada</p>
-              <p className="text-3xl font-black text-playzenha-yellow">{currentWord}</p>
+              <p className="text-3xl font-black text-emerald-300">{currentWord}</p>
               <p className="text-gray-500 text-xs mt-3">Juiz: {judge.name}</p>
             </div>
 
             <div className="w-full max-w-sm space-y-3">
-              <GameButton onClick={goToNextRound} className="w-full">
+              <GameButton theme="green" onClick={goToNextRound} className="w-full">
                 <RotateCcw className="w-5 h-5" /> PRÓXIMA RODADA
               </GameButton>
-              <GameButton onClick={resetMatch} variant="secondary" className="w-full">
+              <GameButton theme="green" onClick={resetMatch} variant="secondary" className="w-full">
                 NOVA PARTIDA
               </GameButton>
             </div>

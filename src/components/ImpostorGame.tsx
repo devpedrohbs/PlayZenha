@@ -209,16 +209,16 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
   // --- Renders ---
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white font-sans overflow-hidden relative selection:bg-purple-500 selection:text-white">
+    <div className="min-h-screen bg-dark-bg text-white font-sans overflow-hidden relative selection:bg-playzenha-blue selection:text-white">
         
         {/* Header */}
         <nav className="absolute top-0 w-full p-4 flex justify-between items-center z-50">
             <button onClick={onBackToHome} className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
                 <ArrowLeft size={24} />
             </button>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 rounded-2xl border border-playzenha-blue/30 bg-playzenha-blue/10 px-4 py-2 shadow-lg shadow-playzenha-blue/10">
                 <span className="text-2xl">🕵️‍♂️</span>
-                <span className="text-xl font-bold tracking-wider">IMPOSTOR</span>
+                <span className="text-xl font-bold tracking-wider text-blue-100">IMPOSTOR</span>
             </div>
             <div className="w-10" />
         </nav>
@@ -228,8 +228,8 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
             {/* SETUP PHASE */}
             {phase === 'setup' && (
                 <motion.div key="setup" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="pt-24 px-6 h-screen flex flex-col">
-                    <div className="text-center mb-6">
-                        <h1 className="text-3xl md:text-4xl mb-2 font-bold text-white flex items-center justify-center gap-2">
+                    <div className="text-center mb-6 rounded-3xl border border-playzenha-blue/20 bg-playzenha-blue/10 p-5 shadow-xl shadow-playzenha-blue/10">
+                        <h1 className="text-3xl md:text-4xl mb-2 font-bold text-blue-100 flex items-center justify-center gap-2">
                            Quem vai jogar?
                         </h1>
                         <p className="text-gray-400 text-sm">Mínimo de 3 jogadores</p>
@@ -240,7 +240,7 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
                              <div key={i} className="flex gap-2">
                                 <div className="w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center font-bold text-gray-400 border border-white/10 shrink-0">{i+1}</div>
                                 <input 
-                                    className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-lg px-4 text-base focus:border-purple-500 outline-none transition-colors text-white"
+                                    className="flex-1 min-w-0 bg-white/5 border border-playzenha-blue/20 rounded-lg px-4 text-base focus:border-playzenha-blue outline-none transition-colors text-white"
                                     placeholder="Nome do jogador"
                                     value={name}
                                     onChange={(e) => updatePlayerName(i, e.target.value)}
@@ -258,7 +258,7 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
                     </div>
 
                      {/* Time Settings */}
-                     <div className="bg-white/5 p-4 rounded-xl mb-4 border border-white/10">
+                     <div className="bg-playzenha-blue/10 p-4 rounded-xl mb-4 border border-playzenha-blue/20">
                         <div className="flex justify-between items-center text-sm text-gray-300">
                              <div className="flex items-center gap-2">
                                 <Clock size={16} />
@@ -272,10 +272,11 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
                         </div>
                      </div>
 
-                    <GameButton 
+                    <GameButton
+                        theme="blue"
                         onClick={startGameSetup} 
                         disabled={playerNames.filter(n => n.trim()).length < 3}
-                        className="w-full py-4 text-xl shadow-lg shadow-purple-900/40 mb-6 font-bold"
+                        className="w-full py-4 text-xl shadow-lg shadow-playzenha-blue/30 mb-6 font-bold"
                     >
                         COMEÇAR
                     </GameButton>
@@ -284,7 +285,7 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
 
             {/* ROLE DISTRIBUTION START */}
             {phase === 'role-distribution-start' && (
-                <motion.div key="role-start" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen flex flex-col justify-center items-center px-6 text-center bg-black">
+                <motion.div key="role-start" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen flex flex-col justify-center items-center px-6 text-center bg-dark-bg">
                      <div className="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center mb-6 animate-pulse border border-white/20">
                         <Users className="w-10 h-10 text-white" />
                      </div>
@@ -292,7 +293,7 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
                         Passe o celular para
                      </h2>
                             <h1 className="text-5xl text-white mb-12 font-bold tracking-tight px-2 break-words max-w-full">{currentPlayerForReveal?.name ?? '---'}</h1>
-                            <GameButton onClick={() => setPhase('role-reveal')} disabled={!currentPlayerForReveal} className="w-full max-w-xs shadow-purple-500/20 shadow-lg">
+                            <GameButton theme="blue" onClick={() => setPhase('role-reveal')} disabled={!currentPlayerForReveal} className="w-full max-w-xs shadow-playzenha-blue/20 shadow-lg">
                         REVELAR PAPEL
                      </GameButton>
                 </motion.div>
@@ -300,7 +301,7 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
 
             {/* ROLE REVEAL */}
             {phase === 'role-reveal' && (
-                <motion.div key="role-reveal" initial={{scale:0.9, opacity:0}} animate={{scale:1, opacity:1}} exit={{scale:0.9, opacity:0}} className="h-screen flex flex-col justify-center items-center px-6 text-center bg-gray-900 border-[10px] border-gray-800">
+                <motion.div key="role-reveal" initial={{scale:0.9, opacity:0}} animate={{scale:1, opacity:1}} exit={{scale:0.9, opacity:0}} className="h-screen flex flex-col justify-center items-center px-6 text-center bg-playzenha-surface border-[10px] border-playzenha-card">
                      
                      {currentPlayerForReveal?.role === 'Impostor' ? (
                          <>
@@ -346,8 +347,8 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
 
             {/* GAME START INTRO */}
             {phase === 'game-start' && (
-                <motion.div key="game-start" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen bg-black flex flex-col items-center justify-center text-center">
-                    <HelpCircle className="w-32 h-32 text-purple-600 animate-bounce mb-8" />
+                <motion.div key="game-start" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen bg-dark-bg flex flex-col items-center justify-center text-center">
+                    <HelpCircle className="w-32 h-32 text-playzenha-blue animate-bounce mb-8" />
                     <h1 className="text-4xl text-white font-bold tracking-wider uppercase mb-4">Investiguem!</h1>
                     <p className="text-gray-500 text-lg">Façam perguntas sobre o tema...</p>
                 </motion.div>
@@ -355,13 +356,13 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
 
             {/* DISCUSSION */}
             {phase === 'discussion' && (
-                <motion.div key="discussion" className="h-screen flex flex-col items-center justify-center bg-gray-900 px-6">
+                <motion.div key="discussion" className="h-screen flex flex-col items-center justify-center bg-playzenha-surface px-6">
                     <h2 className="text-2xl text-gray-400 mb-8 uppercase tracking-widest font-bold">Tempo Restante</h2>
                     
                     <div className="relative w-72 h-72 flex items-center justify-center mb-12">
                          <svg className="absolute w-full h-full transform -rotate-90">
                              <circle cx="144" cy="144" r="130" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-gray-800" />
-                             <circle cx="144" cy="144" r="130" stroke="currentColor" strokeWidth="12" fill="transparent" className={`transition-all duration-1000 ${timeLeft < 30 ? 'text-red-500' : 'text-purple-500'}`}
+                             <circle cx="144" cy="144" r="130" stroke="currentColor" strokeWidth="12" fill="transparent" className={`transition-all duration-1000 ${timeLeft < 30 ? 'text-red-500' : 'text-playzenha-blue'}`}
                                 strokeDasharray={2 * Math.PI * 130}
                                 strokeDashoffset={2 * Math.PI * 130 * (1 - timeLeft / discussionTime)}
                              />
@@ -372,7 +373,7 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
                     </div>
                     
                     <div className="flex flex-col gap-4 w-full max-w-sm">
-                        <GameButton onClick={() => setPhase('voting-intro')} variant="primary" className="w-full">
+                        <GameButton theme="blue" onClick={() => setPhase('voting-intro')} variant="primary" className="w-full">
                             VOTAR AGORA
                         </GameButton>
                         <button onClick={() => setTimeLeft(prev => prev + 60)} className="text-sm text-gray-500 hover:text-white transition-colors">
@@ -394,7 +395,7 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
 
             {/* VOTING LIST */}
             {phase === 'voting' && (
-                <motion.div key="voting" className="pt-24 px-6 h-screen flex flex-col bg-gray-900">
+                <motion.div key="voting" className="pt-24 px-6 h-screen flex flex-col bg-playzenha-surface">
                     <h2 className="text-center text-2xl font-bold text-white mb-2">Quem foi o escolhido?</h2>
                     <p className="text-center text-gray-500 text-sm mb-6">Selecione quem a maioria votou.</p>
 
@@ -410,7 +411,7 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
                                 }`}
                             >
                                 <div className="flex items-center gap-4">
-                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${selectedVote === player.id ? 'bg-red-500 text-white' : 'bg-gray-800 text-gray-400'}`}>
+                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${selectedVote === player.id ? 'bg-red-500 text-white' : 'bg-playzenha-card text-playzenha-muted'}`}>
                                          {player.name.charAt(0)}
                                      </div>
                                      <span className="text-lg font-medium text-white">{player.name}</span>
@@ -421,7 +422,8 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
                     </div>
 
                     <div className="pb-8">
-                        <GameButton 
+                        <GameButton
+                            theme="blue"
                             onClick={submitVote} 
                             disabled={selectedVote === null}
                             variant="danger"
@@ -435,7 +437,7 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
 
             {/* RESULTS */}
             {phase === 'voting-results' && winner && (
-                <motion.div key="results" initial={{opacity:0}} animate={{opacity:1}} className="h-screen flex flex-col items-center justify-center p-6 text-center bg-black">
+                <motion.div key="results" initial={{opacity:0}} animate={{opacity:1}} className="h-screen flex flex-col items-center justify-center p-6 text-center bg-dark-bg">
                      
                      <div className="mb-8 relative">
                          <div className={`absolute inset-0 blur-3xl rounded-full opacity-20 ${winner === 'Cidadãos' ? 'bg-green-500' : 'bg-red-500'}`} />
@@ -463,7 +465,7 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
                          </p>
                      </div>
 
-                     <GameButton onClick={restartGame} className="w-full max-w-xs">
+                     <GameButton theme="blue" onClick={restartGame} className="w-full max-w-xs">
                          JOGAR DE NOVO
                      </GameButton>
 

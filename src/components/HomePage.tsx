@@ -1,636 +1,602 @@
-import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import React, { useMemo, useState } from 'react'
+import { motion } from 'framer-motion'
+import {
+  ArrowRight,
+  BarChart3,
+  BookOpen,
+  BrainCircuit,
+  Clock,
+  Crown,
+  Flame,
+  Gamepad2,
+  Heart,
+  Moon,
+  Play,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  Trophy,
+  Users,
+  Zap
+} from 'lucide-react'
 import { GameView } from '../App'
-import { Users, Zap, ArrowRight, Clock, Gamepad2, Trophy, Coins, Star, Crown, Moon, BookOpen, X, Smartphone, ShieldCheck, BrainCircuit } from 'lucide-react'
-import GameButton from './GameButton'
-import GameIcon from './GameIcon'
+import AppShell from './ui/AppShell'
+import Badge from './ui/Badge'
+import Button from './ui/Button'
+import Card from './ui/Card'
+import Footer from './ui/Footer'
+import Modal from './ui/Modal'
+import Navbar from './ui/Navbar'
 
 interface HomePageProps {
   onStartGame: (game: GameView) => void
 }
 
+type RulesKey = 'impostor' | 'ultima-noite' | 'contato' | 'quem-sou-eu'
+type GameThemeKey = 'blue' | 'purple' | 'green' | 'yellow'
+
+interface GameTheme {
+  accent: string
+  accentHex: string
+  accentSoft: string
+  bg: string
+  border: string
+  text: string
+  textStrong: string
+  onAccent: string
+  shadow: string
+  ring: string
+}
+
+interface GameItem {
+  id: RulesKey
+  view: GameView
+  name: string
+  category: string
+  players: string
+  averageTime: string
+  description: string
+  icon: React.ReactNode
+  theme: GameThemeKey
+  featured?: boolean
+}
+
+const gameThemes: Record<GameThemeKey, GameTheme> = {
+  blue: {
+    accent: 'bg-playzenha-blue',
+    accentHex: '#0441F2',
+    accentSoft: 'bg-playzenha-blue/15',
+    bg: 'from-playzenha-blue/25 via-playzenha-card to-playzenha-card',
+    border: 'border-playzenha-blue/45',
+    text: 'text-blue-200',
+    textStrong: 'text-playzenha-blue',
+    onAccent: 'text-white',
+    shadow: 'shadow-playzenha-blue/25',
+    ring: 'ring-playzenha-blue/35'
+  },
+  purple: {
+    accent: 'bg-purple-500',
+    accentHex: '#A855F7',
+    accentSoft: 'bg-purple-500/15',
+    bg: 'from-purple-500/25 via-playzenha-card to-playzenha-card',
+    border: 'border-purple-400/45',
+    text: 'text-purple-200',
+    textStrong: 'text-purple-300',
+    onAccent: 'text-white',
+    shadow: 'shadow-purple-500/25',
+    ring: 'ring-purple-400/35'
+  },
+  green: {
+    accent: 'bg-emerald-400',
+    accentHex: '#34D399',
+    accentSoft: 'bg-emerald-400/15',
+    bg: 'from-emerald-400/25 via-playzenha-card to-playzenha-card',
+    border: 'border-emerald-300/45',
+    text: 'text-emerald-200',
+    textStrong: 'text-emerald-300',
+    onAccent: 'text-dark-bg',
+    shadow: 'shadow-emerald-400/20',
+    ring: 'ring-emerald-300/35'
+  },
+  yellow: {
+    accent: 'bg-playzenha-yellow',
+    accentHex: '#FFC603',
+    accentSoft: 'bg-playzenha-yellow/15',
+    bg: 'from-playzenha-yellow/25 via-playzenha-card to-playzenha-card',
+    border: 'border-playzenha-yellow/50',
+    text: 'text-yellow-100',
+    textStrong: 'text-playzenha-yellow',
+    onAccent: 'text-dark-bg',
+    shadow: 'shadow-playzenha-yellow/20',
+    ring: 'ring-playzenha-yellow/35'
+  }
+}
+
+const games: GameItem[] = [
+  {
+    id: 'impostor',
+    view: 'impostor',
+    name: 'Impostor',
+    category: 'Dedução social',
+    players: '3-12 jogadores',
+    averageTime: '10 min',
+    description: 'Descubra quem está blefando antes que o impostor entenda a palavra secreta.',
+    icon: <Users className="h-7 w-7" />,
+    theme: 'blue',
+    featured: true
+  },
+  {
+    id: 'ultima-noite',
+    view: 'ultima-noite',
+    name: 'Última Noite',
+    category: 'Estratégia e blefe',
+    players: '6+ jogadores',
+    averageTime: '15 min',
+    description: 'Lobos, anjos e detetives em uma rodada tensa de acusações e sobrevivência.',
+    icon: <Moon className="h-7 w-7" />,
+    theme: 'purple',
+    featured: true
+  },
+  {
+    id: 'contato',
+    view: 'contato',
+    name: 'Contato',
+    category: 'Sincronia e palavra',
+    players: '3 jogadores',
+    averageTime: '8 min',
+    description: 'Dois jogadores tentam pensar igual enquanto o juiz libera novas pistas.',
+    icon: <Zap className="h-7 w-7" />,
+    theme: 'green'
+  },
+  {
+    id: 'quem-sou-eu',
+    view: 'quem-sou-eu',
+    name: 'Quem Sou Eu',
+    category: 'Adivinhação',
+    players: '2-10 jogadores',
+    averageTime: '5-12 min',
+    description: 'Escreva personagens em segredo e tente adivinhar com o celular na testa.',
+    icon: <BrainCircuit className="h-7 w-7" />,
+    theme: 'yellow'
+  }
+]
+
+const rulesContent: Record<RulesKey, { title: string; sections: Array<{ heading: string; body: string[] }> }> = {
+  impostor: {
+    title: 'Regras: Impostor',
+    sections: [
+      {
+        heading: 'Objetivo',
+        body: [
+          'Civis tentam descobrir quem é o impostor.',
+          'O impostor precisa se misturar e descobrir o tema sem ser votado.'
+        ]
+      },
+      {
+        heading: 'Como jogar',
+        body: [
+          'Cada jogador recebe uma palavra, exceto o impostor.',
+          'Todos dão dicas relacionadas ao tema.',
+          'Depois da discussão, o grupo vota em quem parece estar blefando.'
+        ]
+      }
+    ]
+  },
+  'ultima-noite': {
+    title: 'Regras: Última Noite',
+    sections: [
+      {
+        heading: 'Objetivo',
+        body: [
+          'Cidadãos vencem quando eliminam todos os lobos.',
+          'Lobos vencem quando conseguem dominar a votação.'
+        ]
+      },
+      {
+        heading: 'Fases',
+        body: [
+          'Durante a noite, papéis especiais agem em segredo.',
+          'Durante o dia, todos debatem, acusam e votam.',
+          'A partida segue até uma facção vencer.'
+        ]
+      }
+    ]
+  },
+  contato: {
+    title: 'Regras: Contato',
+    sections: [
+      {
+        heading: 'Objetivo',
+        body: [
+          'Os adivinhadores precisam sincronizar ideias para chegar à palavra final.',
+          'O juiz valida os contatos e libera letras conforme a rodada avança.'
+        ]
+      },
+      {
+        heading: 'Fluxo',
+        body: [
+          'O app sorteia juiz e palavra.',
+          'Adivinhadores veem pistas parciais.',
+          'O juiz decide quando liberar novas letras ou revelar a palavra.'
+        ]
+      }
+    ]
+  },
+  'quem-sou-eu': {
+    title: 'Regras: Quem Sou Eu',
+    sections: [
+      {
+        heading: 'Objetivo',
+        body: [
+          'Cada jogador tenta adivinhar o personagem escrito para ele.',
+          'Ganha destaque quem acerta em menos tempo.'
+        ]
+      },
+      {
+        heading: 'Como jogar',
+        body: [
+          'Jogadores escrevem personagens em segredo.',
+          'Na sua vez, o jogador coloca o celular na testa.',
+          'O grupo ajuda com pistas até o acerto ou desistência.'
+        ]
+      }
+    ]
+  }
+}
+
+const dashboardStats = [
+  { label: 'Partidas jogadas', value: '128', icon: <Gamepad2 className="h-5 w-5" /> },
+  { label: 'Vitórias', value: '74', icon: <Trophy className="h-5 w-5" /> },
+  { label: 'Ranking', value: '#42', icon: <Crown className="h-5 w-5" /> },
+  { label: 'Plano atual', value: 'Premium', icon: <ShieldCheck className="h-5 w-5" /> }
+]
+
+const recentGames: RulesKey[] = ['impostor', 'quem-sou-eu', 'contato']
+const favoriteGames: RulesKey[] = ['ultima-noite', 'impostor']
+
 const HomePage: React.FC<HomePageProps> = ({ onStartGame }) => {
-  const [showRules, setShowRules] = useState<'impostor' | 'ultima-noite' | 'contato' | 'quem-sou-eu' | null>(null)
+  const [showRules, setShowRules] = useState<RulesKey | null>(null)
+  const selectedRules = showRules ? rulesContent[showRules] : null
+  const selectedRulesGame = showRules ? games.find((game) => game.id === showRules) : null
+  const featuredGame = useMemo(() => games.find((game) => game.featured) ?? games[0], [])
+
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   return (
-    <div className="min-h-screen bg-dark-bg text-white font-comfortaa overflow-x-hidden">
-      
-      {/* Background Ambience */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-playzenha-blue/20 blur-[120px] rounded-full animate-float" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-playzenha-yellow/10 blur-[120px] rounded-full animate-float-delayed" />
+    <AppShell>
+      <Navbar
+        onLogin={() => onStartGame('login')}
+        onExploreGames={() => scrollTo('jogos')}
+        onDashboard={() => scrollTo('dashboard')}
+      />
+
+      <main>
+        <HeroSection onStart={() => scrollTo('jogos')} onExplore={() => scrollTo('jogos')} featuredGame={featuredGame} />
+        <ExperienceSection />
+        <GamesLibrary games={games} onStartGame={onStartGame} onShowRules={setShowRules} />
+        <DashboardSection />
+      </main>
+
+      <Footer />
+
+      <Modal open={Boolean(showRules && selectedRules)} title={selectedRules?.title ?? ''} onClose={() => setShowRules(null)}>
+        {selectedRules && (
+          <div className="space-y-6">
+            {selectedRules.sections.map((section) => (
+              <section key={section.heading} className="space-y-3">
+                <h3 className="flex items-center gap-2 font-fredoka text-xl text-white">
+                  <BookOpen className={`h-5 w-5 ${selectedRulesGame ? gameThemes[selectedRulesGame.theme].textStrong : 'text-playzenha-yellow'}`} />
+                  {section.heading}
+                </h3>
+                <ul className="space-y-2">
+                  {section.body.map((item) => (
+                    <li
+                      key={item}
+                      className={`rounded-2xl border bg-white/5 p-4 leading-relaxed text-playzenha-muted ${selectedRulesGame ? gameThemes[selectedRulesGame.theme].border : 'border-white/10'}`}
+                    >
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+        )}
+      </Modal>
+    </AppShell>
+  )
+}
+
+interface HeroSectionProps {
+  featuredGame: GameItem
+  onStart: () => void
+  onExplore: () => void
+}
+
+const HeroSection: React.FC<HeroSectionProps> = ({ featuredGame, onStart, onExplore }) => {
+  const theme = gameThemes[featuredGame.theme]
+
+  return (
+    <section className="section-container grid min-h-[calc(100vh-5rem)] items-center gap-10 py-12 lg:grid-cols-[1.05fr_0.95fr] lg:py-16">
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.55 }}
+        className="max-w-3xl"
+      >
+        <Badge variant="primary" className="mb-5">
+          <Sparkles className="h-3.5 w-3.5 text-playzenha-yellow" />
+          SaaS de party games
+        </Badge>
+        <h1 className="font-fredoka text-5xl leading-[0.95] text-white sm:text-6xl lg:text-7xl">
+          Dê play na sua resenha.
+        </h1>
+        <p className="mt-6 max-w-2xl text-lg leading-relaxed text-playzenha-muted sm:text-xl">
+          Jogos feitos para transformar qualquer encontro em uma experiência inesquecível.
+        </p>
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <Button size="lg" onClick={onStart}>
+            <Play className="h-5 w-5 fill-current" />
+            Começar agora
+          </Button>
+          <Button size="lg" variant="ghost" onClick={onExplore}>
+            Explorar jogos
+            <ArrowRight className="h-5 w-5" />
+          </Button>
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.94, y: 24 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+        className="relative"
+      >
+        <Card className={`bg-gradient-to-br p-5 ring-1 sm:p-7 ${theme.bg} ${theme.border} ${theme.ring}`}>
+          <div className={`absolute right-6 top-6 opacity-20 ${theme.textStrong}`}>
+            <Star className="h-24 w-24 fill-current" />
+          </div>
+          <div className="relative">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <Badge variant="accent">Ao vivo agora</Badge>
+                <h2 className="mt-4 font-fredoka text-4xl text-white">{featuredGame.name}</h2>
+                <p className="mt-2 text-playzenha-muted">{featuredGame.description}</p>
+              </div>
+              <div className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl shadow-lg ${theme.accent} ${theme.onAccent} ${theme.shadow}`}>
+                {featuredGame.icon}
+              </div>
+            </div>
+
+            <div className="mt-8 grid grid-cols-2 gap-3">
+              <MiniStat label="Jogadores" value={featuredGame.players} icon={<Users className="h-4 w-4" />} theme={theme} />
+              <MiniStat label="Tempo médio" value={featuredGame.averageTime} icon={<Clock className="h-4 w-4" />} theme={theme} />
+              <MiniStat label="Status" value="Pronto" icon={<Flame className="h-4 w-4" />} theme={theme} />
+              <MiniStat label="Clima" value="Competitivo" icon={<Trophy className="h-4 w-4" />} theme={theme} />
+            </div>
+
+            <div className="mt-6 rounded-3xl border border-white/10 bg-dark-bg/60 p-4">
+              <div className="mb-3 flex items-center justify-between text-sm">
+                <span className="font-bold text-white">Energia da resenha</span>
+                <span className={`font-bold ${theme.textStrong}`}>92%</span>
+              </div>
+              <div className="h-3 overflow-hidden rounded-full bg-white/10">
+                <div className={`h-full w-[92%] rounded-full ${theme.accent}`} />
+              </div>
+            </div>
+          </div>
+        </Card>
+      </motion.div>
+    </section>
+  )
+}
+
+const MiniStat: React.FC<{ label: string; value: string; icon: React.ReactNode; theme: GameTheme }> = ({ label, value, icon, theme }) => (
+  <div className={`rounded-2xl border bg-white/5 p-4 ${theme.border}`}>
+    <div className={`mb-2 flex items-center gap-2 ${theme.textStrong}`}>{icon}</div>
+    <p className="text-xs font-bold uppercase tracking-wide text-playzenha-muted">{label}</p>
+    <p className="mt-1 font-bold text-white">{value}</p>
+  </div>
+)
+
+const ExperienceSection: React.FC = () => {
+  const items = [
+    {
+      title: 'Rápido de começar',
+      text: 'Abra no celular, escolha o jogo e deixe a rodada acontecer sem setup complicado.',
+      icon: <Zap className="h-6 w-6" />
+    },
+    {
+      title: 'Visual de jogo premium',
+      text: 'Interfaces grandes, claras e divertidas para todo mundo entender mesmo na bagunça.',
+      icon: <Sparkles className="h-6 w-6" />
+    },
+    {
+      title: 'Evolução de SaaS',
+      text: 'Base visual pronta para ranking, planos, histórico, favoritos e próximos modos.',
+      icon: <BarChart3 className="h-6 w-6" />
+    }
+  ]
+
+  return (
+    <section className="section-container py-10 sm:py-16">
+      <div className="grid gap-4 md:grid-cols-3">
+        {items.map((item) => (
+          <Card key={item.title} interactive>
+            <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-playzenha-blue text-white">
+              {item.icon}
+            </div>
+            <h3 className="font-fredoka text-2xl text-white">{item.title}</h3>
+            <p className="mt-3 text-sm leading-relaxed text-playzenha-muted">{item.text}</p>
+          </Card>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+interface GamesLibraryProps {
+  games: GameItem[]
+  onStartGame: (game: GameView) => void
+  onShowRules: (game: RulesKey) => void
+}
+
+const GamesLibrary: React.FC<GamesLibraryProps> = ({ games, onStartGame, onShowRules }) => {
+  return (
+    <section id="jogos" className="section-container scroll-mt-24 py-12 sm:py-16">
+      <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <Badge variant="accent" className="mb-4">Biblioteca de jogos</Badge>
+          <h2 className="font-fredoka text-4xl text-white sm:text-5xl">Escolha o jogo da rodada</h2>
+        </div>
+        <p className="max-w-xl text-playzenha-muted">
+          Cards grandes, informações claras e ações rápidas para colocar a galera para jogar sem perder o clima.
+        </p>
       </div>
 
-      {/* Navbar */}
-      <nav className="fixed top-0 z-50 glass-panel border-b border-white/10 px-4 py-3 md:px-6 md:py-4 mt-2 mx-2 md:mt-4 md:mx-auto max-w-7xl rounded-2xl md:rounded-2xl left-0 right-0 transition-all duration-300">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 md:gap-3">
-             <div className="relative w-8 h-8 md:w-10 md:h-10 flex items-center justify-center">
-                <img src="/Assets/PNG/Yellow/Default/star.png" className="absolute w-full h-full animate-spin-slow opacity-80" alt="Logo Star" />
-                <Gamepad2 className="w-4 h-4 md:w-5 md:h-5 text-white relative z-10" />
-             </div>
-             <span className="font-fredoka text-xl md:text-2xl tracking-wide text-white">PlayZenha</span>
-          </div>
-          
-          <div className="hidden md:flex items-center gap-6">
-            <a href="#gamificacao" className="hover:text-playzenha-yellow transition-colors font-bold text-sm uppercase tracking-wider">Rankings</a>
-            <a href="#jogos" className="hover:text-playzenha-yellow transition-colors font-bold text-sm uppercase tracking-wider">Jogos</a>
-            
-            <div className="w-px h-6 bg-white/20 mx-2" />
-            
-            <button 
-                onClick={() => onStartGame('login')}
-                className="text-white hover:text-playzenha-yellow font-bold text-sm transition-colors"
-            >
-                Entrar
-            </button>
-            <GameButton variant="primary" size="sm" onClick={() => onStartGame('login')}>
-              CRIAR CONTA
-            </GameButton>
-          </div>
-
-          {/* Mobile CTA */}
-          <div className="md:hidden flex items-center gap-3">
-             <button 
-                onClick={() => onStartGame('login')}
-                className="text-xs font-bold text-white/80"
-             >
-                Entrar
-             </button>
-            <GameButton variant="primary" size="sm" onClick={() => onStartGame('login')} className="text-xs px-3 py-1.5 shadow-sm">
-              CRIAR CONTA
-            </GameButton>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <section className="relative pt-40 pb-20 px-6 z-10">
-        <div className="container mx-auto max-w-7xl flex flex-col md:flex-row items-center gap-12">
-          
-          {/* Text Content */}
-          <motion.div 
-            className="flex-1 text-center md:text-left"
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 mb-6 hover:bg-white/20 transition-colors cursor-default">
-              <span className="w-2 h-2 rounded-full bg-success-green animate-pulse" />
-              <span className="text-sm font-bold text-playzenha-yellow">+2.4k Jogadores Online</span>
-            </div>
-            
-            <h1 className="font-fredoka text-5xl md:text-7xl leading-tight mb-6 text-white drop-shadow-lg px-2 md:px-0">
-              A Resenha virou <br />
-              <span className="text-playzenha-yellow drop-shadow-md">COMPETIÇÃO</span>
-            </h1>
-            
-            <p className="text-xl text-gray-300 mb-8 max-w-lg mx-auto md:mx-0 leading-relaxed font-light">
-              Junte seus amigos, aposte <strong>Zenhas</strong> e suba no ranking global. 
-              A plataforma definitiva de jogos de tabuleiro e cartas online.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row items-center gap-4 justify-center md:justify-start">
-              <GameButton variant="primary" size="lg" onClick={() => document.getElementById('jogos')?.scrollIntoView({ behavior: 'smooth' })} className="group flex items-center gap-3 shadow-lg hover:shadow-playzenha-yellow/20">
-                <GameIcon type="play" variant="dark" size="md" />
-                <span>COMEÇAR A JOGAR</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </GameButton>
-              
-              <button className="flex items-center gap-2 px-6 py-4 rounded-xl glass-button text-white font-bold hover:bg-white/20 transition-all border border-white/10">
-                <img src="/Assets/PNG/Blue/Default/icon_circle.png" className="w-6 h-6" alt="Icon" />
-                <span>Ver Rankings</span>
-              </button>
-            </div>
-          </motion.div>
-
-          {/* Gamified Visual */}
-          <motion.div 
-            className="flex-1 w-full max-w-md mx-auto relative perspective-1000"
-            initial={{ opacity: 0, scale: 0.8, rotateY: 15 }}
-            animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-             {/* Decorative Elements */}
-             <motion.img 
-                src="/Assets/PNG/Yellow/Default/star.png" 
-                className="absolute -top-10 -right-10 w-24 h-24 z-20 drop-shadow-lg filter brightness-110"
-                animate={{ y: [0, -20, 0], rotate: [0, 10, 0] }}
-                transition={{ duration: 4, repeat: Infinity }}
-             />
-             <motion.img 
-                src="/Assets/PNG/Blue/Default/star_outline.png" 
-                className="absolute bottom-0 -left-10 w-20 h-20 z-0 opacity-50"
-                animate={{ y: [0, 20, 0], rotate: [0, -10, 0] }}
-                transition={{ duration: 5, repeat: Infinity }}
-             />
-
-             {/* Main Card */}
-             <div className="glass-panel p-6 sm:p-8 relative overflow-hidden bg-gradient-to-br from-white/10 to-transparent border border-white/20 shadow-2xl backdrop-blur-xl rounded-2xl sm:rounded-3xl">
-                
-                {/* Header */}
-                <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 mb-6 sm:mb-8 relative z-10 border-b border-white/10 pb-6 text-center sm:text-left">
-                    <div className="w-20 h-20 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-playzenha-blue to-purple-500 border-4 border-white/20 flex items-center justify-center overflow-hidden shadow-inner shrink-0">
-                        <span className="text-4xl sm:text-3xl filter drop-shadow">😎</span>
-                    </div>
-                    <div className="flex flex-col items-center sm:items-start">
-                        <h3 className="font-fredoka text-2xl sm:text-xl text-white mb-1 sm:mb-0">Mestre da Resenha</h3>
-                        <div className="flex items-center gap-2 mt-1 justify-center sm:justify-start">
-                          <span className="text-xs font-bold text-dark-bg bg-playzenha-yellow px-2 py-0.5 rounded-full shadow-lg shadow-playzenha-yellow/20">NÍVEL 42</span>
-                          <span className="text-sm text-gray-300 font-medium">Ouro I</span>
-                        </div>
-                    </div>
-                    <div className="w-full sm:w-auto sm:ml-auto flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center bg-white/5 sm:bg-transparent rounded-xl p-3 sm:p-0 gap-3 sm:gap-0 mt-2 sm:mt-0 border border-white/5 sm:border-none">
-                        <span className="text-xs text-gray-400 font-bold uppercase tracking-widest sm:hidden pl-2">Saldo</span>
-                        <div className="flex flex-col sm:items-end">
-                            <div className="flex items-center gap-1.5 text-playzenha-yellow font-bold text-xl sm:text-lg drop-shadow-sm">
-                                <img src="/Assets/PNG/Yellow/Default/icon_circle.png" className="w-6 h-6 sm:w-5 sm:h-5 shadow-sm" />
-                                <span>15,400</span>
-                            </div>
-                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest hidden sm:block">Zenhas</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="space-y-6 relative z-10">
-                    {/* Rank Progress */}
-                    <div className="space-y-2">
-                        <div className="flex justify-between items-center text-xs uppercase tracking-wider font-bold text-gray-400">
-                            <span className="flex items-center gap-2">
-                                <Trophy className="w-3 h-3 text-playzenha-yellow" />
-                                Próximo Rank: Diamante
-                            </span>
-                            <span className="text-playzenha-blue">85%</span>
-                        </div>
-                        <div className="h-3 w-full bg-dark-bg/60 rounded-full overflow-hidden border border-white/5 shadow-inner">
-                            <div className="h-full bg-gradient-to-r from-playzenha-blue to-cyan-400 w-[85%] shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
-                        </div>
-                    </div>
-
-                    {/* Active Quest */}
-                    <div className="bg-gradient-to-r from-playzenha-blue/20 to-transparent rounded-xl p-4 border border-playzenha-blue/30 flex items-start gap-4 hover:bg-playzenha-blue/30 transition-colors cursor-pointer group">
-                        <div className="w-10 h-10 rounded-lg bg-playzenha-blue/40 flex items-center justify-center shrink-0 border border-white/10 group-hover:scale-110 transition-transform">
-                            <Zap className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                            <p className="font-bold text-sm text-white mb-1">Vença 3 partidas de Truco</p>
-                            <p className="text-xs text-gray-300">Recompensa: <span className="text-playzenha-yellow font-bold">500 Zenhas</span></p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="mt-8">
-                     <button className="w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold uppercase tracking-widest transition-colors">
-                        Ver Perfil Completo
-                     </button>
-                </div>
-             </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Gamification Features Grid */}
-      <section id="gamificacao" className="py-24 relative bg-dark-bg/50">
-        <div className="container mx-auto px-6 max-w-7xl relative z-10">
-            <div className="text-center mb-16">
-                <span className="text-playzenha-blue font-bold tracking-[0.2em] text-sm uppercase bg-playzenha-blue/10 px-4 py-2 rounded-full border border-playzenha-blue/20">Sistema de Progressão</span>
-                <h2 className="font-fredoka text-4xl py-6 text-white">Jogue mais, Ganhe mais</h2>
-                <p className="text-gray-400 max-w-2xl mx-auto">Nossa plataforma recompensa cada vitória e cada interação.</p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {[
-                    {
-                        title: "Apostas P2P",
-                        desc: "Desafie seus amigos valendo Zenhas. Quem perder paga a conta (virtual)!",
-                        icon: <Coins className="w-8 h-8 text-playzenha-yellow" />,
-                        bg: "to-yellow-600/5",
-                        border: "border-yellow-500/20 hover:border-playzenha-yellow/50"
-                    },
-                    {
-                        title: "Rankings Semanais",
-                        desc: "Suba de divisão e ganhe molduras exclusivas e skins para seu avatar.",
-                        icon: <Crown className="w-8 h-8 text-playzenha-blue" />,
-                        bg: "to-blue-600/5",
-                        border: "border-blue-500/20 hover:border-playzenha-blue/50"
-                    },
-                    {
-                        title: "Conquistas",
-                        desc: "Desbloqueie badges raras por feitos épicos durante as partidas.",
-                        icon: <Star className="w-8 h-8 text-purple-400" />,
-                        bg: "to-purple-600/5",
-                        border: "border-purple-500/20 hover:border-purple-400/50"
-                    }
-                ].map((item, idx) => (
-                    <motion.div 
-                        key={idx}
-                        className={`glass-panel p-8 bg-gradient-to-br from-white/5 ${item.bg} ${item.border} hover:-translate-y-2 transition-all duration-300 group cursor-default`}
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.1 }}
-                        viewport={{ once: true }}
-                    >
-                        <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg border border-white/5">
-                            {item.icon}
-                        </div>
-                        <h3 className="font-fredoka text-2xl mb-3 text-white group-hover:text-playzenha-yellow transition-colors">{item.title}</h3>
-                        <p className="text-gray-400 leading-relaxed font-light">{item.desc}</p>
-                    </motion.div>
-                ))}
-            </div>
-        </div>
-      </section>
-
-      {/* Games List Section */}
-      <section id="jogos" className="py-20 relative">
-        <div className="container mx-auto px-6 max-w-7xl">
-             <div className="text-center mb-16">
-                <span className="text-playzenha-yellow font-bold tracking-[0.2em] text-sm uppercase bg-playzenha-yellow/10 px-4 py-2 rounded-full border border-playzenha-yellow/20">Biblioteca de Jogos</span>
-                <h2 className="font-fredoka text-4xl py-6 text-white">Escolha sua Resenha</h2>
-             </div>
-
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                {/* Impostor Game Card */}
-                <div className="group relative bg-gradient-to-br from-playzenha-blue/10 to-dark-blue/50 rounded-[2rem] p-8 border border-white/10 overflow-hidden hover:border-playzenha-yellow/50 transition-all duration-300 hover:-translate-y-2">
-                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity transform group-hover:rotate-12">
-                        <Users className="w-32 h-32 text-playzenha-blue" />
-                    </div>
-                    
-                    <div className="relative z-10">
-                        <span className="bg-playzenha-blue text-white font-bold px-3 py-1 rounded-lg text-xs uppercase tracking-wider mb-4 inline-block">Dedução Social</span>
-                        <h3 className="font-fredoka text-3xl mb-4 text-white group-hover:text-playzenha-blue transition-colors">Impostor</h3>
-                        <p className="text-gray-300 mb-6 leading-relaxed min-h-20">
-                            Descubra quem é o mentiroso na roda! Um clássico para grupos, onde você deve encontrar o impostor antes que o tempo acabe.
-                        </p>
-                        
-                        <div className="flex gap-4 mb-4 text-sm font-bold text-gray-400">
-                             <div className="flex items-center gap-2"><Users className="w-4 h-4" /> 3-12 Jogadores</div>
-                             <div className="flex items-center gap-2"><Clock className="w-4 h-4" /> 10 min</div>
-                        </div>
-
-                        <div className="flex gap-2">
-                          <GameButton variant="primary" onClick={() => onStartGame('impostor')} className="flex-1 shadow-lg group-hover:shadow-playzenha-blue/30">
-                                JOGAR
-                            </GameButton>
-                          <button
-                            onClick={() => setShowRules('impostor')}
-                            className="px-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white text-gray-300 transition-colors font-bold text-sm tracking-wide uppercase inline-flex items-center gap-2"
-                            title="Regras"
-                          >
-                            <BookOpen className="w-4 h-4" />
-                            Regras
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Ultima Noite Game Card */}
-                <div className="group relative bg-gradient-to-br from-purple-900/20 to-black/50 rounded-[2rem] p-8 border border-white/10 overflow-hidden hover:border-purple-500/50 transition-all duration-300 hover:-translate-y-2">
-                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity transform group-hover:-rotate-12">
-                        <Moon className="w-32 h-32 text-purple-500" />
-                    </div>
-                    
-                    <div className="relative z-10">
-                        <span className="bg-purple-600 text-white font-bold px-3 py-1 rounded-lg text-xs uppercase tracking-wider mb-4 inline-block">Estratégia & Bluff</span>
-                        <div className="flex items-center gap-2 mb-4">
-                            <h3 className="font-fredoka text-3xl text-white group-hover:text-purple-400 transition-colors">Última Noite</h3>
-                            <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded animate-pulse">NOVO</span>
-                        </div>
-                        <p className="text-gray-300 mb-6 leading-relaxed min-h-20">
-                            Lobos, Anjos e Detetives! Uma noite de mistério onde ninguém é quem diz ser. Sobreviva à noite e descubra os lobos.
-                        </p>
-                        
-                        <div className="flex gap-4 mb-4 text-sm font-bold text-gray-400">
-                             <div className="flex items-center gap-2"><Users className="w-4 h-4" /> 6+ Jogadores</div>
-                             <div className="flex items-center gap-2"><Clock className="w-4 h-4" /> 15 min</div>
-                        </div>
-
-                        <div className="flex gap-2">
-                          <GameButton variant="secondary" onClick={() => onStartGame('ultima-noite')} className="flex-1 shadow-lg shadow-purple-900/20 hover:shadow-purple-500/30 border-purple-500/30 text-white">
-                                JOGAR
-                            </GameButton>
-                          <button
-                            onClick={() => setShowRules('ultima-noite')}
-                            className="px-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white text-gray-300 transition-colors font-bold text-sm tracking-wide uppercase inline-flex items-center gap-2"
-                            title="Regras"
-                          >
-                            <BookOpen className="w-4 h-4" />
-                            Regras
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                  {/* Contato Game Card */}
-                  <div className="group relative bg-gradient-to-br from-emerald-900/20 to-black/50 rounded-[2rem] p-8 border border-white/10 overflow-hidden hover:border-emerald-400/50 transition-all duration-300 hover:-translate-y-2">
-                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity transform group-hover:rotate-12">
-                      <Smartphone className="w-32 h-32 text-emerald-400" />
-                    </div>
-
-                    <div className="relative z-10">
-                      <span className="bg-emerald-500 text-black font-bold px-3 py-1 rounded-lg text-xs uppercase tracking-wider mb-4 inline-block">Sincronia & Palavra</span>
-                      <div className="flex items-center gap-2 mb-4">
-                        <h3 className="font-fredoka text-3xl text-white group-hover:text-emerald-300 transition-colors">Contato</h3>
-                        <span className="bg-emerald-500 text-black text-[10px] font-black px-2 py-0.5 rounded">NOVO</span>
-                      </div>
-                      <p className="text-gray-300 mb-6 leading-relaxed min-h-20">
-                        Dois jogadores tentam pensar na mesma palavra enquanto o juiz valida o contato. A cada acerto, uma nova letra é liberada.
-                      </p>
-
-                      <div className="flex gap-4 mb-4 text-sm font-bold text-gray-400">
-                         <div className="flex items-center gap-2"><Users className="w-4 h-4" /> 3 Jogadores</div>
-                         <div className="flex items-center gap-2"><Clock className="w-4 h-4" /> 8 min</div>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <GameButton variant="secondary" onClick={() => onStartGame('contato')} className="flex-1 shadow-lg shadow-emerald-900/20 hover:shadow-emerald-400/20 border-emerald-400/30 text-white">
-                          JOGAR
-                        </GameButton>
-                        <button
-                        onClick={() => setShowRules('contato')}
-                        className="px-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white text-gray-300 transition-colors font-bold text-sm tracking-wide uppercase inline-flex items-center gap-2"
-                        title="Regras"
-                        >
-                        <BookOpen className="w-4 h-4" />
-                        Regras
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Quem Sou Eu Game Card */}
-                  <div className="group relative bg-gradient-to-br from-yellow-700/20 to-black/50 rounded-[2rem] p-8 border border-white/10 overflow-hidden hover:border-playzenha-yellow/60 transition-all duration-300 hover:-translate-y-2">
-                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity transform group-hover:rotate-12">
-                      <BrainCircuit className="w-32 h-32 text-playzenha-yellow" />
-                    </div>
-
-                    <div className="relative z-10">
-                      <span className="bg-playzenha-yellow text-dark-bg font-bold px-3 py-1 rounded-lg text-xs uppercase tracking-wider mb-4 inline-block">Adivinhação</span>
-                      <div className="flex items-center gap-2 mb-4">
-                        <h3 className="font-fredoka text-3xl text-white group-hover:text-playzenha-yellow transition-colors">Quem Sou Eu</h3>
-                        <span className="bg-playzenha-yellow text-dark-bg text-[10px] font-black px-2 py-0.5 rounded">NOVO</span>
-                      </div>
-                      <p className="text-gray-300 mb-6 leading-relaxed min-h-20">
-                        Escreva personagens em segredo e adivinhe com o celular na testa. Acerte antes do tempo acabar.
-                      </p>
-
-                      <div className="flex gap-4 mb-4 text-sm font-bold text-gray-400">
-                        <div className="flex items-center gap-2"><Users className="w-4 h-4" /> 2-10 Jogadores</div>
-                        <div className="flex items-center gap-2"><Clock className="w-4 h-4" /> 5-12 min</div>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <GameButton variant="primary" onClick={() => onStartGame('quem-sou-eu')} className="flex-1 shadow-lg shadow-playzenha-yellow/20 hover:shadow-playzenha-yellow/30">
-                          JOGAR
-                        </GameButton>
-                        <button
-                          onClick={() => setShowRules('quem-sou-eu')}
-                          className="px-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white text-gray-300 transition-colors font-bold text-sm tracking-wide uppercase inline-flex items-center gap-2"
-                          title="Regras"
-                        >
-                          <BookOpen className="w-4 h-4" />
-                          Regras
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-             </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="py-12 border-t border-white/5 mt-20 relative bg-black/20">
-        <div className="container mx-auto px-6 text-center">
-             <div className="flex items-center justify-center gap-2 mb-4">
-                <Gamepad2 className="w-6 h-6 text-playzenha-yellow" />
-                <span className="font-fredoka text-2xl text-white">PlayZenha</span>
-             </div>
-             <p className="text-gray-500 text-sm mb-8">© 2026 PlayZenha Inc. - Todos os direitos reservados.</p>
-             <div className="flex justify-center gap-8 text-sm font-bold tracking-wide">
-                            <a href="#" className="text-gray-400 hover:text-white transition-colors">TERMOS</a>
-                            <a href="#" className="text-gray-400 hover:text-white transition-colors">PRIVACIDADE</a>
-                            <a href="#" className="text-gray-400 hover:text-white transition-colors">SUPORTE</a>
-                        </div>
-                   </div>
-      </footer>
-
-      {/* Rules Modal */}
-      <AnimatePresence>
-        {showRules && (
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        {games.map((game, index) => (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setShowRules(null)}
+            key={game.id}
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.4, delay: index * 0.06 }}
           >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="bg-gray-900 border border-white/10 rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl shadow-black/50"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Header */}
-              <div className={`p-6 border-b border-white/5 flex justify-between items-center ${
-                showRules === 'impostor'
-                  ? 'bg-playzenha-blue/10'
-                  : showRules === 'contato'
-                    ? 'bg-emerald-900/20'
-                    : showRules === 'quem-sou-eu'
-                      ? 'bg-yellow-900/20'
-                      : 'bg-purple-900/20'
-              }`}>
-                <div className="flex items-center gap-3">
-                  {showRules === 'impostor' ? (
-                    <div className="p-2 bg-playzenha-blue rounded-xl">
-                      <Zap size={24} className="text-white" />
-                    </div>
-                  ) : showRules === 'contato' ? (
-                    <div className="p-2 bg-emerald-500 rounded-xl">
-                      <Smartphone size={24} className="text-black" />
-                    </div>
-                  ) : showRules === 'quem-sou-eu' ? (
-                    <div className="p-2 bg-playzenha-yellow rounded-xl">
-                      <BrainCircuit size={24} className="text-dark-bg" />
-                    </div>
-                  ) : (
-                    <div className="p-2 bg-purple-600 rounded-xl">
-                      <Moon size={24} className="text-white" />
-                    </div>
-                  )}
-                  <h2 className="text-2xl font-fredoka font-bold">
-                    {showRules === 'impostor'
-                      ? 'Regras: Impostor'
-                      : showRules === 'contato'
-                        ? 'Regras: Contato'
-                        : showRules === 'quem-sou-eu'
-                          ? 'Regras: Quem Sou Eu'
-                          : 'Regras: Última Noite'}
-                  </h2>
-                </div>
-                <button
-                  onClick={() => setShowRules(null)}
-                  className="p-2 hover:bg-white/10 rounded-full transition-colors"
-                >
-                  <X size={24} className="text-gray-400" />
-                </button>
-              </div>
-
-              {/* Content */}
-              <div className="p-6 overflow-y-auto space-y-8 text-gray-300 leading-relaxed custom-scrollbar">
-                {showRules === 'impostor' ? (
-                  <>
-                    <section>
-                      <h3 className="text-playzenha-blue font-bold text-lg mb-3 flex items-center gap-2">
-                        <Trophy size={18} /> Objetivo
-                      </h3>
-                      <ul className="list-disc pl-5 space-y-2">
-                        <li><strong className="text-white">Civis:</strong> Descobrir quem é o impostor e votar nele.</li>
-                        <li><strong className="text-white">Impostor:</strong> Enganar os outros e descobrir a palavra secreta.</li>
-                      </ul>
-                    </section>
-
-                    <section>
-                      <h3 className="text-playzenha-blue font-bold text-lg mb-3 flex items-center gap-2">
-                        <Gamepad2 size={18} /> Como Jogar
-                      </h3>
-                      <ol className="list-decimal pl-5 space-y-3">
-                        <li>Todos recebem uma palavra secreta, exceto o Impostor (que só vê "IMPOSTOR").</li>
-                        <li>Em cada rodada, cada jogador diz uma palavra relacionada à palavra secreta.</li>
-                        <li>O Impostor deve tentar se misturar dando uma dica vaga ou copiando os outros.</li>
-                        <li>Após a rodada de dicas, todos votam em quem acham que é o Impostor.</li>
-                      </ol>
-                    </section>
-
-                    <section>
-                      <h3 className="text-playzenha-blue font-bold text-lg mb-3 flex items-center gap-2">
-                        <Zap size={18} /> Dicas
-                      </h3>
-                      <p>Seja sutil! Se sua dica for muito óbvia, o Impostor descobrirá a palavra secreta facilmente.</p>
-                    </section>
-                  </>
-                ) : showRules === 'contato' ? (
-                  <>
-                    <section>
-                      <h3 className="text-emerald-400 font-bold text-lg mb-3 flex items-center gap-2">
-                        <Trophy size={18} /> Objetivo
-                      </h3>
-                      <ul className="list-disc pl-5 space-y-2">
-                        <li><strong className="text-white">Adivinhadores:</strong> sincronizar respostas e descobrir a palavra final.</li>
-                        <li><strong className="text-white">Juiz:</strong> validar se o contato foi justo e confirmar a descoberta final.</li>
-                      </ul>
-                    </section>
-
-                    <section>
-                      <h3 className="text-emerald-400 font-bold text-lg mb-3 flex items-center gap-2">
-                        <Gamepad2 size={18} /> Como Jogar
-                      </h3>
-                      <ol className="list-decimal pl-5 space-y-3">
-                        <li>O app sorteia automaticamente 1 juiz e 2 adivinhadores.</li>
-                        <li>Somente o juiz vê a palavra completa. Os adivinhadores veem só letras liberadas (ex.: B _ _ _ _).</li>
-                        <li>Quando os dois acharem que chegaram na mesma palavra, apertam <strong className="text-white">CONTATO</strong>.</li>
-                        <li>Se o juiz validar, o app libera mais uma letra.</li>
-                        <li>Quando quiserem, os adivinhadores podem apertar <strong className="text-white">DESCOBRIR</strong> para tentar fechar a palavra.</li>
-                      </ol>
-                    </section>
-
-                    <section>
-                      <h3 className="text-emerald-400 font-bold text-lg mb-3 flex items-center gap-2">
-                        <ShieldCheck size={18} /> Regras Rápidas
-                      </h3>
-                      <ul className="list-disc pl-5 space-y-2">
-                        <li>Partida fixa de 3 jogadores.</li>
-                        <li>O modo de juiz rotativo pode ser ativado no setup.</li>
-                        <li>Palavras são escolhidas automaticamente pelo app a cada rodada.</li>
-                      </ul>
-                    </section>
-                  </>
-                ) : showRules === 'quem-sou-eu' ? (
-                  <>
-                    <section>
-                      <h3 className="text-playzenha-yellow font-bold text-lg mb-3 flex items-center gap-2">
-                        <Trophy size={18} /> Objetivo
-                      </h3>
-                      <ul className="list-disc pl-5 space-y-2">
-                        <li>Cada jogador adivinha uma unica vez o personagem da sua testa.</li>
-                        <li>Ganhar pontos acertando antes do timer terminar.</li>
-                      </ul>
-                    </section>
-
-                    <section>
-                      <h3 className="text-playzenha-yellow font-bold text-lg mb-3 flex items-center gap-2">
-                        <Gamepad2 size={18} /> Como Jogar
-                      </h3>
-                      <ol className="list-decimal pl-5 space-y-3">
-                        <li>Cadastre entre 2 e 10 jogadores.</li>
-                        <li>Cada pessoa escreve secretamente um personagem para outro jogador sorteado.</li>
-                        <li>Na vez do adivinhador, toque em Estou Pronto e aguarde o countdown.</li>
-                        <li>Durante o tempo, use os botoes ACERTEI ou DESISTIR.</li>
-                        <li>Antes de registrar, o app pede confirmacao e permite voltar com cooldown de 3 segundos.</li>
-                      </ol>
-                    </section>
-
-                    <section>
-                      <h3 className="text-playzenha-yellow font-bold text-lg mb-3 flex items-center gap-2">
-                        <ShieldCheck size={18} /> Regras Rapidas
-                      </h3>
-                      <ul className="list-disc pl-5 space-y-2">
-                        <li>A ordem de adivinhacao e sorteada aleatoriamente.</li>
-                        <li>Quando o tempo zera, conta como desistiu automaticamente.</li>
-                        <li>A tela tenta permanecer acesa com Wake Lock durante a adivinhacao.</li>
-                      </ul>
-                    </section>
-                  </>
-                ) : (
-                  <>
-                     <section>
-                      <h3 className="text-purple-400 font-bold text-lg mb-3 flex items-center gap-2">
-                        <Trophy size={18} /> Objetivo
-                      </h3>
-                      <ul className="list-disc pl-5 space-y-2">
-                        <li><strong className="text-white">Cidadãos:</strong> Identificar e eliminar os Lobos através da votação.</li>
-                        <li><strong className="text-white">Lobos:</strong> Sobreviver à votação e eliminar os cidadãos à noite.</li>
-                      </ul>
-                    </section>
-
-                    <section>
-                      <h3 className="text-purple-400 font-bold text-lg mb-3 flex items-center gap-2">
-                        <Gamepad2 size={18} /> Como Jogar (Fases)
-                      </h3>
-                      <div className="space-y-4">
-                        <div className="bg-white/5 p-4 rounded-xl border border-white/5">
-                            <h4 className="font-bold text-white mb-1">1. A Noite</h4>
-                            <p className="text-sm">Todos fecham os olhos. O app chamará os papéis especiais (Lobo, Anjo, Detetive) para acordarem e realizarem suas ações em segredo.</p>
-                        </div>
-                        <div className="bg-white/5 p-4 rounded-xl border border-white/5">
-                            <h4 className="font-bold text-white mb-1">2. O Dia</h4>
-                            <p className="text-sm">Todos acordam. Discutam quem vocês acham que são os Lobos com base nas pistas (ou mentiras!).</p>
-                        </div>
-                        <div className="bg-white/5 p-4 rounded-xl border border-white/5">
-                            <h4 className="font-bold text-white mb-1">3. Votação</h4>
-                            <p className="text-sm">Ao final do tempo, todos votam. Quem tiver mais votos é eliminado e revela sua identidade.</p>
-                        </div>
-                      </div>
-                    </section>
-
-                     <section>
-                      <h3 className="text-purple-400 font-bold text-lg mb-3 flex items-center gap-2">
-                        <Star size={18} /> Papéis Especiais
-                      </h3>
-                      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                        <li className="bg-white/5 p-2 rounded"><strong className="text-red-400">Lobo:</strong> Acorda à noite para eliminar um jogador. Se conhecem.</li>
-                        <li className="bg-white/5 p-2 rounded"><strong className="text-blue-400">Anjo:</strong> Escolhe alguém para proteger do ataque dos lobos.</li>
-                        <li className="bg-white/5 p-2 rounded"><strong className="text-yellow-400">Detetive:</strong> Pode investigar a identidade de um jogador suspeito.</li>
-                        <li className="bg-white/5 p-2 rounded"><strong className="text-gray-400">Cidadão:</strong> Não tem poderes especiais, mas deve descobrir quem são os lobos.</li>
-                      </ul>
-                    </section>
-                  </>
-                )}
-              </div>
-            </motion.div>
+            <GameCard game={game} onPlay={() => onStartGame(game.view)} onRules={() => onShowRules(game.id)} />
           </motion.div>
-        )}
-      </AnimatePresence>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+interface GameCardProps {
+  game: GameItem
+  onPlay: () => void
+  onRules: () => void
+}
+
+const GameCard: React.FC<GameCardProps> = ({ game, onPlay, onRules }) => {
+  const theme = gameThemes[game.theme]
+
+  return (
+    <Card interactive className={`flex h-full min-h-[28rem] flex-col bg-gradient-to-br ${theme.bg} ${theme.border}`}>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div className={`flex h-16 w-16 items-center justify-center rounded-3xl shadow-lg ${theme.accent} ${theme.onAccent} ${theme.shadow}`}>
+          {game.icon}
+        </div>
+        {game.featured && <Badge variant="accent">Destaque</Badge>}
+      </div>
+      <Badge variant="primary" className={`w-fit ${theme.accentSoft} ${theme.border} ${theme.text}`}>{game.category}</Badge>
+      <h3 className={`mt-4 font-fredoka text-3xl text-white decoration-4 underline-offset-8 group-hover:underline ${theme.textStrong}`}>{game.name}</h3>
+      <p className="mt-3 flex-1 text-sm leading-relaxed text-playzenha-muted">{game.description}</p>
+
+      <div className="mt-6 grid gap-3 text-sm">
+        <div className="flex items-center gap-2 text-playzenha-muted">
+          <Users className={`h-4 w-4 ${theme.textStrong}`} />
+          {game.players}
+        </div>
+        <div className="flex items-center gap-2 text-playzenha-muted">
+          <Clock className={`h-4 w-4 ${theme.textStrong}`} />
+          {game.averageTime}
+        </div>
+      </div>
+
+      <div className="mt-6 grid grid-cols-[1fr_auto] gap-3">
+        <Button
+          onClick={onPlay}
+          fullWidth
+          className={`${theme.onAccent} ${theme.shadow}`}
+          style={{ backgroundColor: theme.accentHex }}
+        >
+          Jogar
+        </Button>
+        <Button variant="ghost" onClick={onRules} aria-label={`Ver regras de ${game.name}`} className={`${theme.accentSoft} ${theme.border} ${theme.text}`}>
+          <BookOpen className="h-5 w-5" />
+          <span className="hidden sm:inline xl:hidden">Regras</span>
+        </Button>
+      </div>
+    </Card>
+  )
+}
+
+const DashboardSection: React.FC = () => {
+  return (
+    <section id="dashboard" className="section-container scroll-mt-24 py-12 sm:py-16">
+      <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <Badge variant="primary" className="mb-4">Dashboard</Badge>
+          <h2 className="font-fredoka text-4xl text-white sm:text-5xl">Seu painel da resenha</h2>
+        </div>
+        <p className="max-w-xl text-playzenha-muted">
+          Uma visão premium para evolução da conta, jogos recentes, favoritos e estatísticas.
+        </p>
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+        <Card className="p-5 sm:p-6">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {dashboardStats.map((stat) => (
+              <div key={stat.label} className="rounded-3xl border border-white/10 bg-dark-bg/50 p-5">
+                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-playzenha-blue text-white">
+                  {stat.icon}
+                </div>
+                <p className="text-sm text-playzenha-muted">{stat.label}</p>
+                <p className="mt-1 font-fredoka text-3xl text-white">{stat.value}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <div className="grid gap-5">
+          <Card>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-fredoka text-2xl text-white">Jogos recentes</h3>
+              <Badge variant="muted">Histórico</Badge>
+            </div>
+            <div className="space-y-3">
+              {recentGames.map((game, index) => (
+                <DashboardRow key={game} label={game} value={`${index + 1}ª última partida`} icon={<Clock className="h-4 w-4" />} />
+              ))}
+            </div>
+          </Card>
+
+          <Card>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-fredoka text-2xl text-white">Favoritos</h3>
+              <Heart className="h-5 w-5 text-playzenha-yellow fill-current" />
+            </div>
+            <div className="space-y-3">
+              {favoriteGames.map((game) => (
+                <DashboardRow key={game} label={game} value="Pronto para jogar" icon={<Star className="h-4 w-4" />} />
+              ))}
+            </div>
+          </Card>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+const DashboardRow: React.FC<{ label: RulesKey; value: string; icon: React.ReactNode }> = ({ label, value, icon }) => {
+  const game = games.find((item) => item.id === label) ?? games[0]
+  const theme = gameThemes[game.theme]
+
+  return (
+    <div className={`flex items-center justify-between gap-4 rounded-2xl border bg-white/5 p-4 ${theme.border}`}>
+      <div className="flex items-center gap-3">
+        <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${theme.accentSoft} ${theme.textStrong}`}>
+          {icon}
+        </span>
+        <div>
+          <p className="font-bold text-white">{game.name}</p>
+          <p className="text-xs text-playzenha-muted">{value}</p>
+        </div>
+      </div>
+      <ArrowRight className={`h-4 w-4 shrink-0 ${theme.textStrong}`} />
     </div>
   )
 }
