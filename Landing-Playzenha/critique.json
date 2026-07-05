@@ -1,0 +1,26 @@
+{
+  "kind": "critique-panel",
+  "score": 4,
+  "axes": {
+    "clarity": {
+      "score": 4,
+      "notes": "The auth surface clearly separates login and account creation with tabs, direct form labels, validation, and a single primary action."
+    },
+    "hierarchy": {
+      "score": 4,
+      "notes": "The hero carries the Playzenha promise while the form card owns the main action. The CTA is visually dominant."
+    },
+    "typography": {
+      "score": 4,
+      "notes": "Large display type, tracked uppercase labels, and readable form text follow the craft rules."
+    },
+    "motion": {
+      "score": 4,
+      "notes": "Framer Motion handles tab transitions and entrance movement without making the login feel busy."
+    },
+    "brand": {
+      "score": 4,
+      "notes": "Playzenha blue and yellow remain central, with small party accents and dark mobile-game atmosphere."
+    }
+  }
+}

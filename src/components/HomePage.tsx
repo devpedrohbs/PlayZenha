@@ -1,603 +1,450 @@
-import React, { useMemo, useState } from 'react'
-import { motion } from 'framer-motion'
-import {
-  ArrowRight,
-  BarChart3,
-  BookOpen,
-  BrainCircuit,
-  Clock,
-  Crown,
-  Flame,
-  Gamepad2,
-  Heart,
-  Moon,
-  Play,
-  ShieldCheck,
-  Sparkles,
-  Star,
-  Trophy,
-  Users,
-  Zap
-} from 'lucide-react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { GameView } from '../App'
-import AppShell from './ui/AppShell'
-import Badge from './ui/Badge'
-import Button from './ui/Button'
-import Card from './ui/Card'
-import Footer from './ui/Footer'
-import Modal from './ui/Modal'
-import Navbar from './ui/Navbar'
 
 interface HomePageProps {
   onStartGame: (game: GameView) => void
 }
 
-type RulesKey = 'impostor' | 'ultima-noite' | 'contato' | 'quem-sou-eu'
-type GameThemeKey = 'blue' | 'purple' | 'green' | 'yellow'
+type GameCategory = 'all' | 'quebra-gelo' | 'desafio' | 'festa'
 
-interface GameTheme {
-  accent: string
-  accentHex: string
-  accentSoft: string
-  bg: string
-  border: string
-  text: string
-  textStrong: string
-  onAccent: string
-  shadow: string
-  ring: string
-}
-
-interface GameItem {
-  id: RulesKey
+interface LandingGame {
+  id: string
+  category: Exclude<GameCategory, 'all'>
   view: GameView
-  name: string
-  category: string
-  players: string
-  averageTime: string
+  title: string
+  tag: string
+  prompt: string
   description: string
-  icon: React.ReactNode
-  theme: GameThemeKey
-  featured?: boolean
+  color: string
 }
 
-const gameThemes: Record<GameThemeKey, GameTheme> = {
-  blue: {
-    accent: 'bg-playzenha-blue',
-    accentHex: '#0441F2',
-    accentSoft: 'bg-playzenha-blue/15',
-    bg: 'from-playzenha-blue/25 via-playzenha-card to-playzenha-card',
-    border: 'border-playzenha-blue/45',
-    text: 'text-blue-200',
-    textStrong: 'text-playzenha-blue',
-    onAccent: 'text-white',
-    shadow: 'shadow-playzenha-blue/25',
-    ring: 'ring-playzenha-blue/35'
-  },
-  purple: {
-    accent: 'bg-purple-500',
-    accentHex: '#A855F7',
-    accentSoft: 'bg-purple-500/15',
-    bg: 'from-purple-500/25 via-playzenha-card to-playzenha-card',
-    border: 'border-purple-400/45',
-    text: 'text-purple-200',
-    textStrong: 'text-purple-300',
-    onAccent: 'text-white',
-    shadow: 'shadow-purple-500/25',
-    ring: 'ring-purple-400/35'
-  },
-  green: {
-    accent: 'bg-emerald-400',
-    accentHex: '#34D399',
-    accentSoft: 'bg-emerald-400/15',
-    bg: 'from-emerald-400/25 via-playzenha-card to-playzenha-card',
-    border: 'border-emerald-300/45',
-    text: 'text-emerald-200',
-    textStrong: 'text-emerald-300',
-    onAccent: 'text-dark-bg',
-    shadow: 'shadow-emerald-400/20',
-    ring: 'ring-emerald-300/35'
-  },
-  yellow: {
-    accent: 'bg-playzenha-yellow',
-    accentHex: '#FFC603',
-    accentSoft: 'bg-playzenha-yellow/15',
-    bg: 'from-playzenha-yellow/25 via-playzenha-card to-playzenha-card',
-    border: 'border-playzenha-yellow/50',
-    text: 'text-yellow-100',
-    textStrong: 'text-playzenha-yellow',
-    onAccent: 'text-dark-bg',
-    shadow: 'shadow-playzenha-yellow/20',
-    ring: 'ring-playzenha-yellow/35'
-  }
-}
-
-const games: GameItem[] = [
+const games: LandingGame[] = [
   {
     id: 'impostor',
+    category: 'desafio',
     view: 'impostor',
-    name: 'Impostor',
-    category: 'Dedução social',
-    players: '3-12 jogadores',
-    averageTime: '10 min',
-    description: 'Descubra quem está blefando antes que o impostor entenda a palavra secreta.',
-    icon: <Users className="h-7 w-7" />,
-    theme: 'blue',
-    featured: true
+    title: 'Impostor',
+    tag: 'Deducao social',
+    prompt: 'Descubra quem esta blefando antes que o impostor entenda o tema.',
+    description: 'Um tema secreto, um impostor perdido e uma rodada cheia de suspeitas.',
+    color: 'var(--brand-blue)'
   },
   {
     id: 'ultima-noite',
+    category: 'festa',
     view: 'ultima-noite',
-    name: 'Última Noite',
-    category: 'Estratégia e blefe',
-    players: '6+ jogadores',
-    averageTime: '15 min',
-    description: 'Lobos, anjos e detetives em uma rodada tensa de acusações e sobrevivência.',
-    icon: <Moon className="h-7 w-7" />,
-    theme: 'purple',
-    featured: true
+    title: 'Ultima Noite',
+    tag: 'Blefe e estrategia',
+    prompt: 'Lobos, anjos e detetives entram em uma noite de acusacoes.',
+    description: 'Uma experiencia de grupo grande com mediador, papeis secretos e votacao.',
+    color: 'var(--party-purple)'
   },
   {
     id: 'contato',
+    category: 'quebra-gelo',
     view: 'contato',
-    name: 'Contato',
-    category: 'Sincronia e palavra',
-    players: '3 jogadores',
-    averageTime: '8 min',
-    description: 'Dois jogadores tentam pensar igual enquanto o juiz libera novas pistas.',
-    icon: <Zap className="h-7 w-7" />,
-    theme: 'green'
+    title: 'Contato',
+    tag: 'Sincronia',
+    prompt: 'Dois jogadores tentam chegar na palavra antes que as letras acabem.',
+    description: 'Um juiz, uma palavra secreta e pistas reveladas aos poucos.',
+    color: 'var(--party-green)'
   },
   {
     id: 'quem-sou-eu',
+    category: 'desafio',
     view: 'quem-sou-eu',
-    name: 'Quem Sou Eu',
-    category: 'Adivinhação',
-    players: '2-10 jogadores',
-    averageTime: '5-12 min',
-    description: 'Escreva personagens em segredo e tente adivinhar com o celular na testa.',
-    icon: <BrainCircuit className="h-7 w-7" />,
-    theme: 'yellow'
+    title: 'Quem Sou Eu',
+    tag: 'Adivinhacao',
+    prompt: 'Escreva personagens em segredo e tente adivinhar com o celular na testa.',
+    description: 'Rodadas rapidas de personagem secreto, tempo e muita torcida.',
+    color: 'var(--brand-yellow)'
   }
 ]
 
-const rulesContent: Record<RulesKey, { title: string; sections: Array<{ heading: string; body: string[] }> }> = {
-  impostor: {
-    title: 'Regras: Impostor',
-    sections: [
-      {
-        heading: 'Objetivo',
-        body: [
-          'Civis tentam descobrir quem é o impostor.',
-          'O impostor precisa se misturar e descobrir o tema sem ser votado.'
-        ]
-      },
-      {
-        heading: 'Como jogar',
-        body: [
-          'Cada jogador recebe uma palavra, exceto o impostor.',
-          'Todos dão dicas relacionadas ao tema.',
-          'Depois da discussão, o grupo vota em quem parece estar blefando.'
-        ]
-      }
-    ]
-  },
-  'ultima-noite': {
-    title: 'Regras: Última Noite',
-    sections: [
-      {
-        heading: 'Objetivo',
-        body: [
-          'Cidadãos vencem quando eliminam todos os lobos.',
-          'Lobos vencem quando conseguem dominar a votação.'
-        ]
-      },
-      {
-        heading: 'Fases',
-        body: [
-          'Durante a noite, papéis especiais agem em segredo.',
-          'Durante o dia, todos debatem, acusam e votam.',
-          'A partida segue até uma facção vencer.'
-        ]
-      }
-    ]
-  },
-  contato: {
-    title: 'Regras: Contato',
-    sections: [
-      {
-        heading: 'Objetivo',
-        body: [
-          'Os adivinhadores precisam sincronizar ideias para chegar à palavra final.',
-          'O juiz valida os contatos e libera letras conforme a rodada avança.'
-        ]
-      },
-      {
-        heading: 'Fluxo',
-        body: [
-          'O app sorteia juiz e palavra.',
-          'Adivinhadores veem pistas parciais.',
-          'O juiz decide quando liberar novas letras ou revelar a palavra.'
-        ]
-      }
-    ]
-  },
-  'quem-sou-eu': {
-    title: 'Regras: Quem Sou Eu',
-    sections: [
-      {
-        heading: 'Objetivo',
-        body: [
-          'Cada jogador tenta adivinhar o personagem escrito para ele.',
-          'Ganha destaque quem acerta em menos tempo.'
-        ]
-      },
-      {
-        heading: 'Como jogar',
-        body: [
-          'Jogadores escrevem personagens em segredo.',
-          'Na sua vez, o jogador coloca o celular na testa.',
-          'O grupo ajuda com pistas até o acerto ou desistência.'
-        ]
-      }
-    ]
-  }
-}
-
-const dashboardStats = [
-  { label: 'Partidas jogadas', value: '128', icon: <Gamepad2 className="h-5 w-5" /> },
-  { label: 'Vitórias', value: '74', icon: <Trophy className="h-5 w-5" /> },
-  { label: 'Ranking', value: '#42', icon: <Crown className="h-5 w-5" /> },
-  { label: 'Plano atual', value: 'Premium', icon: <ShieldCheck className="h-5 w-5" /> }
+const steps = [
+  ['01', 'Abra no celular', 'Nada de instalacao. O link abre rapido e ja coloca o grupo no clima.'],
+  ['02', 'Escolha o jogo', 'Verdade, desafio, quiz ou modo festa conforme a energia do momento.'],
+  ['03', 'Comece a resenha', 'As rodadas sao curtas, faceis de entender e feitas para gerar assunto.']
 ]
 
-const recentGames: RulesKey[] = ['impostor', 'quem-sou-eu', 'contato']
-const favoriteGames: RulesKey[] = ['ultima-noite', 'impostor']
+const useCases = [
+  ['party', 'Festa com amigos'],
+  ['grill', 'Churrasco'],
+  ['gift', 'Aniversario'],
+  ['home', 'Resenha em casa'],
+  ['trip', 'Viagem'],
+  ['drink', 'Pre-role'],
+  ['group', 'Encontro em grupo']
+]
+
+const benefits = [
+  ['Sem baixar nada', 'Abriu o link, escolheu o jogo e pronto.'],
+  ['Direto no celular', 'Interface pensada para polegar, toque e mesa cheia.'],
+  ['Jogos rapidos', 'Rodadas curtas para manter o grupo junto.'],
+  ['Facil de explicar', 'Qualquer pessoa entende a primeira rodada.'],
+  ['Quebra o gelo', 'Perfeito quando o grupo ainda nao se soltou.'],
+  ['Grupo mais animado', 'Ideal para festas, churrascos e resenhas.']
+]
+
+const plans = [
+  {
+    name: 'Gratis',
+    description: 'Para testar e jogar de boa.',
+    price: 'R$ 0',
+    cta: 'Comecar gratis',
+    variant: 'ghost',
+    items: ['Jogos basicos', 'Anuncios', 'Acesso limitado']
+  },
+  {
+    name: 'Premium',
+    description: 'Para quem joga sempre com os amigos.',
+    price: 'Plano pago',
+    cta: 'Assinar Premium',
+    variant: 'primary',
+    featured: true,
+    items: ['Sem anuncios', 'Mais jogos', 'Novas categorias', 'Experiencia melhor']
+  },
+  {
+    name: 'Festa',
+    description: 'Para grupos, festas e eventos.',
+    price: 'Para eventos',
+    cta: 'Usar no meu role',
+    variant: 'blue',
+    items: ['Jogos para grupos grandes', 'Modo festa', 'Experiencias exclusivas', 'Ideal para churrascos e roles']
+  }
+]
 
 const HomePage: React.FC<HomePageProps> = ({ onStartGame }) => {
-  const [showRules, setShowRules] = useState<RulesKey | null>(null)
-  const selectedRules = showRules ? rulesContent[showRules] : null
-  const selectedRulesGame = showRules ? games.find((game) => game.id === showRules) : null
-  const featuredGame = useMemo(() => games.find((game) => game.featured) ?? games[0], [])
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [activeFilter, setActiveFilter] = useState<GameCategory>('all')
+  const [selectedGame, setSelectedGame] = useState<LandingGame>(games[1])
+  const [toast, setToast] = useState('')
+
+  const filteredGames = useMemo(
+    () => games.filter((game) => activeFilter === 'all' || game.category === activeFilter),
+    [activeFilter]
+  )
+
+  useEffect(() => {
+    document.body.classList.toggle('menu-open', menuOpen)
+    return () => document.body.classList.remove('menu-open')
+  }, [menuOpen])
+
+  useEffect(() => {
+    const elements = Array.from(document.querySelectorAll('.reveal'))
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible')
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.18 }
+    )
+
+    elements.forEach((element) => observer.observe(element))
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    if (!toast) return
+    const timer = window.setTimeout(() => setToast(''), 2200)
+    return () => window.clearTimeout(timer)
+  }, [toast])
+
+  const showToast = (message = 'Link de jogo pronto para a galera.') => setToast(message)
 
   const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    const target = document.querySelector(id)
+    if (!target) return
+    const top = target.getBoundingClientRect().top + window.pageYOffset - 74
+    window.scrollTo({ top, behavior: 'smooth' })
+    setMenuOpen(false)
+  }
+
+  const selectGame = (game: LandingGame) => {
+    setSelectedGame(game)
+    showToast(`${game.title} aberto no mockup.`)
   }
 
   return (
-    <AppShell>
-      <Navbar
-        onLogin={() => onStartGame('login')}
-        onExploreGames={() => scrollTo('jogos')}
-        onDashboard={() => scrollTo('dashboard')}
-      />
-
-      <main>
-        <HeroSection onStart={() => scrollTo('jogos')} onExplore={() => scrollTo('jogos')} featuredGame={featuredGame} />
-        <ExperienceSection />
-        <GamesLibrary games={games} onStartGame={onStartGame} onShowRules={setShowRules} />
-        <DashboardSection />
-      </main>
-
-      <Footer />
-
-      <Modal open={Boolean(showRules && selectedRules)} title={selectedRules?.title ?? ''} onClose={() => setShowRules(null)}>
-        {selectedRules && (
-          <div className="space-y-6">
-            {selectedRules.sections.map((section) => (
-              <section key={section.heading} className="space-y-3">
-                <h3 className="flex items-center gap-2 font-fredoka text-xl text-white">
-                  <BookOpen className={`h-5 w-5 ${selectedRulesGame ? gameThemes[selectedRulesGame.theme].textStrong : 'text-playzenha-yellow'}`} />
-                  {section.heading}
-                </h3>
-                <ul className="space-y-2">
-                  {section.body.map((item) => (
-                    <li
-                      key={item}
-                      className={`rounded-2xl border bg-white/5 p-4 leading-relaxed text-playzenha-muted ${selectedRulesGame ? gameThemes[selectedRulesGame.theme].border : 'border-white/10'}`}
-                    >
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ))}
+    <div className="landing-page">
+      <div className="landing-page-shell">
+        <nav className="landing-nav" aria-label="Navegacao principal">
+          <div className="landing-nav-inner">
+            <a className="landing-brand" href="#top" onClick={(event) => { event.preventDefault(); scrollTo('#top') }} aria-label="Playzenha inicio">
+              <span className="landing-brand-mark" aria-hidden="true">
+                <Icon name="chat" />
+              </span>
+              Playzenha
+            </a>
+            <div className="landing-nav-links">
+              <a href="#como-funciona" onClick={(event) => { event.preventDefault(); scrollTo('#como-funciona') }}>Como funciona</a>
+              <a href="#jogos" onClick={(event) => { event.preventDefault(); scrollTo('#jogos') }}>Jogos</a>
+              <a href="#planos" onClick={(event) => { event.preventDefault(); scrollTo('#planos') }}>Planos</a>
+              <a href="#depoimentos" onClick={(event) => { event.preventDefault(); scrollTo('#depoimentos') }}>Depoimentos</a>
+            </div>
+            <div className="landing-nav-actions">
+              <button className="landing-button landing-button-blue" type="button" onClick={() => onStartGame('login')}>Comecar a jogar</button>
+              <button className="landing-menu-button" type="button" aria-label="Abrir menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}>
+                <Icon name="menu" />
+              </button>
+            </div>
           </div>
-        )}
-      </Modal>
-    </AppShell>
+        </nav>
+
+        <main id="top">
+          <section className="landing-hero">
+            <div className="landing-hero-panel">
+              <div className="landing-hero-copy">
+                <p className="landing-eyebrow">Jogos presenciais pelo celular</p>
+                <h1>Transforme qualquer role em um jogo</h1>
+                <p className="landing-hero-lead">Jogos rapidos, engracados e interativos para jogar com seus amigos direto pelo celular. Sem baixar nada, sem explicar demais, sem deixar o role morrer.</p>
+                <div className="landing-hero-actions">
+                  <button className="landing-button landing-button-primary" type="button" onClick={() => onStartGame('login')}>Comecar a jogar</button>
+                  <button className="landing-button landing-button-ghost" type="button" onClick={() => scrollTo('#jogos')}>Ver jogos disponiveis</button>
+                </div>
+                <div className="landing-hero-proof">
+                  <span className="landing-proof-pill">Direto no navegador</span>
+                  <span className="landing-proof-pill">Feito para jogar em grupo</span>
+                  <span className="landing-proof-pill">Planos gratis, premium e festa</span>
+                </div>
+              </div>
+
+              <div className="landing-hero-visual">
+                <article className="landing-phone" aria-label="Mockup do Playzenha no celular">
+                  <div className="landing-phone-screen">
+                    <div className="landing-phone-top">
+                      <span>Playzenha</span>
+                      <span>Ao vivo</span>
+                    </div>
+                    <div className="landing-game-live">
+                      <small>{selectedGame.tag}</small>
+                      <h3>{selectedGame.title}</h3>
+                      <div className="landing-prompt-card">{selectedGame.prompt}</div>
+                      <div className="landing-players" aria-label="Jogadores ativos">
+                        <div className="landing-player">Lu</div>
+                        <div className="landing-player">Ca</div>
+                        <div className="landing-player">Bia</div>
+                      </div>
+                    </div>
+                    <div className="landing-phone-cta">
+                      <button type="button" onClick={() => showToast('Proxima rodada pronta.')}>Rodar proxima</button>
+                      <button type="button" onClick={() => showToast('Convite pronto para compartilhar.')}>Chamar a galera</button>
+                    </div>
+                  </div>
+                </article>
+                <div className="landing-float-card landing-float-a"><strong>Impostor</strong><span>blefe rapido para suspeitar de todo mundo</span></div>
+                <div className="landing-float-card landing-float-b"><strong>Ultima Noite</strong><span>papeis secretos para grupo grande</span></div>
+                <div className="landing-float-card landing-float-c"><strong>Contato</strong><span>sincronia e palavra secreta</span></div>
+              </div>
+            </div>
+          </section>
+
+          <section className="landing-section reveal" id="como-funciona">
+            <SectionHead eyebrow="Como funciona" title="Da tela para a resenha em segundos">
+              A experiencia precisa ser obvia na primeira visita: abriu no celular, escolheu o clima do role e todo mundo entra na brincadeira.
+            </SectionHead>
+            <div className="landing-steps">
+              {steps.map(([number, title, text]) => (
+                <article className="landing-step-card" key={number}>
+                  <div className="landing-step-number">{number}</div>
+                  <div>
+                    <h3>{title}</h3>
+                    <p>{text}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="landing-section reveal" id="jogos">
+            <SectionHead eyebrow="Jogos disponiveis" title="Escolha o jogo que salva o role">
+              Cards tocaveis, com microinteracao e feedback no mockup. No celular, o usuario entende a variedade sem precisar ler demais.
+            </SectionHead>
+            <div className="landing-games-shell">
+              <div className="landing-filter-row" aria-label="Filtros de jogos">
+                {[
+                  ['all', 'Todos'],
+                  ['quebra-gelo', 'Quebra-gelo'],
+                  ['desafio', 'Desafio'],
+                  ['festa', 'Festa']
+                ].map(([filter, label]) => (
+                  <button
+                    className={`landing-filter-chip ${activeFilter === filter ? 'is-active' : ''}`}
+                    key={filter}
+                    type="button"
+                    onClick={() => setActiveFilter(filter as GameCategory)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <div className="landing-game-grid">
+                {filteredGames.map((game) => (
+                  <article
+                    className={`landing-game-card ${selectedGame.id === game.id ? 'is-selected' : ''}`}
+                    key={game.id}
+                    style={{ '--card-color': game.color } as React.CSSProperties}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Jogar ${game.title}`}
+                    onMouseEnter={() => selectGame(game)}
+                    onFocus={() => selectGame(game)}
+                    onClick={() => onStartGame(game.view)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        onStartGame(game.view)
+                      }
+                    }}
+                  >
+                    <span className="landing-card-tag">{game.tag}</span>
+                    <h3>{game.title}</h3>
+                    <p>{game.description}</p>
+                    <span className="landing-card-play">Jogar</span>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="landing-section reveal">
+            <SectionHead eyebrow="Feito para qualquer role" title="Quando junta gente, cabe Playzenha">
+              A linguagem e os cenarios sao brasileiros, sociais e diretos. Nada de app serio demais para um momento que precisa ser leve.
+            </SectionHead>
+            <div className="landing-use-strip">
+              {useCases.map(([icon, title]) => (
+                <article className="landing-use-card" key={title}>
+                  <span className="landing-mini-icon"><Icon name={icon} /></span>
+                  <h3>{title}</h3>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="landing-section reveal">
+            <div className="landing-benefits">
+              <div className="landing-benefit-hero">
+                <div>
+                  <p className="landing-eyebrow">Beneficios</p>
+                  <h2>Menos enrolacao. Mais risada.</h2>
+                  <p>Playzenha foi pensado para entrar no meio do role sem virar uma explicacao longa. O jogo precisa caber na mao e no tempo da galera.</p>
+                </div>
+                <button className="landing-button landing-button-primary" type="button" onClick={() => onStartGame('login')}>Comecar de boa</button>
+              </div>
+              <div className="landing-benefit-stack">
+                {benefits.map(([title, text]) => (
+                  <article className="landing-benefit-card" key={title}>
+                    <h3>{title}</h3>
+                    <p>{text}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="landing-section reveal" id="planos">
+            <SectionHead eyebrow="Planos" title="Comece gratis, evolua quando o role pedir">
+              Tres caminhos simples: testar, jogar sempre ou levar para uma festa grande com experiencias especiais.
+            </SectionHead>
+            <div className="landing-plans">
+              {plans.map((plan) => (
+                <article className={`landing-plan-card ${plan.featured ? 'featured' : ''}`} key={plan.name}>
+                  {plan.featured && <span className="landing-plan-badge">Mais recomendado</span>}
+                  <div>
+                    <h3>{plan.name}</h3>
+                    <p>{plan.description}</p>
+                  </div>
+                  <div className="landing-price">{plan.price}</div>
+                  <ul className="landing-plan-list">
+                    {plan.items.map((item) => (
+                      <li key={item}><span className="landing-check" aria-hidden="true" />{item}</li>
+                    ))}
+                  </ul>
+                  <button
+                    className={`landing-button landing-button-${plan.variant}`}
+                    type="button"
+                    onClick={() => onStartGame('login')}
+                  >
+                    {plan.cta}
+                  </button>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="landing-section reveal" id="depoimentos">
+            <div className="landing-testimonials">
+              <div className="landing-quote-wall">
+                <div>
+                  <p className="landing-eyebrow">Social proof</p>
+                  <h2>O grupo entende antes da primeira rodada acabar</h2>
+                </div>
+                <p>Historias curtas do tipo de momento em que o Playzenha entra melhor: churrasco, grupo novo e aquela hora em que alguem precisa puxar a energia.</p>
+              </div>
+              <div className="landing-testimonial-list">
+                <Testimonial quote="Usei no churrasco e virou a atracao principal da noite." author="Marina, resenha de sabado" />
+                <Testimonial quote="Foi perfeito para quebrar o gelo no grupo." author="Rafa, aniversario com amigos novos" />
+                <Testimonial quote="Todo mundo abriu no celular e em 2 minutos ja estava jogando." author="Joao, pre-role antes da festa" />
+              </div>
+            </div>
+          </section>
+
+          <section className="landing-final-cta reveal">
+            <p className="landing-eyebrow">Pronto para jogar</p>
+            <h2>Seu proximo role pode ser muito mais divertido.</h2>
+            <p>Abra no celular, chame a galera e escolha o primeiro jogo. O resto vira historia do grupo.</p>
+            <button className="landing-button landing-button-primary" type="button" onClick={() => onStartGame('login')}>Comecar a jogar agora</button>
+          </section>
+        </main>
+
+        <footer className="landing-footer">
+          <span>Playzenha</span>
+          <span>Jogos presenciais para resenhas, festas e grupos de amigos.</span>
+        </footer>
+      </div>
+      <div className={`landing-toast ${toast ? 'is-visible' : ''}`} role="status" aria-live="polite">{toast}</div>
+    </div>
   )
 }
 
-interface HeroSectionProps {
-  featuredGame: GameItem
-  onStart: () => void
-  onExplore: () => void
-}
-
-const HeroSection: React.FC<HeroSectionProps> = ({ featuredGame, onStart, onExplore }) => {
-  const theme = gameThemes[featuredGame.theme]
-
-  return (
-    <section className="section-container grid min-h-[calc(100vh-5rem)] items-center gap-10 py-12 lg:grid-cols-[1.05fr_0.95fr] lg:py-16">
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55 }}
-        className="max-w-3xl"
-      >
-        <Badge variant="primary" className="mb-5">
-          <Sparkles className="h-3.5 w-3.5 text-playzenha-yellow" />
-          SaaS de party games
-        </Badge>
-        <h1 className="font-fredoka text-5xl leading-[0.95] text-white sm:text-6xl lg:text-7xl">
-          Dê play na sua resenha.
-        </h1>
-        <p className="mt-6 max-w-2xl text-lg leading-relaxed text-playzenha-muted sm:text-xl">
-          Jogos feitos para transformar qualquer encontro em uma experiência inesquecível.
-        </p>
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Button size="lg" onClick={onStart}>
-            <Play className="h-5 w-5 fill-current" />
-            Começar agora
-          </Button>
-          <Button size="lg" variant="ghost" onClick={onExplore}>
-            Explorar jogos
-            <ArrowRight className="h-5 w-5" />
-          </Button>
-        </div>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.94, y: 24 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.1 }}
-        className="relative"
-      >
-        <Card className={`bg-gradient-to-br p-5 ring-1 sm:p-7 ${theme.bg} ${theme.border} ${theme.ring}`}>
-          <div className={`absolute right-6 top-6 opacity-20 ${theme.textStrong}`}>
-            <Star className="h-24 w-24 fill-current" />
-          </div>
-          <div className="relative">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <Badge variant="accent">Ao vivo agora</Badge>
-                <h2 className="mt-4 font-fredoka text-4xl text-white">{featuredGame.name}</h2>
-                <p className="mt-2 text-playzenha-muted">{featuredGame.description}</p>
-              </div>
-              <div className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl shadow-lg ${theme.accent} ${theme.onAccent} ${theme.shadow}`}>
-                {featuredGame.icon}
-              </div>
-            </div>
-
-            <div className="mt-8 grid grid-cols-2 gap-3">
-              <MiniStat label="Jogadores" value={featuredGame.players} icon={<Users className="h-4 w-4" />} theme={theme} />
-              <MiniStat label="Tempo médio" value={featuredGame.averageTime} icon={<Clock className="h-4 w-4" />} theme={theme} />
-              <MiniStat label="Status" value="Pronto" icon={<Flame className="h-4 w-4" />} theme={theme} />
-              <MiniStat label="Clima" value="Competitivo" icon={<Trophy className="h-4 w-4" />} theme={theme} />
-            </div>
-
-            <div className="mt-6 rounded-3xl border border-white/10 bg-dark-bg/60 p-4">
-              <div className="mb-3 flex items-center justify-between text-sm">
-                <span className="font-bold text-white">Energia da resenha</span>
-                <span className={`font-bold ${theme.textStrong}`}>92%</span>
-              </div>
-              <div className="h-3 overflow-hidden rounded-full bg-white/10">
-                <div className={`h-full w-[92%] rounded-full ${theme.accent}`} />
-              </div>
-            </div>
-          </div>
-        </Card>
-      </motion.div>
-    </section>
-  )
-}
-
-const MiniStat: React.FC<{ label: string; value: string; icon: React.ReactNode; theme: GameTheme }> = ({ label, value, icon, theme }) => (
-  <div className={`rounded-2xl border bg-white/5 p-4 ${theme.border}`}>
-    <div className={`mb-2 flex items-center gap-2 ${theme.textStrong}`}>{icon}</div>
-    <p className="text-xs font-bold uppercase tracking-wide text-playzenha-muted">{label}</p>
-    <p className="mt-1 font-bold text-white">{value}</p>
+const SectionHead: React.FC<{ eyebrow: string; title: string; children: React.ReactNode }> = ({ eyebrow, title, children }) => (
+  <div className="landing-section-head">
+    <div>
+      <p className="landing-eyebrow">{eyebrow}</p>
+      <h2>{title}</h2>
+    </div>
+    <p>{children}</p>
   </div>
 )
 
-const ExperienceSection: React.FC = () => {
-  const items = [
-    {
-      title: 'Rápido de começar',
-      text: 'Abra no celular, escolha o jogo e deixe a rodada acontecer sem setup complicado.',
-      icon: <Zap className="h-6 w-6" />
-    },
-    {
-      title: 'Visual de jogo premium',
-      text: 'Interfaces grandes, claras e divertidas para todo mundo entender mesmo na bagunça.',
-      icon: <Sparkles className="h-6 w-6" />
-    },
-    {
-      title: 'Evolução de SaaS',
-      text: 'Base visual pronta para ranking, planos, histórico, favoritos e próximos modos.',
-      icon: <BarChart3 className="h-6 w-6" />
-    }
-  ]
+const Testimonial: React.FC<{ quote: string; author: string }> = ({ quote, author }) => (
+  <article className="landing-testimonial-card">
+    <p>"{quote}"</p>
+    <span>{author}</span>
+  </article>
+)
+
+const Icon: React.FC<{ name: string }> = ({ name }) => {
+  const paths: Record<string, React.ReactNode> = {
+    chat: <><path d="M7 8h10a4 4 0 0 1 4 4v1a4 4 0 0 1-4 4h-1.5l-2 2-2-2H7a4 4 0 0 1-4-4v-1a4 4 0 0 1 4-4Z" /><path d="M8 12h.01M12 12h.01M16 12h.01" /></>,
+    menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+    party: <><path d="M8 21l8-18 2 7 4 4-14 7Z" /><path d="M13 9l2 2" /></>,
+    grill: <><path d="M5 14h14M7 14l-2 7M17 14l2 7M8 7c0-2 2-2 2-4M14 7c0-2 2-2 2-4" /></>,
+    gift: <><path d="M4 11h16v10H4z" /><path d="M4 15h16M12 11v10M8 11c-2 0-3-1-3-2s1-2 2-2c2 0 3 4 5 4s3-4 5-4c1 0 2 1 2 2s-1 2-3 2" /></>,
+    home: <><path d="M3 11l9-7 9 7" /><path d="M5 10v10h14V10" /></>,
+    trip: <><path d="M3 7h18v11H3z" /><path d="M7 7V5h10v2M7 18v2M17 18v2" /></>,
+    drink: <><path d="M6 3h12l-1 8a5 5 0 0 1-10 0L6 3Z" /><path d="M12 16v5M8 21h8" /></>,
+    group: <><path d="M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM16 13a4 4 0 1 0 0-8" /><path d="M2 21a6 6 0 0 1 12 0M14 21a6 6 0 0 1 8-5.6" /></>
+  }
 
   return (
-    <section className="section-container py-10 sm:py-16">
-      <div className="grid gap-4 md:grid-cols-3">
-        {items.map((item) => (
-          <Card key={item.title} interactive>
-            <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-playzenha-blue text-white">
-              {item.icon}
-            </div>
-            <h3 className="font-fredoka text-2xl text-white">{item.title}</h3>
-            <p className="mt-3 text-sm leading-relaxed text-playzenha-muted">{item.text}</p>
-          </Card>
-        ))}
-      </div>
-    </section>
-  )
-}
-
-interface GamesLibraryProps {
-  games: GameItem[]
-  onStartGame: (game: GameView) => void
-  onShowRules: (game: RulesKey) => void
-}
-
-const GamesLibrary: React.FC<GamesLibraryProps> = ({ games, onStartGame, onShowRules }) => {
-  return (
-    <section id="jogos" className="section-container scroll-mt-24 py-12 sm:py-16">
-      <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <Badge variant="accent" className="mb-4">Biblioteca de jogos</Badge>
-          <h2 className="font-fredoka text-4xl text-white sm:text-5xl">Escolha o jogo da rodada</h2>
-        </div>
-        <p className="max-w-xl text-playzenha-muted">
-          Cards grandes, informações claras e ações rápidas para colocar a galera para jogar sem perder o clima.
-        </p>
-      </div>
-
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-        {games.map((game, index) => (
-          <motion.div
-            key={game.id}
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.4, delay: index * 0.06 }}
-          >
-            <GameCard game={game} onPlay={() => onStartGame(game.view)} onRules={() => onShowRules(game.id)} />
-          </motion.div>
-        ))}
-      </div>
-    </section>
-  )
-}
-
-interface GameCardProps {
-  game: GameItem
-  onPlay: () => void
-  onRules: () => void
-}
-
-const GameCard: React.FC<GameCardProps> = ({ game, onPlay, onRules }) => {
-  const theme = gameThemes[game.theme]
-
-  return (
-    <Card interactive className={`flex h-full min-h-[28rem] flex-col bg-gradient-to-br ${theme.bg} ${theme.border}`}>
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div className={`flex h-16 w-16 items-center justify-center rounded-3xl shadow-lg ${theme.accent} ${theme.onAccent} ${theme.shadow}`}>
-          {game.icon}
-        </div>
-        {game.featured && <Badge variant="accent">Destaque</Badge>}
-      </div>
-      <Badge variant="primary" className={`w-fit ${theme.accentSoft} ${theme.border} ${theme.text}`}>{game.category}</Badge>
-      <h3 className={`mt-4 font-fredoka text-3xl text-white decoration-4 underline-offset-8 group-hover:underline ${theme.textStrong}`}>{game.name}</h3>
-      <p className="mt-3 flex-1 text-sm leading-relaxed text-playzenha-muted">{game.description}</p>
-
-      <div className="mt-6 grid gap-3 text-sm">
-        <div className="flex items-center gap-2 text-playzenha-muted">
-          <Users className={`h-4 w-4 ${theme.textStrong}`} />
-          {game.players}
-        </div>
-        <div className="flex items-center gap-2 text-playzenha-muted">
-          <Clock className={`h-4 w-4 ${theme.textStrong}`} />
-          {game.averageTime}
-        </div>
-      </div>
-
-      <div className="mt-6 grid grid-cols-[1fr_auto] gap-3">
-        <Button
-          onClick={onPlay}
-          fullWidth
-          className={`${theme.onAccent} ${theme.shadow}`}
-          style={{ backgroundColor: theme.accentHex }}
-        >
-          Jogar
-        </Button>
-        <Button variant="ghost" onClick={onRules} aria-label={`Ver regras de ${game.name}`} className={`${theme.accentSoft} ${theme.border} ${theme.text}`}>
-          <BookOpen className="h-5 w-5" />
-          <span className="hidden sm:inline xl:hidden">Regras</span>
-        </Button>
-      </div>
-    </Card>
-  )
-}
-
-const DashboardSection: React.FC = () => {
-  return (
-    <section id="dashboard" className="section-container scroll-mt-24 py-12 sm:py-16">
-      <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <Badge variant="primary" className="mb-4">Dashboard</Badge>
-          <h2 className="font-fredoka text-4xl text-white sm:text-5xl">Seu painel da resenha</h2>
-        </div>
-        <p className="max-w-xl text-playzenha-muted">
-          Uma visão premium para evolução da conta, jogos recentes, favoritos e estatísticas.
-        </p>
-      </div>
-
-      <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-        <Card className="p-5 sm:p-6">
-          <div className="grid gap-4 sm:grid-cols-2">
-            {dashboardStats.map((stat) => (
-              <div key={stat.label} className="rounded-3xl border border-white/10 bg-dark-bg/50 p-5">
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-playzenha-blue text-white">
-                  {stat.icon}
-                </div>
-                <p className="text-sm text-playzenha-muted">{stat.label}</p>
-                <p className="mt-1 font-fredoka text-3xl text-white">{stat.value}</p>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        <div className="grid gap-5">
-          <Card>
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-fredoka text-2xl text-white">Jogos recentes</h3>
-              <Badge variant="muted">Histórico</Badge>
-            </div>
-            <div className="space-y-3">
-              {recentGames.map((game, index) => (
-                <DashboardRow key={game} label={game} value={`${index + 1}ª última partida`} icon={<Clock className="h-4 w-4" />} />
-              ))}
-            </div>
-          </Card>
-
-          <Card>
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-fredoka text-2xl text-white">Favoritos</h3>
-              <Heart className="h-5 w-5 text-playzenha-yellow fill-current" />
-            </div>
-            <div className="space-y-3">
-              {favoriteGames.map((game) => (
-                <DashboardRow key={game} label={game} value="Pronto para jogar" icon={<Star className="h-4 w-4" />} />
-              ))}
-            </div>
-          </Card>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-const DashboardRow: React.FC<{ label: RulesKey; value: string; icon: React.ReactNode }> = ({ label, value, icon }) => {
-  const game = games.find((item) => item.id === label) ?? games[0]
-  const theme = gameThemes[game.theme]
-
-  return (
-    <div className={`flex items-center justify-between gap-4 rounded-2xl border bg-white/5 p-4 ${theme.border}`}>
-      <div className="flex items-center gap-3">
-        <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${theme.accentSoft} ${theme.textStrong}`}>
-          {icon}
-        </span>
-        <div>
-          <p className="font-bold text-white">{game.name}</p>
-          <p className="text-xs text-playzenha-muted">{value}</p>
-        </div>
-      </div>
-      <ArrowRight className={`h-4 w-4 shrink-0 ${theme.textStrong}`} />
-    </div>
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      {paths[name]}
+    </svg>
   )
 }
 

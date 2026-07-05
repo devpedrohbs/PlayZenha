@@ -1,177 +1,209 @@
-import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, User, Lock, Mail, Chrome, Eye, EyeOff } from 'lucide-react'
-import GameButton from './GameButton'
+import React, { useEffect, useMemo, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 
 interface LoginPageProps {
   onBackToHome: () => void
 }
 
-type AuthMode = 'login' | 'register'
+type AuthMode = 'login' | 'signup'
+
+interface AuthForm {
+  name: string
+  email: string
+  password: string
+  remember: boolean
+}
+
+const INITIAL_FORM: AuthForm = {
+  name: '',
+  email: '',
+  password: '',
+  remember: true
+}
 
 const LoginPage: React.FC<LoginPageProps> = ({ onBackToHome }) => {
-  const [mode, setMode] = useState<AuthMode>('login')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [name, setName] = useState('')
+  const [mode, setMode] = useState<AuthMode>('signup')
+  const [form, setForm] = useState<AuthForm>(INITIAL_FORM)
   const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState('')
+  const [toast, setToast] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Implement authentication logic here
-    console.log('Auth submit:', { mode, email, password, name })
+  const isCreate = mode === 'signup'
+  const title = isCreate ? 'Crie sua conta' : 'Entre na resenha'
+  const subtitle = isCreate
+    ? 'Salve seus grupos, favoritos e jogos para comecar mais rapido no proximo role.'
+    : 'Acesse seus jogos, planos e grupos salvos para chamar a galera sem enrolacao.'
+  const cta = isCreate ? 'Criar conta e jogar' : 'Entrar e comecar'
+
+  const canSubmit = useMemo(() => {
+    const emailOk = /.+@.+\..+/.test(form.email.trim())
+    const passwordOk = form.password.trim().length >= 6
+    const nameOk = !isCreate || form.name.trim().length >= 2
+    return emailOk && passwordOk && nameOk
+  }, [form, isCreate])
+
+  useEffect(() => {
+    if (!toast) return undefined
+    const id = window.setTimeout(() => setToast(''), 2400)
+    return () => window.clearTimeout(id)
+  }, [toast])
+
+  const updateField = <Field extends keyof AuthForm>(field: Field, value: AuthForm[Field]) => {
+    setForm((current) => ({ ...current, [field]: value }))
+    setError('')
   }
 
-  const toggleMode = () => {
-    setMode(mode === 'login' ? 'register' : 'login')
+  const switchMode = (nextMode: AuthMode) => {
+    setMode(nextMode)
+    setError('')
+    setShowPassword(false)
+  }
+
+  const submit = (event: React.FormEvent) => {
+    event.preventDefault()
+    if (!canSubmit) {
+      setError(isCreate ? 'Preencha nome, e-mail valido e senha com 6+ caracteres.' : 'Use um e-mail valido e uma senha com 6+ caracteres.')
+      return
+    }
+    setToast(isCreate ? 'Conta pronta. Bora comecar a resenha.' : 'Login aprovado. Seus jogos estao prontos.')
   }
 
   return (
-    <div className="min-h-screen bg-dark-bg text-white font-comfortaa flex items-center justify-center relative overflow-hidden px-4">
-      
-      {/* Background Ambience */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-playzenha-blue/10 blur-[150px] rounded-full animate-float" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-playzenha-yellow/5 blur-[150px] rounded-full animate-float-delayed" />
-      </div>
+    <div className="auth-page">
+      <div className="auth-page-shell">
+        <header className="auth-page-topbar">
+          <button className="auth-page-brand" type="button" onClick={onBackToHome}>
+            <BrandMark />
+            Playzenha
+          </button>
+          <button className="auth-page-home-link" type="button" onClick={onBackToHome}>Home</button>
+        </header>
 
-      {/* Back Button */}
-      <button 
-        onClick={onBackToHome}
-        className="absolute top-6 left-6 z-50 p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors group"
-      >
-        <ArrowLeft className="w-6 h-6 text-gray-400 group-hover:text-white" />
-      </button>
-
-      <div className="w-full max-w-md relative z-10">
-        
-        <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-playzenha-yellow to-orange-500 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg transform rotate-3">
-                <User className="w-8 h-8 text-white" />
+        <section className="auth-page-layout">
+          <motion.aside className="auth-page-hero-panel" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+            <div>
+              <p className="auth-page-kicker">Sua conta Playzenha</p>
+              <h1>Entre, chame a galera e jogue.</h1>
+              <p className="auth-page-hero-copy">Uma conta simples para guardar seus jogos favoritos, planos e grupos. Abriu no celular, escolheu o jogo e a resenha comeca.</p>
             </div>
-            <h1 className="font-fredoka text-3xl md:text-4xl text-white mb-2">
-                {mode === 'login' ? 'Bem-vindo de volta!' : 'Criar sua conta'}
-            </h1>
-            <p className="text-gray-400 text-sm">
-                {mode === 'login' 
-                    ? 'Entre para continuar sua jornada no PlayZenha.' 
-                    : 'Registre-se e comece a competir com seus amigos.'}
-            </p>
-        </div>
+            <div className="auth-page-party-card">
+              <div className="auth-page-avatars">
+                <span className="auth-page-avatar">Lu</span>
+                <span className="auth-page-avatar">Ca</span>
+                <span className="auth-page-avatar">Bi</span>
+              </div>
+              <strong>Grupo pronto para jogar</strong>
+              <p>Impostor, Contato, Quem Sou Eu e Ultima Noite em poucos toques.</p>
+            </div>
+          </motion.aside>
 
-        <motion.div 
-            layout
-            className="glass-panel p-8 rounded-3xl border border-white/10 bg-dark-blue/30 backdrop-blur-xl shadow-2xl"
-        >
-            <form onSubmit={handleSubmit} className="space-y-4">
-                
-                <AnimatePresence mode="popLayout">
-                    {mode === 'register' && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="space-y-1"
-                        >
-                            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Nome</label>
-                            <div className="relative group">
-                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-playzenha-yellow transition-colors" />
-                                <input 
-                                    type="text" 
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    className="w-full bg-dark-bg/50 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white focus:border-playzenha-yellow/50 focus:outline-none transition-all placeholder-gray-600"
-                                    placeholder="Seu nome de jogador"
-                                />
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Email</label>
-                    <div className="relative group">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-playzenha-blue transition-colors" />
-                        <input 
-                            type="email" 
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full bg-dark-bg/50 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white focus:border-playzenha-blue/50 focus:outline-none transition-all placeholder-gray-600"
-                            placeholder="seu@email.com"
-                        />
-                    </div>
-                </div>
-
-                <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Senha</label>
-                    <div className="relative group">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-playzenha-yellow transition-colors" />
-                        <input 
-                            type={showPassword ? "text" : "password"} 
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full bg-dark-bg/50 border border-white/10 rounded-xl py-3 pl-12 pr-12 text-white focus:border-playzenha-yellow/50 focus:outline-none transition-all placeholder-gray-600"
-                            placeholder="••••••••"
-                        />
-                         <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors focus:outline-none"
-                        >
-                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                        </button>
-                    </div>
-                </div>
-
-                {mode === 'login' && (
-                    <div className="flex justify-end">
-                        <a href="#" className="text-xs text-playzenha-yellow/80 hover:text-playzenha-yellow transition-colors">
-                            Esqueceu a senha?
-                        </a>
-                    </div>
-                )}
-
-                <GameButton 
-                    variant="primary" 
-                    className="w-full justify-center mt-6 shadow-lg shadow-playzenha-yellow/20"
-                    size="lg"
-                >
-                    {mode === 'login' ? 'ENTRAR' : 'CRIAR CONTA'}
-                </GameButton>
-
-            </form>
-
-            <div className="mt-8 relative">
-                <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-white/10"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-transparent text-gray-500 bg-dark-bg/50 backdrop-blur-sm rounded">Ou continue com</span>
-                </div>
+          <motion.section className="auth-page-form-card" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
+            <div className="auth-page-mode-tabs">
+              <button className={`auth-page-mode-tab ${mode === 'login' ? 'active' : ''}`} type="button" onClick={() => switchMode('login')}>Entrar</button>
+              <button className={`auth-page-mode-tab ${mode === 'signup' ? 'active' : ''}`} type="button" onClick={() => switchMode('signup')}>Criar conta</button>
             </div>
 
-            <div className="mt-6 flex flex-col gap-3">
-                <button className="flex items-center justify-center gap-2 py-2.5 border border-white/10 rounded-xl hover:bg-white/5 transition-colors bg-white/5 w-full">
-                    <Chrome className="w-5 h-5 text-red-400 mr-2" />
-                    <span className="text-sm font-medium">Continuar com Google</span>
-                </button>
-            </div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={mode}
+                initial={{ opacity: 0, x: isCreate ? 16 : -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: isCreate ? -16 : 16 }}
+                transition={{ duration: 0.18 }}
+              >
+                <div className="auth-page-form-head">
+                  <p className="auth-page-small-label">{isCreate ? 'Novo por aqui' : 'Bem-vindo de volta'}</p>
+                  <h2>{title}</h2>
+                  <p>{subtitle}</p>
+                </div>
 
-            <p className="mt-8 text-center text-sm text-gray-400">
-                {mode === 'login' ? 'Não tem uma conta?' : 'Já tem uma conta?'}
-                <button 
-                    onClick={toggleMode}
-                    className="ml-2 font-bold text-playzenha-yellow hover:underline transition-all"
-                >
-                    {mode === 'login' ? 'Registre-se' : 'Faça Login'}
-                </button>
-            </p>
+                <form className="auth-page-form" onSubmit={submit}>
+                  {isCreate && (
+                    <AuthField
+                      label="Nome ou apelido"
+                      value={form.name}
+                      placeholder="Como a galera te chama?"
+                      onChange={(value) => updateField('name', value)}
+                    />
+                  )}
+                  <AuthField label="E-mail" type="email" value={form.email} placeholder="voce@email.com" onChange={(value) => updateField('email', value)} />
+                  <AuthField
+                    label="Senha"
+                    type="password"
+                    value={form.password}
+                    placeholder="Minimo 6 caracteres"
+                    passwordVisible={showPassword}
+                    onTogglePassword={() => setShowPassword((value) => !value)}
+                    onChange={(value) => updateField('password', value)}
+                  />
 
-        </motion.div>
+                  <div className="auth-page-inline-row">
+                    <label className="auth-page-checkbox">
+                      <input type="checkbox" checked={form.remember} onChange={(event) => updateField('remember', event.target.checked)} />
+                      <span>Manter conectado</span>
+                    </label>
+                    {!isCreate && <a className="auth-page-text-link" href="#recuperar">Esqueci a senha</a>}
+                  </div>
 
+                  <p className="auth-page-error" role="alert">{error}</p>
+                  <button className="auth-page-button" type="submit">{cta}</button>
+
+                  <div className="auth-page-divider">ou continue com</div>
+                  <div className="auth-page-social-row">
+                    <button className="auth-page-social-button" type="button" onClick={() => setToast('Google conectado para teste visual.')}>Google</button>
+                    <button className="auth-page-social-button" type="button" onClick={() => setToast('Apple conectado para teste visual.')}>Apple</button>
+                  </div>
+                </form>
+              </motion.div>
+            </AnimatePresence>
+          </motion.section>
+        </section>
+
+        <section className="auth-page-perks">
+          <article className="auth-page-perk-card"><h3>Sem baixar nada</h3><p>Conta leve, jogo direto no navegador do celular.</p></article>
+          <article className="auth-page-perk-card"><h3>Grupos salvos</h3><p>Volte para a mesma galera sem cadastrar tudo de novo.</p></article>
+          <article className="auth-page-perk-card"><h3>Planos e jogos</h3><p>Acesse Premium, Festa e favoritos em um so lugar.</p></article>
+        </section>
+
+        <div className={`auth-page-toast ${toast ? 'visible' : ''}`} role="status" aria-live="polite">{toast}</div>
       </div>
     </div>
   )
 }
+
+interface AuthFieldProps {
+  label: string
+  type?: React.HTMLInputTypeAttribute
+  value: string
+  placeholder: string
+  onChange: (value: string) => void
+  passwordVisible?: boolean
+  onTogglePassword?: () => void
+}
+
+const AuthField: React.FC<AuthFieldProps> = ({ label, type = 'text', value, placeholder, onChange, passwordVisible, onTogglePassword }) => {
+  const fieldType = type === 'password' && passwordVisible ? 'text' : type
+
+  return (
+    <label className="auth-page-field">
+      <span>{label}</span>
+      <span className="auth-page-input-wrap">
+        <input className={`auth-page-input ${type === 'password' ? 'password' : ''}`} type={fieldType} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
+        {type === 'password' && (
+          <button className="auth-page-show-pass" type="button" onClick={onTogglePassword}>{passwordVisible ? 'Ocultar' : 'Mostrar'}</button>
+        )}
+      </span>
+    </label>
+  )
+}
+
+const BrandMark: React.FC = () => (
+  <span className="auth-page-brand-mark" aria-hidden="true">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <path d="M7 8h10a4 4 0 0 1 4 4v1a4 4 0 0 1-4 4h-1.5l-2 2-2-2H7a4 4 0 0 1-4-4v-1a4 4 0 0 1 4-4Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8 12h.01M12 12h.01M16 12h.01" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+    </svg>
+  </span>
+)
 
 export default LoginPage

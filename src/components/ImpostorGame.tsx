@@ -1,27 +1,22 @@
-import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { 
-    ArrowLeft, Users, AlertTriangle, Trash2, 
-  CheckCircle, HelpCircle, Clock, Skull, Crown
-} from 'lucide-react'
-import GameButton from './GameButton'
+import React, { useEffect, useMemo, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { ArrowLeft } from 'lucide-react'
 
 interface ImpostorGameProps {
   onBackToHome: () => void
 }
 
-type Phase = 
-  | 'setup' 
+type Phase =
+  | 'setup'
   | 'role-distribution-start'
   | 'role-reveal'
   | 'game-start'
-  | 'discussion' // Timer running
-  | 'voting-intro' 
+  | 'discussion'
+  | 'voting-intro'
   | 'voting'
-  | 'voting-results' // Who died/Was ejected
-  | 'game-over'
+  | 'voting-results'
 
-type Role = 'Impostor' | 'Cidadão'
+type Role = 'Impostor' | 'Cidadao'
 
 interface Player {
   id: number
@@ -32,67 +27,67 @@ interface Player {
 }
 
 const THEMES = [
-   'Lua', 'Copa do Mundo', 'Praia', 'Netflix', 'Pizza', 
-  'Carnaval', 'Black Friday', 'Festa Junina', 'Aniversário', 'Trabalho',
+  'Lua', 'Copa do Mundo', 'Praia', 'Netflix', 'Pizza',
+  'Carnaval', 'Black Friday', 'Festa Junina', 'Aniversario', 'Trabalho',
   'Escola', 'Hospital', 'Shopping', 'Igreja', 'Cinema', 'Uber', 'Instagram', 'TikTok', 'WhatsApp',
-    'Padaria', 'Churrasco', 'Barbearia', 'Salão de Beleza', 'Farmácia','Rodoviária',
-    'Metrô', 'Elevador', 'Formatura',
-    'Natal', 'Ano Novo', 'Halloween', 'Videogame', 'YouTube',
-    'Spotify', 'Bicicleta', 'Feira', 'Pet Shop', 'Supermercado',
-    'Academia', 'Aeroporto', 'Acampamento', 'Parque de Diversões', 'Museu',
-    'Teatro', 'Restaurante', 'Lanchonete', 'Sorveteria', 'Cafeteria',
-    'Biblioteca', 'Delegacia', 'Tribunal', 'Banco', 'Correios',
-    'Posto de Gasolina', 'Oficina', 'Condomínio', 'Hotel', 'Pousada',
-    'Cruzeiro', 'Praça', 'Floresta', 'Montanha', 'Deserto',
-    'Ilha', 'Cachoeira', 'Piquenique', 'Parque Aquático', 'Karaokê',
-    'Show', 'Festival', 'Casamento', 'Reunião', 'Home Office',
-    'Delivery', 'Loja de Roupas', 'Trânsito'
+  'Padaria', 'Churrasco', 'Barbearia', 'Salao de Beleza', 'Farmacia', 'Rodoviaria',
+  'Metro', 'Elevador', 'Formatura', 'Natal', 'Ano Novo', 'Halloween', 'Videogame', 'YouTube',
+  'Spotify', 'Bicicleta', 'Feira', 'Pet Shop', 'Supermercado', 'Academia', 'Aeroporto',
+  'Acampamento', 'Parque de Diversoes', 'Museu', 'Teatro', 'Restaurante', 'Lanchonete',
+  'Sorveteria', 'Cafeteria', 'Biblioteca', 'Delegacia', 'Tribunal', 'Banco', 'Correios',
+  'Posto de Gasolina', 'Oficina', 'Condominio', 'Hotel', 'Pousada', 'Cruzeiro',
+  'Praca', 'Floresta', 'Montanha', 'Deserto', 'Ilha', 'Cachoeira', 'Piquenique',
+  'Parque Aquatico', 'Karaoke', 'Show', 'Festival', 'Casamento', 'Reuniao',
+  'Home Office', 'Delivery', 'Loja de Roupas', 'Transito'
 ]
 
+const phaseLabel: Record<Phase, string> = {
+  setup: 'Configuracao',
+  'role-distribution-start': 'Passe o celular',
+  'role-reveal': 'Papel secreto',
+  'game-start': 'Investigacao',
+  discussion: 'Timer',
+  'voting-intro': 'Alerta',
+  voting: 'Votacao',
+  'voting-results': 'Resultado'
+}
+
 const shuffleArray = <T,>(arr: T[]): T[] => {
-    const shuffled = [...arr]
-    for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1))
-        ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-    }
-    return shuffled
+  const shuffled = [...arr]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
+  return shuffled
 }
 
 const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
-  // State
   const [phase, setPhase] = useState<Phase>('setup')
-  const [playerNames, setPlayerNames] = useState<string[]>(['', '', '']) // Min 3
+  const [playerNames, setPlayerNames] = useState<string[]>(['', '', ''])
   const [players, setPlayers] = useState<Player[]>([])
-    const [revealOrder, setRevealOrder] = useState<number[]>([])
-    const [currentRevealStep, setCurrentRevealStep] = useState(0)
-  
-  // Game Data
+  const [revealOrder, setRevealOrder] = useState<number[]>([])
+  const [currentRevealStep, setCurrentRevealStep] = useState(0)
   const [theme, setTheme] = useState('')
-  const [discussionTime, setDiscussionTime] = useState(180) // 3 mins default
+  const [discussionTime, setDiscussionTime] = useState(180)
   const [timeLeft, setTimeLeft] = useState(0)
-  
-  // Voting
   const [selectedVote, setSelectedVote] = useState<number | null>(null)
-  
-  // Results
-  const [winner, setWinner] = useState<'Impostor' | 'Cidadãos' | null>(null)
-    const currentPlayerForReveal = players.find(p => p.id === revealOrder[currentRevealStep])
+  const [winner, setWinner] = useState<'Impostor' | 'Cidadaos' | null>(null)
 
-  // Timer Effect
+  const currentPlayerForReveal = useMemo(
+    () => players.find((player) => player.id === revealOrder[currentRevealStep]) ?? null,
+    [players, revealOrder, currentRevealStep]
+  )
+
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>
     if (phase === 'discussion' && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft((prev) => prev - 1)
-      }, 1000)
+      interval = setInterval(() => setTimeLeft((prev) => prev - 1), 1000)
     } else if (phase === 'discussion' && timeLeft === 0) {
-        setPhase('voting-intro')
+      setPhase('voting-intro')
     }
+
     return () => clearInterval(interval)
   }, [phase, timeLeft])
-
-
-  // --- Helper Functions ---
 
   const addPlayerSlot = () => {
     if (playerNames.length < 16) setPlayerNames([...playerNames, ''])
@@ -100,12 +95,13 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
 
   const removePlayerSlot = (idx: number) => {
     if (playerNames.length > 3) {
-        setPlayerNames(playerNames.filter((_, i) => i !== idx))
-    } else {
-        const newNames = [...playerNames]
-        newNames[idx] = ''
-        setPlayerNames(newNames)
+      setPlayerNames(playerNames.filter((_, i) => i !== idx))
+      return
     }
+
+    const newNames = [...playerNames]
+    newNames[idx] = ''
+    setPlayerNames(newNames)
   }
 
   const updatePlayerName = (idx: number, val: string) => {
@@ -115,366 +111,356 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
   }
 
   const startGameSetup = () => {
-    // Validate names
     const activeNames: string[] = []
     const usedNames = new Set<string>()
 
     for (const name of playerNames) {
-        const trimmed = name.trim()
-        if (!trimmed) continue
-        
-        if (usedNames.has(trimmed.toUpperCase())) {
-            alert(`O nome "${trimmed}" já está em uso!`)
-            return
-        }
-        usedNames.add(trimmed.toUpperCase())
-        activeNames.push(trimmed.toUpperCase()) // Uppercase convention
+      const trimmed = name.trim()
+      if (!trimmed) continue
+
+      if (usedNames.has(trimmed.toUpperCase())) {
+        alert(`O nome "${trimmed}" ja esta em uso!`)
+        return
+      }
+
+      usedNames.add(trimmed.toUpperCase())
+      activeNames.push(trimmed.toUpperCase())
     }
 
     if (activeNames.length < 3) {
-        alert("Mínimo de 3 jogadores para o Impostor.")
-        return
+      alert('Minimo de 3 jogadores para o Impostor.')
+      return
     }
 
-    // Role Assignment
     const impostorIdx = Math.floor(Math.random() * activeNames.length)
     const selectedTheme = THEMES[Math.floor(Math.random() * THEMES.length)]
-
     const newPlayers: Player[] = activeNames.map((name, i) => ({
-        id: i,
-        name,
-        role: i === impostorIdx ? 'Impostor' : 'Cidadão',
-        isAlive: true,
-        votes: 0
+      id: i,
+      name,
+      role: i === impostorIdx ? 'Impostor' : 'Cidadao',
+      isAlive: true,
+      votes: 0
     }))
 
     setPlayers(newPlayers)
     setTheme(selectedTheme)
-        setRevealOrder(shuffleArray(newPlayers.map(player => player.id)))
-        setCurrentRevealStep(0)
+    setRevealOrder(shuffleArray(newPlayers.map((player) => player.id)))
+    setCurrentRevealStep(0)
     setPhase('role-distribution-start')
   }
 
-  // --- Game Flow ---
-
   const handleNextRoleReveal = () => {
-      if (currentRevealStep < revealOrder.length - 1) {
-          setCurrentRevealStep(prev => prev + 1)
-          setPhase('role-distribution-start')
-      } else {
-          setPhase('game-start')
-          setTimeout(() => {
-              setTimeLeft(discussionTime)
-              setPhase('discussion')
-          }, 3000)
-      }
+    if (currentRevealStep < revealOrder.length - 1) {
+      setCurrentRevealStep((prev) => prev + 1)
+      setPhase('role-distribution-start')
+      return
+    }
+
+    setPhase('game-start')
+  }
+
+  const startDiscussion = () => {
+    setTimeLeft(discussionTime)
+    setPhase('discussion')
   }
 
   const startVoting = () => {
-      // Reset votes
-      setPlayers(prev => prev.map(p => ({...p, votes: 0})))
-      setSelectedVote(null)
-      setPhase('voting')
+    setPlayers((prev) => prev.map((player) => ({ ...player, votes: 0 })))
+    setSelectedVote(null)
+    setPhase('voting')
   }
 
   const submitVote = () => {
-      if (selectedVote === null) return
-      
-      const votedPlayer = players.find(p => p.id === selectedVote)
-      if (!votedPlayer) return
+    if (selectedVote === null) return
+    const votedPlayer = players.find((player) => player.id === selectedVote)
+    if (!votedPlayer) return
 
-      handleElimination(votedPlayer)
-  }
-
-  const handleElimination = (player: Player) => {
-      // Check Win Condition
-      if (player.role === 'Impostor') {
-          setWinner('Cidadãos')
-      } else {
-          // Wrong Vote = Impostor Wins
-          setWinner('Impostor')
-      }
-      setPhase('voting-results')
+    setWinner(votedPlayer.role === 'Impostor' ? 'Cidadaos' : 'Impostor')
+    setPhase('voting-results')
   }
 
   const restartGame = () => {
-      setPhase('setup')
-      setWinner(null)
-      setPlayers([])
-      setRevealOrder([])
-      setCurrentRevealStep(0)
-      // Keep playerNames from previous game to ease restart
+    setPhase('setup')
+    setWinner(null)
+    setPlayers([])
+    setRevealOrder([])
+    setCurrentRevealStep(0)
+    setSelectedVote(null)
   }
 
-  // --- Renders ---
-
   return (
-    <div className="min-h-screen bg-dark-bg text-white font-sans overflow-hidden relative selection:bg-playzenha-blue selection:text-white">
-        
-        {/* Header */}
-        <nav className="absolute top-0 w-full p-4 flex justify-between items-center z-50">
-            <button onClick={onBackToHome} className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
-                <ArrowLeft size={24} />
-            </button>
-            <div className="flex items-center gap-2 rounded-2xl border border-playzenha-blue/30 bg-playzenha-blue/10 px-4 py-2 shadow-lg shadow-playzenha-blue/10">
-                <span className="text-2xl">🕵️‍♂️</span>
-                <span className="text-xl font-bold tracking-wider text-blue-100">IMPOSTOR</span>
-            </div>
-            <div className="w-10" />
-        </nav>
+    <div className="impostor-game">
+      <div className="impostor-shell">
+        <header className="impostor-topbar">
+          <button className="impostor-home-link" type="button" onClick={onBackToHome} aria-label="Voltar para a home">
+            <ArrowLeft size={16} />
+            Home
+          </button>
+          <div className="impostor-brand">
+            <span className="impostor-brand-mark"><Icon name="mask" /></span>
+            Playzenha
+          </div>
+          <span className="impostor-round-chip">{phaseLabel[phase]}</span>
+        </header>
 
         <AnimatePresence mode="wait">
+          {phase === 'setup' && (
+            <motion.section key="setup" className="impostor-screen" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <div className="impostor-hero-card">
+                <p className="impostor-kicker">Impostor</p>
+                <h1>Quem vai jogar?</h1>
+                <p>Adicione de 3 a 16 pessoas. Depois e so passar o celular e deixar cada um descobrir seu papel em segredo.</p>
+              </div>
 
-            {/* SETUP PHASE */}
-            {phase === 'setup' && (
-                <motion.div key="setup" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="pt-24 px-6 h-screen flex flex-col">
-                    <div className="text-center mb-6 rounded-3xl border border-playzenha-blue/20 bg-playzenha-blue/10 p-5 shadow-xl shadow-playzenha-blue/10">
-                        <h1 className="text-3xl md:text-4xl mb-2 font-bold text-blue-100 flex items-center justify-center gap-2">
-                           Quem vai jogar?
-                        </h1>
-                        <p className="text-gray-400 text-sm">Mínimo de 3 jogadores</p>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto space-y-3 mb-4 custom-scrollbar">
-                        {playerNames.map((name, i) => (
-                             <div key={i} className="flex gap-2">
-                                <div className="w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center font-bold text-gray-400 border border-white/10 shrink-0">{i+1}</div>
-                                <input 
-                                    className="flex-1 min-w-0 bg-white/5 border border-playzenha-blue/20 rounded-lg px-4 text-base focus:border-playzenha-blue outline-none transition-colors text-white"
-                                    placeholder="Nome do jogador"
-                                    value={name}
-                                    onChange={(e) => updatePlayerName(i, e.target.value)}
-                                />
-                                <button onClick={() => removePlayerSlot(i)} className="p-3 text-red-500/50 hover:text-red-500 shrink-0 transition-colors">
-                                    <Trash2 size={20}/>
-                                </button>
-                             </div>
-                        ))}
-                        {playerNames.length < 16 && (
-                            <button onClick={addPlayerSlot} className="w-full py-3 border-2 border-dashed border-white/10 rounded-lg text-gray-500 hover:text-white hover:border-white/30 font-bold transition-all">
-                                + Adicionar Jogador
-                            </button>
-                        )}
-                    </div>
-
-                     {/* Time Settings */}
-                     <div className="bg-playzenha-blue/10 p-4 rounded-xl mb-4 border border-playzenha-blue/20">
-                        <div className="flex justify-between items-center text-sm text-gray-300">
-                             <div className="flex items-center gap-2">
-                                <Clock size={16} />
-                                <span>Tempo de Discussão</span>
-                             </div>
-                             <div className="flex gap-3 items-center">
-                                <button onClick={() => setDiscussionTime(Math.max(60, discussionTime - 60))} className="w-8 h-8 rounded bg-white/10 hover:bg-white/20">-</button>
-                                <span className="font-mono w-12 text-center">{discussionTime / 60}min</span>
-                                <button onClick={() => setDiscussionTime(Math.min(600, discussionTime + 60))} className="w-8 h-8 rounded bg-white/10 hover:bg-white/20">+</button>
-                             </div>
-                        </div>
-                     </div>
-
-                    <GameButton
-                        theme="blue"
-                        onClick={startGameSetup} 
-                        disabled={playerNames.filter(n => n.trim()).length < 3}
-                        className="w-full py-4 text-xl shadow-lg shadow-playzenha-blue/30 mb-6 font-bold"
-                    >
-                        COMEÇAR
-                    </GameButton>
-                </motion.div>
-            )}
-
-            {/* ROLE DISTRIBUTION START */}
-            {phase === 'role-distribution-start' && (
-                <motion.div key="role-start" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen flex flex-col justify-center items-center px-6 text-center bg-dark-bg">
-                     <div className="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center mb-6 animate-pulse border border-white/20">
-                        <Users className="w-10 h-10 text-white" />
-                     </div>
-                     <h2 className="text-xl text-gray-400 mb-2 font-light">
-                        Passe o celular para
-                     </h2>
-                            <h1 className="text-5xl text-white mb-12 font-bold tracking-tight px-2 break-words max-w-full">{currentPlayerForReveal?.name ?? '---'}</h1>
-                            <GameButton theme="blue" onClick={() => setPhase('role-reveal')} disabled={!currentPlayerForReveal} className="w-full max-w-xs shadow-playzenha-blue/20 shadow-lg">
-                        REVELAR PAPEL
-                     </GameButton>
-                </motion.div>
-            )}
-
-            {/* ROLE REVEAL */}
-            {phase === 'role-reveal' && (
-                <motion.div key="role-reveal" initial={{scale:0.9, opacity:0}} animate={{scale:1, opacity:1}} exit={{scale:0.9, opacity:0}} className="h-screen flex flex-col justify-center items-center px-6 text-center bg-playzenha-surface border-[10px] border-playzenha-card">
-                     
-                     {currentPlayerForReveal?.role === 'Impostor' ? (
-                         <>
-                            <div className="text-8xl mb-6">🤫</div>
-                            <h2 className="text-2xl text-red-400 font-bold mb-2 uppercase tracking-widest">
-                                Você é o
-                            </h2>
-                            <h1 className="text-5xl md:text-6xl font-black text-red-500 mb-8 drop-shadow-red">
-                                IMPOSTOR
-                            </h1>
-                            <p className="text-gray-400 mb-12 max-w-xs mx-auto text-sm leading-relaxed bg-white/5 p-4 rounded-xl border border-white/10">
-                                Seu objetivo: <br/> 
-                                <span className="text-white font-bold">Descubra o tema</span> ouvindo a conversa ou <span className="text-white font-bold">engane a todos</span> para não ser votado.
-                            </p>
-                         </>
-                     ) : (
-                         <>
-                            <div className="text-8xl mb-6">🎯</div>
-                            <h2 className="text-2xl text-green-400 font-bold mb-2 uppercase tracking-widest">
-                                Tema da Rodada
-                            </h2>
-                            <h1 className="text-5xl md:text-6xl font-black text-white mb-8 border-b-4 border-green-500 pb-2">
-                                {theme}
-                            </h1>
-                            <p className="text-gray-400 mb-12 max-w-xs mx-auto text-sm leading-relaxed bg-white/5 p-4 rounded-xl border border-white/10">
-                                Você é um Cidadão. <br/>
-                                <span className="text-white font-bold">Encontre o impostor</span> que não sabe qual é este tema!
-                            </p>
-                         </>
-                     )}
-                     
-                     <button 
-                        onClick={handleNextRoleReveal} 
-                        className="w-24 h-24 rounded-full border-4 border-white/20 flex items-center justify-center animate-pulse hover:bg-white/10 transition-colors active:scale-95"
-                     >
-                        <CheckCircle className="w-10 h-10 text-white" />
-                     </button>
-                     <span className="text-xs text-gray-500 mt-4 uppercase tracking-widest font-bold">
-                        Toque para esconder
-                     </span>
-                </motion.div>
-            )}
-
-            {/* GAME START INTRO */}
-            {phase === 'game-start' && (
-                <motion.div key="game-start" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen bg-dark-bg flex flex-col items-center justify-center text-center">
-                    <HelpCircle className="w-32 h-32 text-playzenha-blue animate-bounce mb-8" />
-                    <h1 className="text-4xl text-white font-bold tracking-wider uppercase mb-4">Investiguem!</h1>
-                    <p className="text-gray-500 text-lg">Façam perguntas sobre o tema...</p>
-                </motion.div>
-            )}
-
-            {/* DISCUSSION */}
-            {phase === 'discussion' && (
-                <motion.div key="discussion" className="h-screen flex flex-col items-center justify-center bg-playzenha-surface px-6">
-                    <h2 className="text-2xl text-gray-400 mb-8 uppercase tracking-widest font-bold">Tempo Restante</h2>
-                    
-                    <div className="relative w-72 h-72 flex items-center justify-center mb-12">
-                         <svg className="absolute w-full h-full transform -rotate-90">
-                             <circle cx="144" cy="144" r="130" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-gray-800" />
-                             <circle cx="144" cy="144" r="130" stroke="currentColor" strokeWidth="12" fill="transparent" className={`transition-all duration-1000 ${timeLeft < 30 ? 'text-red-500' : 'text-playzenha-blue'}`}
-                                strokeDasharray={2 * Math.PI * 130}
-                                strokeDashoffset={2 * Math.PI * 130 * (1 - timeLeft / discussionTime)}
-                             />
-                         </svg>
-                         <div className="text-7xl font-bold font-mono text-white">
-                             {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
-                         </div>
-                    </div>
-                    
-                    <div className="flex flex-col gap-4 w-full max-w-sm">
-                        <GameButton theme="blue" onClick={() => setPhase('voting-intro')} variant="primary" className="w-full">
-                            VOTAR AGORA
-                        </GameButton>
-                        <button onClick={() => setTimeLeft(prev => prev + 60)} className="text-sm text-gray-500 hover:text-white transition-colors">
-                            + 1 Minuto
+              <div className="impostor-setup-grid">
+                <div className="impostor-panel">
+                  <div className="impostor-player-list">
+                    {playerNames.map((name, index) => (
+                      <motion.div className="impostor-player-card" key={`player-${index}`} layout>
+                        <span className="impostor-avatar">{name.trim().slice(0, 1).toUpperCase() || index + 1}</span>
+                        <input
+                          className="impostor-name-input compact"
+                          value={name}
+                          maxLength={18}
+                          placeholder={`Jogador ${index + 1}`}
+                          onChange={(event) => updatePlayerName(index, event.target.value)}
+                        />
+                        <button className="impostor-remove-button" type="button" aria-label={`Remover jogador ${index + 1}`} onClick={() => removePlayerSlot(index)}>
+                          <Icon name="x" />
                         </button>
+                      </motion.div>
+                    ))}
+                  </div>
+                  <ImpostorButton variant="ghost" onClick={addPlayerSlot} disabled={playerNames.length >= 16} className="impostor-add-player-button">
+                    <Icon name="plus" /> Adicionar jogador
+                  </ImpostorButton>
+                </div>
+
+                <div className="impostor-panel impostor-stack">
+                  <div className="impostor-time-card">
+                    <div>
+                      <p className="impostor-tiny-label">Discussao</p>
+                      <h3>Tempo da rodada</h3>
                     </div>
-                </motion.div>
-            )}
-
-            {/* VOTING INTRO */}
-            {phase === 'voting-intro' && (
-                <motion.div key="voting-intro" onClick={startVoting} initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen bg-red-900/20 flex flex-col items-center justify-center text-center px-6 cursor-pointer">
-                    <AlertTriangle className="w-24 h-24 text-red-500 mb-6 animate-pulse" />
-                    <h1 className="text-4xl font-black text-white uppercase mb-4">Hora de Votar</h1>
-                    <p className="text-red-300 text-lg max-w-md">Quem vocês acham que é o <strong>Impostor</strong>?</p>
-                    <p className="mt-12 text-sm text-gray-500 animate-bounce">Toque para continuar</p>
-                </motion.div>
-            )}
-
-            {/* VOTING LIST */}
-            {phase === 'voting' && (
-                <motion.div key="voting" className="pt-24 px-6 h-screen flex flex-col bg-playzenha-surface">
-                    <h2 className="text-center text-2xl font-bold text-white mb-2">Quem foi o escolhido?</h2>
-                    <p className="text-center text-gray-500 text-sm mb-6">Selecione quem a maioria votou.</p>
-
-                    <div className="flex-1 overflow-y-auto custom-scrollbar mb-4 space-y-3">
-                        {players.map((player) => (
-                            <button
-                                key={player.id}
-                                onClick={() => setSelectedVote(player.id)}
-                                className={`w-full p-4 rounded-xl border flex items-center justify-between transition-all ${
-                                    selectedVote === player.id 
-                                    ? 'bg-red-500/20 border-red-500 scale-[1.02]' 
-                                    : 'bg-white/5 border-white/10 hover:bg-white/10'
-                                }`}
-                            >
-                                <div className="flex items-center gap-4">
-                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${selectedVote === player.id ? 'bg-red-500 text-white' : 'bg-playzenha-card text-playzenha-muted'}`}>
-                                         {player.name.charAt(0)}
-                                     </div>
-                                     <span className="text-lg font-medium text-white">{player.name}</span>
-                                </div>
-                                {selectedVote === player.id && <Skull className="text-red-500" />}
-                            </button>
-                        ))}
+                    <div className="impostor-stepper">
+                      <button className="impostor-icon-button" type="button" onClick={() => setDiscussionTime(Math.max(60, discussionTime - 60))}>
+                        <Icon name="minus" />
+                      </button>
+                      <strong>{discussionTime / 60} min</strong>
+                      <button className="impostor-icon-button" type="button" onClick={() => setDiscussionTime(Math.min(900, discussionTime + 60))}>
+                        <Icon name="plus" />
+                      </button>
                     </div>
+                  </div>
+                  <p className={playerNames.filter((name) => name.trim()).length >= 3 ? 'impostor-hint' : 'impostor-hint error'}>
+                    {playerNames.filter((name) => name.trim()).length >= 3
+                      ? `${playerNames.filter((name) => name.trim()).length} jogadores prontos para a investigacao.`
+                      : 'Minimo de 3 jogadores para comecar.'}
+                  </p>
+                </div>
+              </div>
 
-                    <div className="pb-8">
-                        <GameButton
-                            theme="blue"
-                            onClick={submitVote} 
-                            disabled={selectedVote === null}
-                            variant="danger"
-                            className="w-full shadow-lg shadow-red-900/20"
-                        >
-                            CONFIRMAR VOTO
-                        </GameButton>
+              <div className="impostor-spacer" />
+              <div className="impostor-sticky-action">
+                <ImpostorButton disabled={playerNames.filter((name) => name.trim()).length < 3} onClick={startGameSetup}>Comecar rodada</ImpostorButton>
+              </div>
+            </motion.section>
+          )}
+
+          {phase === 'role-distribution-start' && currentPlayerForReveal && (
+            <motion.section key="role-start" className="impostor-screen" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
+              <div className="impostor-hero-card">
+                <p className="impostor-kicker">Segredo da vez</p>
+                <h2>Passe o celular para</h2>
+                <div className="impostor-pass-player-name">{currentPlayerForReveal.name}</div>
+                <p>Ninguem mais deve olhar. A proxima tela mostra o papel secreto desta pessoa.</p>
+              </div>
+              <div className="impostor-pass-illustration">
+                <motion.div className="impostor-secret-token" animate={{ rotate: [-4, 3, -4], y: [0, -10, 0] }} transition={{ duration: 4, repeat: Infinity }}>
+                  <Icon name="eyeOff" />
+                </motion.div>
+              </div>
+              <div className="impostor-spacer" />
+              <ImpostorButton onClick={() => setPhase('role-reveal')}>
+                <Icon name="eye" /> Revelar papel
+              </ImpostorButton>
+            </motion.section>
+          )}
+
+          {phase === 'role-reveal' && currentPlayerForReveal && (
+            <motion.section key="role-reveal" className="impostor-screen impostor-screen-fill" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <div className={`impostor-secret-card ${currentPlayerForReveal.role === 'Impostor' ? 'impostor' : 'citizen'}`}>
+                <div>
+                  <div className="impostor-big-icon"><Icon name={currentPlayerForReveal.role === 'Impostor' ? 'mask' : 'card'} /></div>
+                  <p className="impostor-kicker role-name">{currentPlayerForReveal.name}</p>
+                  {currentPlayerForReveal.role === 'Impostor' ? (
+                    <>
+                      <h2>Voce e o Impostor</h2>
+                      <p className="impostor-secret-copy">Seu objetivo e descobrir o tema ou enganar todo mundo para nao ser votado.</p>
+                    </>
+                  ) : (
+                    <>
+                      <h2>Tema da rodada</h2>
+                      <div className="impostor-theme-badge">{theme}</div>
+                      <p className="impostor-secret-copy theme-help">Encontre quem nao sabe este tema.</p>
+                    </>
+                  )}
+                </div>
+                <p className="impostor-hint">Esconda o papel antes de devolver o celular.</p>
+              </div>
+              <div className="impostor-spacer" />
+              <ImpostorButton variant={currentRevealStep === revealOrder.length - 1 ? 'blue' : 'ghost'} onClick={handleNextRoleReveal}>
+                {currentRevealStep === revealOrder.length - 1 ? 'Comecar investigacao' : 'Esconder e passar'}
+              </ImpostorButton>
+            </motion.section>
+          )}
+
+          {phase === 'game-start' && (
+            <motion.section key="game-start" className="impostor-screen impostor-screen-fill" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <div className="impostor-secret-card">
+                <div>
+                  <div className="impostor-big-icon"><Icon name="alert" /></div>
+                  <p className="impostor-kicker role-name">Agora e conversa</p>
+                  <h1>Investiguem!</h1>
+                  <p className="impostor-secret-copy">Facam perguntas sobre o tema. O Impostor vai tentar parecer confiante sem saber do que todo mundo esta falando.</p>
+                </div>
+                <p className="impostor-hint">Dica: perguntas especificas deixam a mentira mais dificil.</p>
+              </div>
+              <div className="impostor-spacer" />
+              <ImpostorButton onClick={startDiscussion}>Iniciar timer</ImpostorButton>
+            </motion.section>
+          )}
+
+          {phase === 'discussion' && (
+            <motion.section key="discussion" className="impostor-screen" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <div className="impostor-hero-card">
+                <p className="impostor-kicker">Discussao</p>
+                <h2>{timeLeft <= 30 ? 'Pressao subindo' : 'Facam perguntas'}</h2>
+                <p>O grupo tenta achar quem esta fingindo. O Impostor escuta, improvisa e tenta escapar.</p>
+              </div>
+              <div className="impostor-timer-wrap">
+                <div
+                  className="impostor-timer-ring"
+                  style={{
+                    '--progress': Math.max(0, timeLeft / discussionTime),
+                    '--ring-color': timeLeft <= 30 ? 'var(--impostor-danger)' : 'var(--impostor-yellow)'
+                  } as React.CSSProperties}
+                >
+                  <div>
+                    <div className="impostor-timer-value">
+                      {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}
                     </div>
-                </motion.div>
-            )}
+                    <p>{timeLeft <= 30 ? 'Ultimos segundos' : 'Tempo restante'}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="impostor-split">
+                <ImpostorButton variant="ghost" onClick={() => { setTimeLeft((prev) => prev + 60); setDiscussionTime((prev) => prev + 60) }}>+1 minuto</ImpostorButton>
+                <ImpostorButton variant="danger" onClick={() => setPhase('voting-intro')}>Votar agora</ImpostorButton>
+              </div>
+            </motion.section>
+          )}
 
-            {/* RESULTS */}
-            {phase === 'voting-results' && winner && (
-                <motion.div key="results" initial={{opacity:0}} animate={{opacity:1}} className="h-screen flex flex-col items-center justify-center p-6 text-center bg-dark-bg">
-                     
-                     <div className="mb-8 relative">
-                         <div className={`absolute inset-0 blur-3xl rounded-full opacity-20 ${winner === 'Cidadãos' ? 'bg-green-500' : 'bg-red-500'}`} />
-                         {winner === 'Cidadãos' ? (
-                             <Crown className="w-32 h-32 text-green-400 relative z-10" />
-                         ) : (
-                             <Skull className="w-32 h-32 text-red-500 relative z-10" />
-                         )}
-                     </div>
+          {phase === 'voting-intro' && (
+            <motion.section key="voting-intro" className="impostor-screen impostor-screen-fill" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
+              <div className="impostor-secret-card impostor">
+                <div>
+                  <div className="impostor-big-icon"><Icon name="vote" /></div>
+                  <p className="impostor-kicker role-name">Momento decisivo</p>
+                  <h1>Hora de votar</h1>
+                  <p>Quem voces acham que e o Impostor? Escolham a pessoa mais suspeita do grupo.</p>
+                </div>
+                <p className="impostor-hint">Selecione quem recebeu mais votos na conversa.</p>
+              </div>
+              <div className="impostor-spacer" />
+              <ImpostorButton variant="danger" onClick={startVoting}>Abrir votacao</ImpostorButton>
+            </motion.section>
+          )}
 
-                     <h2 className="text-gray-400 text-xl uppercase tracking-widest mb-2 font-bold">Vencedores</h2>
-                     <h1 className={`text-5xl md:text-6xl font-black mb-8 ${winner === 'Cidadãos' ? 'text-green-500' : 'text-red-500'}`}>
-                         {winner.toUpperCase()}
-                     </h1>
+          {phase === 'voting' && (
+            <motion.section key="voting" className="impostor-screen" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <div className="impostor-hero-card">
+                <p className="impostor-kicker">Votacao</p>
+                <h2>Quem recebeu mais votos?</h2>
+                <p>Toque no jogador escolhido pelo grupo. O card vermelho marca o principal suspeito.</p>
+              </div>
+              <div className="impostor-vote-grid">
+                {players.map((player) => (
+                  <button className={`impostor-vote-card ${selectedVote === player.id ? 'selected' : ''}`} key={player.id} type="button" onClick={() => setSelectedVote(player.id)}>
+                    <span className="impostor-avatar">{player.name.slice(0, 1)}</span>
+                    <strong>{player.name}</strong>
+                    {selectedVote === player.id && <Icon name="alert" />}
+                  </button>
+                ))}
+              </div>
+              <div className="impostor-spacer" />
+              <ImpostorButton variant="danger" disabled={selectedVote === null} onClick={submitVote}>Confirmar voto</ImpostorButton>
+            </motion.section>
+          )}
 
-                     <div className="bg-white/10 p-6 rounded-2xl border border-white/10 max-w-sm w-full mb-8 backdrop-blur-md">
-                         <p className="text-gray-400 text-sm mb-2">O impostor era:</p>
-                         <p className="text-3xl font-bold text-white mb-4">
-                             {players.find(p => p.role === 'Impostor')?.name}
-                         </p>
-                         <div className="h-px bg-white/10 w-full my-4" />
-                         <p className="text-gray-400 text-sm mb-1">O tema era:</p>
-                         <p className="text-xl text-playzenha-blue font-bold">
-                             {theme}
-                         </p>
-                     </div>
-
-                     <GameButton theme="blue" onClick={restartGame} className="w-full max-w-xs">
-                         JOGAR DE NOVO
-                     </GameButton>
-
-                </motion.div>
-            )}
-
+          {phase === 'voting-results' && winner && (
+            <motion.section key="results" className="impostor-screen impostor-screen-fill" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <div className={`impostor-secret-card impostor-result-card ${winner === 'Cidadaos' ? 'citizens' : 'impostor-win'}`}>
+                <div>
+                  <div className="impostor-big-icon"><Icon name={winner === 'Cidadaos' ? 'crown' : 'mask'} /></div>
+                  <p className="impostor-kicker role-name">Resultado</p>
+                  <h1>{winner === 'Cidadaos' ? 'Cidadaos venceram' : 'Impostor venceu'}</h1>
+                  <p>{winner === 'Cidadaos' ? 'O grupo encontrou quem estava mentindo.' : 'O Impostor escapou e enganou a resenha.'}</p>
+                </div>
+                <div className="impostor-facts">
+                  <div className="impostor-fact"><span className="impostor-tiny-label">Impostor</span><strong>{players.find((player) => player.role === 'Impostor')?.name}</strong></div>
+                  <div className="impostor-fact"><span className="impostor-tiny-label">Tema</span><strong>{theme}</strong></div>
+                </div>
+              </div>
+              <div className="impostor-result-actions">
+                <ImpostorButton variant={winner === 'Cidadaos' ? 'success' : 'danger'} onClick={restartGame}>Jogar de novo</ImpostorButton>
+                <ImpostorButton variant="ghost" onClick={onBackToHome}>Voltar para inicio</ImpostorButton>
+              </div>
+            </motion.section>
+          )}
         </AnimatePresence>
+      </div>
     </div>
   )
 }
+
+interface IconProps {
+  name: 'eye' | 'eyeOff' | 'card' | 'alert' | 'vote' | 'crown' | 'mask' | 'plus' | 'minus' | 'x'
+}
+
+const Icon: React.FC<IconProps> = ({ name }) => {
+  const paths: Record<IconProps['name'], React.ReactNode> = {
+    eye: <><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" /><path d="M12 9a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z" /></>,
+    eyeOff: <><path d="m3 3 18 18" /><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" /><path d="M9.2 5.5A9.8 9.8 0 0 1 12 5c6.5 0 10 7 10 7a16 16 0 0 1-3.1 4.2" /><path d="M6.2 6.8C3.5 8.6 2 12 2 12s3.5 7 10 7c1.6 0 3-.4 4.2-1" /></>,
+    card: <><rect x="5" y="3" width="14" height="18" rx="3" /><path d="M9 8h6M9 12h4" /></>,
+    alert: <><path d="M12 3 2 21h20L12 3Z" /><path d="M12 9v5M12 17h.01" /></>,
+    vote: <><path d="M4 14h16v7H4z" /><path d="M8 14V8l4-5 4 5v6" /><path d="M9 18h6" /></>,
+    crown: <><path d="m3 7 5 5 4-8 4 8 5-5-2 12H5L3 7Z" /><path d="M5 19h14" /></>,
+    mask: <><path d="M4 9c2-2 5-3 8-3s6 1 8 3v3c0 4-3.5 7-8 7s-8-3-8-7V9Z" /><path d="M8 12h.01M16 12h.01" /><path d="M9 16c2 1 4 1 6 0" /></>,
+    plus: <path d="M12 5v14M5 12h14" />,
+    minus: <path d="M5 12h14" />,
+    x: <><path d="M6 6l12 12M18 6 6 18" /></>
+  }
+
+  return (
+    <span className="impostor-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24">{paths[name]}</svg>
+    </span>
+  )
+}
+
+interface ImpostorButtonProps {
+  children: React.ReactNode
+  variant?: 'primary' | 'blue' | 'danger' | 'ghost' | 'success'
+  disabled?: boolean
+  onClick?: () => void
+  className?: string
+}
+
+const ImpostorButton: React.FC<ImpostorButtonProps> = ({ children, variant = 'primary', disabled, onClick, className = '' }) => (
+  <button className={`impostor-game-button ${variant} ${disabled ? 'disabled' : ''} ${className}`} disabled={disabled} onClick={onClick} type="button">
+    {children}
+  </button>
+)
 
 export default ImpostorGame
