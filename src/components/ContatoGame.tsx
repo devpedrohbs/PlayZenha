@@ -84,6 +84,9 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToHome }) => {
       .join(' ')
   }, [currentWord, revealedLetters])
 
+  const filledPlayerCount = playerNames.filter((name) => name.trim()).length
+  const canStartGame = filledPlayerCount === 3
+
   const updatePlayerName = (idx: number, value: string) => {
     const newNames = [...playerNames]
     newNames[idx] = value
@@ -175,7 +178,7 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToHome }) => {
   }
 
   return (
-    <div className="min-h-screen bg-dark-bg text-white font-sans overflow-hidden relative selection:bg-emerald-400/60 selection:text-white">
+    <div className="playzenha-game playzenha-game-contato min-h-screen bg-dark-bg text-white font-sans overflow-hidden relative selection:bg-emerald-400/60 selection:text-white">
       <nav className="absolute top-0 w-full p-4 flex justify-between items-center z-50">
         <button onClick={onBackToHome} className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
           <ArrowLeft size={24} />
@@ -194,54 +197,57 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToHome }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="pt-24 px-6 h-screen flex flex-col"
+            className="playzenha-game-screen pt-24 px-6 h-screen flex flex-col"
           >
             <div className="text-center mb-6 rounded-3xl border border-emerald-300/20 bg-emerald-400/10 p-5 shadow-xl shadow-emerald-400/10">
               <h1 className="text-3xl md:text-4xl mb-2 font-bold text-emerald-100">Cadastro de Jogadores</h1>
               <p className="text-gray-400 text-sm">Jogo para exatamente 3 pessoas</p>
             </div>
 
-            <div className="space-y-3 mb-6">
+            <div className="playzenha-setup-grid">
+              <div className="playzenha-setup-panel">
+                <div className="playzenha-setup-player-list">
               {playerNames.map((name, i) => (
-                <div key={i} className="flex gap-2 items-center">
-                  <div className="w-12 h-12 bg-white/5 rounded-lg border border-white/10 shrink-0 flex items-center justify-center font-bold text-gray-400">
-                    {i + 1}
-                  </div>
+                <motion.div key={i} className="playzenha-setup-player-card no-remove" layout>
+                  <span className="playzenha-setup-avatar">{name.trim().slice(0, 1).toUpperCase() || i + 1}</span>
                   <input
                     value={name}
                     onChange={(e) => updatePlayerName(i, e.target.value)}
-                    className="flex-1 min-w-0 bg-white/5 border border-emerald-300/20 rounded-lg px-4 text-base focus:border-emerald-300 outline-none transition-colors text-white h-12"
-                    placeholder={`Nome do Jogador ${i + 1}`}
+                    className="playzenha-setup-name-input compact"
+                    placeholder={`Jogador ${i + 1}`}
                   />
-                </div>
+                </motion.div>
               ))}
-            </div>
+                </div>
+              </div>
 
-            <div className="bg-emerald-400/10 border border-emerald-300/20 rounded-xl p-4 mb-6">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-200 font-medium">Juiz rotativo por rodada</span>
+            <div className="playzenha-setup-panel playzenha-setup-stack">
+              <div className="playzenha-setup-option-card">
+                <div>
+                  <p className="playzenha-setup-tiny-label">Rodada</p>
+                  <h3>Juiz rotativo</h3>
+                </div>
                 <button
                   onClick={() => setRotateJudge((prev) => !prev)}
-                  className={`w-14 h-8 rounded-full p-1 transition-colors ${
-                    rotateJudge ? 'bg-emerald-400' : 'bg-white/20'
-                  }`}
+                  className={`playzenha-setup-toggle ${rotateJudge ? 'active' : ''}`}
                   aria-label="Alternar juiz rotativo"
                 >
-                  <div
-                    className={`w-6 h-6 rounded-full bg-white transition-transform ${
-                      rotateJudge ? 'translate-x-6' : 'translate-x-0'
-                    }`}
-                  />
+                  <span />
                 </button>
               </div>
-              <p className="text-xs text-gray-400 mt-2">
+              <p className="playzenha-setup-hint">
                 Ativado: o juiz muda automaticamente a cada rodada.
               </p>
             </div>
 
-            <GameButton theme="green" onClick={startGame} className="w-full py-4 text-xl mb-6">
+            </div>
+
+            <div className="playzenha-game-spacer" />
+            <div className="playzenha-game-action">
+            <GameButton theme="green" onClick={startGame} disabled={!canStartGame} className="w-full py-4 text-xl mb-6">
               COMEÇAR
             </GameButton>
+            </div>
           </motion.div>
         )}
 
@@ -251,7 +257,7 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToHome }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="h-screen px-6 flex flex-col items-center justify-center text-center bg-dark-bg"
+            className="playzenha-game-screen h-screen px-6 flex flex-col items-center text-center bg-dark-bg"
           >
             <div className="text-sm uppercase tracking-[0.25em] text-gray-500 mb-3">Rodada {round}</div>
             <h1 className="text-4xl font-black mb-8">Sorteio Concluído</h1>
@@ -286,7 +292,7 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToHome }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="h-screen px-6 flex flex-col items-center justify-center text-center bg-dark-bg"
+            className="playzenha-game-screen h-screen px-6 flex flex-col items-center text-center bg-dark-bg"
           >
             <div className="w-24 h-24 rounded-full bg-white/10 border border-white/20 flex items-center justify-center mb-6 animate-pulse">
               <Gavel className="w-10 h-10 text-white" />
@@ -305,7 +311,7 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToHome }) => {
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            className="h-screen px-6 flex flex-col items-center justify-center text-center bg-playzenha-surface"
+            className="playzenha-game-screen h-screen px-6 flex flex-col items-center text-center bg-playzenha-surface"
           >
             <p className="text-sm uppercase tracking-[0.25em] text-gray-500 mb-4">Somente o juiz vê</p>
             <h1 className="text-6xl md:text-7xl font-black text-emerald-300 mb-8">{currentWord}</h1>
@@ -324,7 +330,7 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToHome }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="h-screen pt-24 px-6 flex flex-col"
+            className="playzenha-game-screen h-screen pt-24 px-6 flex flex-col"
           >
             <div className="text-center mb-5">
               <h1 className="text-3xl font-black mb-2">Contato</h1>
@@ -377,7 +383,7 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToHome }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="h-screen px-6 flex flex-col items-center justify-center text-center bg-playzenha-surface"
+            className="playzenha-game-screen h-screen px-6 flex flex-col items-center text-center bg-playzenha-surface"
           >
             <div className="mb-6">
               {roundWinner === 'Adivinhadores' ? (

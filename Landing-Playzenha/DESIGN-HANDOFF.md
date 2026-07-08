@@ -11,10 +11,10 @@ This archive is the source of truth for turning the design into production code.
 
 ## Source map
 - Primary entry: `index.html`
-- HTML screens detected: 3
+- HTML screens detected: 4
 - Stylesheets detected: 3
 - Script/component files detected: 3
-- Supporting assets detected: 4
+- Supporting assets detected: 5
 
 ## Responsive contract
 Validate the implementation across this 2025–2026 viewport matrix:
@@ -66,6 +66,7 @@ For responsive web exports, treat these as a modern breakpoint system for one ad
 - `auth.html`
 - `impostor.html`
 - `index.html`
+- `jogos.html`
 
 ## Styles
 - `auth.css`
@@ -81,6 +82,7 @@ For responsive web exports, treat these as a modern breakpoint system for one ad
 - `auth-preview.png`
 - `critique.json`
 - `impostor-preview.png`
+- `jogos-preview.png`
 - `playzenha-preview.png`
 
 ## Coding checklist for AI tools

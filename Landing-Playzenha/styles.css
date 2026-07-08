@@ -605,6 +605,47 @@
 
     .game-card h3 { margin-top: 42px; max-width: 9ch; }
 
+    .game-mascot {
+      position: absolute;
+      right: 10px;
+      top: 52px;
+      z-index: 1;
+      width: 118px;
+      height: 118px;
+      border-radius: 32px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(160deg, rgba(255, 51, 95, 0.2), rgba(24, 10, 44, 0.82));
+      border: 1px solid color-mix(in oklch, var(--card-color, var(--brand-yellow)) 52%, white);
+      box-shadow: 0 20px 44px rgba(24, 10, 44, 0.24);
+      pointer-events: none;
+    }
+
+    .game-mascot svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .game-mascot .mini-shadow { fill: rgba(0, 0, 0, 0.2); }
+    .game-mascot .mini-hood { fill: #241032; }
+    .game-mascot .mini-face { fill: #090712; }
+    .game-mascot .mini-eye { fill: var(--brand-yellow); }
+    .game-mascot .mini-smirk {
+      fill: none;
+      stroke: white;
+      stroke-width: 3.4;
+      stroke-linecap: round;
+    }
+
+    .impostor-card h3 {
+      margin-top: 104px;
+      max-width: 8ch;
+    }
+
+    .impostor-card {
+      min-height: 284px;
+    }
+
     .use-strip {
       display: grid;
       grid-template-columns: repeat(7, minmax(152px, 1fr));

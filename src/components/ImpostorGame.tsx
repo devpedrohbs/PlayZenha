@@ -262,7 +262,7 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
 
               <div className="impostor-spacer" />
               <div className="impostor-sticky-action">
-                <ImpostorButton disabled={playerNames.filter((name) => name.trim()).length < 3} onClick={startGameSetup}>Comecar rodada</ImpostorButton>
+                <ImpostorButton className="impostor-start-button" disabled={playerNames.filter((name) => name.trim()).length < 3} onClick={startGameSetup}>Comecar rodada</ImpostorButton>
               </div>
             </motion.section>
           )}
@@ -343,7 +343,7 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
                   className="impostor-timer-ring"
                   style={{
                     '--progress': Math.max(0, timeLeft / discussionTime),
-                    '--ring-color': timeLeft <= 30 ? 'var(--impostor-danger)' : 'var(--impostor-yellow)'
+                    '--ring-color': timeLeft <= 30 ? 'var(--impostor-danger)' : 'var(--impostor-blue)'
                   } as React.CSSProperties}
                 >
                   <div>

@@ -15,13 +15,16 @@
       "impostor.css",
       "impostor.html",
       "index.html",
+      "jogos-preview.png",
+      "jogos.html",
       "playzenha-preview.png",
       "styles.css"
     ],
     "html": [
       "auth.html",
       "impostor.html",
-      "index.html"
+      "index.html",
+      "jogos.html"
     ],
     "css": [
       "auth.css",
@@ -37,6 +40,7 @@
       "auth-preview.png",
       "critique.json",
       "impostor-preview.png",
+      "jogos-preview.png",
       "playzenha-preview.png"
     ]
   },
@@ -55,6 +59,11 @@
       "file": "index.html",
       "role": "launcher-overview",
       "implementationNote": "Use this as the navigation/overview entry only; implement each linked screen file as its own route/surface."
+    },
+    {
+      "file": "jogos.html",
+      "role": "screen",
+      "implementationNote": "Preserve visual hierarchy, responsive behavior, and interactive states from this screen."
     }
   ],
   "screenFilePolicy": {

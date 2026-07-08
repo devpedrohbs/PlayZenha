@@ -19,8 +19,10 @@ export default {
         'danger-red': '#EF4444',
       },
       fontFamily: {
-        'fredoka': ['Fredoka One', 'cursive'],
-        'comfortaa': ['Comfortaa', 'sans-serif'],
+        'fredoka': ['Fredoka', 'Inter', 'system-ui', 'sans-serif'],
+        'comfortaa': ['Inter', 'system-ui', 'sans-serif'],
+        'inter': ['Inter', 'system-ui', 'sans-serif'],
+        'geist-pixel': ['Geist Pixel', 'Inter', 'system-ui', 'sans-serif'],
       },
     },
   },

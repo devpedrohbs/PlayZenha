@@ -110,7 +110,7 @@ const GameButton: React.FC<GameButtonProps> = ({
     <motion.button
       onClick={onClick}
       disabled={disabled}
-      className={`relative font-fredoka font-bold rounded-xl overflow-hidden shadow-lg ${getSizeClasses()} ${getTextColor()} ${getThemeClasses()} ${className} ${
+      className={`game-button-modern game-button-${variant} ${theme ? `game-button-theme-${theme}` : ''} relative font-fredoka font-bold rounded-xl overflow-hidden shadow-lg ${getSizeClasses()} ${getTextColor()} ${getThemeClasses()} ${className} ${
         disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
       }`}
       style={themedStyle}
@@ -125,7 +125,7 @@ const GameButton: React.FC<GameButtonProps> = ({
       </div>
       
       {/* Overlay para garantir legibilidade do texto */}
-      <div className={`absolute inset-0 ${
+      <div className={`game-button-overlay absolute inset-0 ${
         theme ? 'bg-white/5' :
         variant === 'primary' ? 'bg-playzenha-yellow/20' :
         variant === 'secondary' ? 'bg-playzenha-blue/30' :

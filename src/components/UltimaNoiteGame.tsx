@@ -23,7 +23,7 @@ type Phase =
   | 'discussion' 
   | 'voting-start'
   | 'voting'
-  | 'voting-suspense' // New Phase
+  | 'voting-suspense'
   | 'voting-results'
   | 'game-over'
 
@@ -37,8 +37,8 @@ interface Player {
 
 const ROLES_CONFIG = {
   Lobo: { color: 'text-red-500', bg: 'bg-red-500/20', border: 'border-red-500', icon: '🐺' },
-  Anjo: { color: 'text-cyan-400', bg: 'bg-cyan-400/20', border: 'border-cyan-400', icon: '👼' },
-  Detetive: { color: 'text-yellow-400', bg: 'bg-yellow-400/20', border: 'border-yellow-400', icon: '🕵️' },
+  Anjo: { color: 'text-purple-400', bg: 'bg-purple-400/20', border: 'border-purple-400', icon: '👼' },
+  Detetive: { color: 'text-purple-400', bg: 'bg-purple-400/20', border: 'border-purple-400', icon: '🕵️' },
   Cidadão: { color: 'text-gray-300', bg: 'bg-gray-500/20', border: 'border-gray-500', icon: '👥' },
   Mediador: { color: 'text-purple-400', bg: 'bg-purple-500/20', border: 'border-purple-400', icon: '🗣️' },
 }
@@ -281,6 +281,10 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
   }
 
   const handleVoteSelection = (targetId: number) => {
+    if (targetId !== -1) {
+        const target = players.find(p => p.id === targetId)
+        if (!target?.isAlive) return
+    }
     setSelectedVote(targetId)
   }
 
@@ -355,7 +359,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
   // --- Renders ---
 
   return (
-    <div className="min-h-screen bg-dark-bg text-white font-fredoka overflow-hidden relative selection:bg-purple-500 selection:text-white">
+    <div className="playzenha-game playzenha-game-ultima-noite min-h-screen bg-dark-bg text-white font-fredoka overflow-hidden relative selection:bg-purple-500 selection:text-white">
         {/* Header - Minimalist */}
         {phase !== 'night-intro' && !phase.startsWith('night-') && (
             <nav className="absolute top-0 w-full p-4 flex justify-between items-center z-50">
@@ -374,7 +378,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
             
             {/* SETUP PHASE */}
             {phase === 'setup' && (
-                <motion.div key="setup" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="pt-20 px-6 h-screen flex flex-col">
+                <motion.div key="setup" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="playzenha-game-screen pt-20 px-6 min-h-screen flex flex-col">
                     <div className="text-center mb-6 relative rounded-3xl border border-purple-400/20 bg-purple-500/10 p-5 shadow-xl shadow-purple-500/10">
                         <h1 className="text-4xl mb-2 text-purple-400 drop-shadow-lg flex items-center justify-center gap-3">
                             Quem vai jogar?
@@ -388,35 +392,39 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
                         <p className="text-gray-400 text-sm">Mínimo de 6 jogadores</p>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto space-y-3 mb-4 custom-scrollbar">
+                    <div className="playzenha-setup-grid">
+                        <div className="playzenha-setup-panel">
+                          <div className="playzenha-setup-player-list">
                         {playerNames.map((name, i) => (
-                             <div key={i} className="flex gap-2">
-                                <div className="w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center font-bold text-gray-500 border border-white/10 shrink-0">{i+1}</div>
+                             <motion.div key={i} className="playzenha-setup-player-card ultima-noite-setup-player-card" layout>
+                                <span className="playzenha-setup-avatar">{name.trim().slice(0, 1).toUpperCase() || i + 1}</span>
                                 <input 
-                                    className="flex-1 min-w-0 bg-white/5 border border-purple-400/20 rounded-lg px-4 text-base md:text-lg focus:border-purple-400 outline-none transition-colors"
-                                    placeholder="Nome jogador"
+                                    className="playzenha-setup-name-input ultima-noite-name-input compact"
+                                    placeholder={`Jogador ${i + 1}`}
                                     value={name}
                                     onChange={(e) => updatePlayerName(i, e.target.value)}
                                 />
                                 <button 
                                     onClick={() => setMediatorIndex(mediatorIndex === i ? null : i)}
-                                    className={`p-3 transition-colors ${mediatorIndex === i ? 'text-purple-400 bg-purple-500/20 rounded-lg' : 'text-gray-600 hover:text-purple-400'}`}
+                                    className={`playzenha-setup-role-button ${mediatorIndex === i ? 'active' : ''}`}
                                     title="Definir como Mediador"
+                                    type="button"
                                 >
                                     <MessageCircle className="w-5 h-5 fill-current" />
                                 </button>
-                                <button onClick={() => removePlayerSlot(i)} className="p-3 text-red-500/50 hover:text-red-500 shrink-0"><AlertTriangle size={20}/></button>
-                             </div>
+                                <button onClick={() => removePlayerSlot(i)} className="playzenha-setup-remove-button" type="button" aria-label={`Remover jogador ${i + 1}`}><AlertTriangle size={20}/></button>
+                             </motion.div>
                         ))}
+                        </div>
                         {playerNames.length < 16 && (
-                            <button onClick={addPlayerSlot} className="w-full py-3 border-2 border-dashed border-white/10 rounded-lg text-gray-500 hover:text-white hover:border-white/30 font-bold transition-all">
+                            <button onClick={addPlayerSlot} className="playzenha-setup-add-button" type="button">
                                 + Adicionar Jogador
                             </button>
                         )}
-                    </div>
+                        </div>
 
-                     {/* Settings Mini-Panel */}
-                     <div className="bg-purple-500/10 p-4 rounded-xl mb-4 border border-purple-400/20">
+                       {/* Settings Mini-Panel */}
+                       <div className="playzenha-setup-panel playzenha-setup-stack">
                         <div className="flex justify-between items-center mb-2">
                             <span className="text-sm text-gray-400 font-sans">Lobos</span>
                             <div className="flex gap-3 items-center">
@@ -426,8 +434,8 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
                             </div>
                         </div>
                         <div className="flex gap-2 mb-2">
-                            <button onClick={() => setSettings(s => ({...s, hasAngel: !s.hasAngel}))} className={`flex-1 py-2 rounded text-xs font-bold transition-colors ${settings.hasAngel ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50' : 'bg-white/5 text-gray-500'}`}>Anjo</button>
-                            <button onClick={() => setSettings(s => ({...s, hasDetective: !s.hasDetective}))} className={`flex-1 py-2 rounded text-xs font-bold transition-colors ${settings.hasDetective ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50' : 'bg-white/5 text-gray-500'}`}>Detetive</button>
+                            <button onClick={() => setSettings(s => ({...s, hasAngel: !s.hasAngel}))} className={`flex-1 py-2 rounded text-xs font-bold transition-colors ${settings.hasAngel ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50' : 'bg-white/5 text-gray-500'}`}>Anjo</button>
+                            <button onClick={() => setSettings(s => ({...s, hasDetective: !s.hasDetective}))} className={`flex-1 py-2 rounded text-xs font-bold transition-colors ${settings.hasDetective ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50' : 'bg-white/5 text-gray-500'}`}>Detetive</button>
                         </div>
                         <div className="flex justify-between items-center text-xs text-gray-400">
                              <span>Discussão: {discussionTime / 60} min</span>
@@ -436,8 +444,11 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
                                 <button onClick={() => setDiscussionTime(Math.min(300, discussionTime + 60))} className="w-6 h-6 bg-white/10 rounded">+</button>
                              </div>
                         </div>
-                     </div>
+                       </div>
+                    </div>
 
+                    <div className="playzenha-game-spacer" />
+                    <div className="playzenha-game-action">
                     <GameButton
                         theme="purple"
                         onClick={startGameSetup} 
@@ -446,12 +457,13 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
                     >
                         CONTINUAR
                     </GameButton>
+                    </div>
                 </motion.div>
             )}
 
             {/* ROLE DISTRIBUTION START */}
             {phase === 'role-distribution-start' && (
-                <motion.div key="role-start" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen flex flex-col justify-center items-center px-6 text-center bg-dark-bg">
+                <motion.div key="role-start" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="playzenha-game-screen h-screen flex flex-col items-center px-6 text-center bg-dark-bg">
                      <div className="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center mb-6 animate-pulse">
                         <Users className="w-10 h-10 text-white" />
                      </div>
@@ -467,7 +479,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
 
             {/* ROLE REVEAL */}
             {phase === 'role-reveal' && (
-                <motion.div key="role-reveal" initial={{scale:0.9, opacity:0}} animate={{scale:1, opacity:1}} exit={{scale:0.9, opacity:0}} className="h-screen flex flex-col justify-center items-center px-6 text-center bg-playzenha-surface border-8 border-purple-500/30">
+                <motion.div key="role-reveal" initial={{scale:0.9, opacity:0}} animate={{scale:1, opacity:1}} exit={{scale:0.9, opacity:0}} className="playzenha-game-screen h-screen flex flex-col items-center px-6 text-center bg-playzenha-surface border-8 border-purple-500/30">
                      <span className="text-6xl mb-6">{ROLES_CONFIG[players[currentPlayerIdx].role].icon}</span>
                      <h2 className="text-xl text-gray-400 font-sans mb-2">
                         {settings.hasMediator ? `Função de ${players[currentPlayerIdx].name}:` : "Seu papel é"}
@@ -556,11 +568,11 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
 
             {/* MORNING RESULTS */}
             {phase === 'morning' && (
-                <motion.div key="morning" initial={{opacity:0, scale: 0.95}} animate={{opacity:1, scale: 1}} className="h-screen bg-gradient-to-br from-purple-950 via-playzenha-surface to-dark-bg flex flex-col items-center justify-center px-6 text-center">
-                    <Sun className="w-24 h-24 text-yellow-400 mb-8 animate-spin-slow" />
-                    <h1 className="text-4xl font-bold text-white mb-6">O sol nasceu!</h1>
+                <motion.div key="morning" initial={{opacity:0, scale: 0.95}} animate={{opacity:1, scale: 1}} className="playzenha-game-screen h-screen bg-gradient-to-br from-purple-150 via-playzenha-surface to-dark-bg flex flex-col items-center px-6 text-center">
+                    <Sun className="ultima-noite-morning-sun w-24 h-24 mb-8 animate-spin-slow" />
+                    <h1 className="ultima-noite-morning-title text-4xl font-bold mb-6">O sol nasceu!</h1>
                     
-                    <div className="bg-black/30 w-full p-8 rounded-2xl backdrop-blur-md border border-white/10 mb-8">
+                    <div className="bg-purple/30 w-full p-8 rounded-2xl backdrop-blur-md border border-white/10 mb-8">
                         {players.filter(p => !p.isAlive && p.id === wolfKill && wolfKill !== angelSave).length > 0 ? (
                             <>
                                 <Skull className="w-12 h-12 text-red-500 mx-auto mb-4" />
@@ -586,42 +598,46 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
 
             {/* DISCUSSION */}
             {phase === 'discussion' && (
-                <motion.div key="discussion" className="h-screen flex flex-col items-center justify-center bg-playzenha-surface px-6">
-                    <div className="relative w-64 h-64 flex items-center justify-center mb-12">
-                         <svg className="absolute w-full h-full transform -rotate-90">
-                             <circle cx="128" cy="128" r="120" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-gray-800" />
-                             <circle cx="128" cy="128" r="120" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-purple-500 transition-all duration-1000" 
-                                strokeDasharray={2 * Math.PI * 120}
-                                strokeDashoffset={2 * Math.PI * 120 * (1 - timeLeft / discussionTime)}
-                             />
-                         </svg>
-                         <div className="text-6xl font-bold font-mono">{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</div>
+                <motion.div key="discussion" className="ultima-noite-discussion-screen playzenha-game-screen h-screen flex flex-col items-center justify-center bg-playzenha-surface px-6 relative">
+                    <div className="flex flex-col items-center justify-center">
+                        <div className="relative w-64 h-64 flex items-center justify-center mb-8">
+                            <svg className="absolute w-full h-full transform -rotate-90">
+                                <circle cx="128" cy="128" r="120" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-gray-800" />
+                             <circle cx="128" cy="128" r="120" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-purple-500 transition-all duration-1000"
+                                    strokeDasharray={2 * Math.PI * 120}
+                                    strokeDashoffset={2 * Math.PI * 120 * (1 - timeLeft / discussionTime)}
+                                />
+                            </svg>
+                            <div className="text-6xl font-bold font-mono">{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</div>
+                        </div>
+
+                        <h2 className="text-2xl text-white text-center uppercase tracking-widest">Tempo de debate</h2>
                     </div>
                     
-                    <h2 className="text-2xl text-white mb-8 text-center uppercase tracking-widest">Tempo de debate</h2>
-                    
-                    <GameButton theme="purple" onClick={startVoting} variant="danger" className="w-full max-w-sm">
-                        ENCERRAR E VOTAR
-                    </GameButton>
+                    <div className="absolute bottom-6 left-0 right-0 px-6 flex justify-center">
+                        <GameButton theme="purple" onClick={startVoting} variant="danger" className="w-full max-w-sm">
+                            ENCERRAR E VOTAR
+                        </GameButton>
+                    </div>
                 </motion.div>
             )}
 
             {/* VOTING START/PASS */}
             {phase === 'voting' && (
                 <motion.div key="voting" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen flex flex-col bg-dark-bg">
-                     <div className="flex-1 flex flex-col justify-center items-center px-6 text-center">
-                        <div className="w-20 h-20 bg-red-900/30 border-2 border-red-500/50 rounded-full flex items-center justify-center mb-6">
-                            <VoteIcon className="w-8 h-8 text-red-500" />
+                     <div className="flex-1 min-h-[230px] flex flex-col justify-center items-center px-6 pt-24 pb-4 text-center">
+                        <div className="w-16 h-16 bg-red-900/30 border-2 border-red-500/50 rounded-full flex items-center justify-center mb-4">
+                            <VoteIcon className="w-7 h-7 text-red-500" />
                         </div>
                         <h2 className="text-gray-400 mb-2">Passe o celular para</h2>
-                        <h1 className="text-4xl text-white font-bold mb-10">{players[currentPlayerIdx].name}</h1>
-                        <p className="text-xs text-gray-500 uppercase tracking-widest mb-8">Votação Presencial</p>
+                        <h1 className="text-4xl text-white font-bold mb-5">{players[currentPlayerIdx].name}</h1>
+                        <p className="text-xs text-gray-500 uppercase tracking-widest">Votação Presencial</p>
                      </div>
                      
                      <div className="bg-playzenha-surface p-6 rounded-t-3xl border-t border-purple-500/20 max-h-[60vh] overflow-hidden flex flex-col items-center">
-                        <h3 className="text-center text-white mb-4 font-bold">Quem é o Lobo?</h3>
+                        <h2 className="text-center text-white mb-4 font-bold text-lg">Quem é o Lobo?</h2>
                         <div className="w-full overflow-y-auto custom-scrollbar space-y-2 pb-20">
-                            {players.map(p => p.id !== players[currentPlayerIdx].id && (
+                            {players.filter(p => p.isAlive && p.id !== players[currentPlayerIdx].id).map(p => (
                                 <button
                                     key={p.id}
                                     onClick={() => handleVoteSelection(p.id)}
@@ -629,11 +645,10 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
                                         selectedVote === p.id 
                                         ? 'bg-red-500/20 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' 
                                         : 'bg-white/5 border-white/5 hover:bg-white/10'
-                                    } ${!p.isAlive ? 'opacity-50 grayscale' : ''}`}
+                                    }`}
                                 >
                                     <div className="flex flex-col items-start">
                                         <span className={`font-bold text-lg ${selectedVote === p.id ? 'text-red-400' : 'text-gray-300'}`}>{p.name}</span>
-                                        {!p.isAlive && <span className="text-xs text-red-500 font-bold uppercase">MORTO</span>}
                                     </div>
                                     <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-colors ${
                                         selectedVote === p.id 
@@ -648,7 +663,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
                             <button 
                                 onClick={() => handleVoteSelection(-1)} 
                                 className={`w-full py-3 text-sm font-bold uppercase tracking-wider transition-colors border rounded-xl ${
-                                    selectedVote === -1 ? 'bg-white/10 text-white border-white/30' : 'text-gray-500 border-transparent hover:text-white'
+                                    selectedVote === -1 ? 'bg-purple-400 text-white border-white/30' : 'text-gray-500 border-transparent hover:bg-white/5'
                                 }`}
                             >
                                 Pular Voto
@@ -696,12 +711,12 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
             )}
             {/* VOTING RESULTS */}
             {phase === 'voting-results' && (
-                <motion.div key="voting-results" className="h-screen bg-dark-bg flex flex-col items-center justify-center px-6">
+                <motion.div key="voting-results" className="ultima-noite-voting-results-screen playzenha-game-screen h-screen bg-dark-bg flex flex-col items-center px-6 relative">
                      <h1 className="text-3xl text-white mb-8 font-bold">Resultado da Votação</h1>
                      
-                     <div className="w-full max-w-sm space-y-3 mb-8 max-h-[50vh] overflow-y-auto custom-scrollbar">
+                     <div className="ultima-noite-vote-result-list w-full max-w-sm mb-8 max-h-[50vh] overflow-y-auto custom-scrollbar pb-24">
                          {[...players].sort((a,b) => b.votes - a.votes).map((p) => (
-                             <div key={p.id} className={`flex items-center justify-between p-4 rounded-lg bg-white/10 ${!p.isAlive ? 'opacity-50' : ''}`}>
+                             <div key={p.id} className={`ultima-noite-vote-result-row flex items-center justify-between p-4 rounded-lg ${!p.isAlive ? 'opacity-50' : ''}`}>
                                  <div className="flex items-center gap-3">
                                      <span className="font-bold text-lg">{p.name}</span>
                                      {!p.isAlive && <Skull size={16} className="text-red-500" />}
@@ -714,7 +729,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
                          ))}
                      </div>
                     
-                     <div className="flex gap-4 w-full justify-center">
+                     <div className="absolute bottom-6 left-0 right-0 px-6 flex gap-4 w-full justify-center">
                          <GameButton theme="purple" onClick={handleNextRoundOrEnd} className="w-full max-w-xs">
                              {getWinner() ? "VER RESULTADO FINAL" : "CONTINUAR O JOGO"}
                          </GameButton>
@@ -724,7 +739,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
 
             {/* GAME OVER */}
             {phase === 'game-over' && (
-                <motion.div key="gameover" className={`h-screen flex flex-col items-center justify-center px-6 text-center ${winner === 'Lobos' ? 'bg-red-950' : 'bg-blue-950'}`}>
+                <motion.div key="gameover" className={`ultima-noite-game-over-screen playzenha-game-screen h-screen flex flex-col items-center px-6 text-center relative ${winner === 'Lobos' ? 'bg-red-950' : 'bg-blue-950'}`}>
                     {winner === 'Lobos' ? <WolfIcon size={64} /> : <Shield size={64} />}
                     <h2 className="text-xl text-white/70 mt-4 uppercase tracking-[0.3em]">Vencedores</h2>
                     <h1 className="text-6xl font-bold text-white mb-8 drop-shadow-xl">{winner}</h1>
@@ -735,7 +750,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
                             : "A cidade está segura novamente. Todos os lobos foram eliminados."}
                     </p>
 
-                    <div className="space-y-4 w-full max-w-xs">
+                    <div className="ultima-noite-game-over-actions space-y-4 w-full max-w-xs">
                         <GameButton theme="purple" onClick={() => setPhase('setup')} variant="secondary" className="w-full">
                             JOGAR NOVAMENTE
                         </GameButton>
@@ -782,7 +797,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
                 >
                      <motion.div 
                         initial={{scale:0.9}} animate={{scale:1}} 
-                        className="bg-playzenha-surface border border-purple-500/30 p-6 rounded-3xl w-full max-w-sm text-center shadow-2xl relative overflow-hidden"
+                        className="playzenha-modal-card bg-playzenha-surface border border-purple-500/30 p-6 rounded-3xl w-full max-w-sm text-center shadow-2xl relative overflow-hidden"
                         onClick={e => e.stopPropagation()}
                      >
                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500" />
@@ -907,14 +922,14 @@ const ActionPhase = ({ title, subtitle, players, onAction, color, embedded = fal
                     <button 
                         key={p.id}
                         onClick={() => handleSelect(p.id)}
-                        className={`aspect-square rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all group relative duration-300
+                        className={`ultima-noite-target-card aspect-square rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all group relative duration-300
                             ${selectedId === p.id 
-                                ? `bg-white/10 ${theme.border} scale-105 shadow-[0_0_15px_rgba(255,255,255,0.1)]` 
-                                : `bg-white/5 border-white/10 hover:bg-white/10`
+                                ? `ultima-noite-target-card-selected bg-white/10 ${theme.border} scale-105 shadow-[0_0_15px_rgba(255,255,255,0.1)]`
+                                : `ultima-noite-target-card-idle bg-white/5 border-white/10 hover:bg-white/10`
                             }
                         `}
                     >   
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl shadow-lg transition-transform ${
+                        <div className={`ultima-noite-target-avatar w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl shadow-lg transition-transform ${
                             selectedId === p.id ? `${theme.bg} text-white scale-110` : 'bg-white/5 text-gray-500'
                         }`}>
                             {p.name.charAt(0)}
@@ -935,8 +950,8 @@ const ActionPhase = ({ title, subtitle, players, onAction, color, embedded = fal
                         <GameButton
                             theme="purple"
                             onClick={handleConfirm}
-                            variant="primary" // Generic style, let logic handle
-                            className={`w-full max-w-xs shadow-lg ${theme.shadow} border ${theme.borderLight} text-white`}
+                            variant="primary"
+                            className={`ultima-noite-confirm-button w-full max-w-xs shadow-lg ${theme.shadow} border ${theme.borderLight} text-white`}
                         >
                             CONFIRMAR ESCOLHA
                         </GameButton>

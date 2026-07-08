@@ -157,6 +157,9 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
     })
   }, [results])
 
+  const filledPlayerCount = playerNames.filter((name) => name.trim()).length
+  const canStartWritingPhase = filledPlayerCount >= 2
+
   const addPlayerSlot = () => {
     if (playerNames.length < 10) setPlayerNames([...playerNames, ''])
   }
@@ -439,7 +442,7 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
   }, [phase, pendingAction, resumeCountdown])
 
   return (
-    <div className="min-h-screen bg-dark-bg text-white font-sans overflow-hidden relative selection:bg-playzenha-yellow/60 selection:text-dark-bg">
+    <div className="playzenha-game playzenha-game-quem-sou-eu min-h-screen bg-dark-bg text-white font-sans overflow-hidden relative selection:bg-playzenha-yellow/60 selection:text-dark-bg">
       <nav className="absolute top-0 w-full p-4 flex justify-between items-center z-50">
         <button onClick={onBackToHome} className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
           <ArrowLeft size={24} />
@@ -458,38 +461,41 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="pt-24 px-6 h-screen flex flex-col"
+            className="playzenha-game-screen pt-24 px-6 h-screen flex flex-col"
           >
             <div className="text-center mb-6 rounded-3xl border border-playzenha-yellow/20 bg-playzenha-yellow/10 p-5 shadow-xl shadow-playzenha-yellow/10">
               <h1 className="text-3xl md:text-4xl font-black mb-2 text-yellow-100">Cadastro de Jogadores</h1>
               <p className="text-gray-400 text-sm">Minimo 2, maximo 10 jogadores</p>
             </div>
 
-            <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 mb-4">
+            <div className="playzenha-setup-grid">
+              <div className="playzenha-setup-panel">
+                <div className="playzenha-setup-player-list">
               {playerNames.map((name, idx) => (
-                <div key={idx} className="flex gap-2">
-                  <div className="w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center font-bold text-gray-400 border border-white/10 shrink-0">
-                    {idx + 1}
-                  </div>
+                <motion.div key={idx} className="playzenha-setup-player-card" layout>
+                  <span className="playzenha-setup-avatar">{name.trim().slice(0, 1).toUpperCase() || idx + 1}</span>
                   <input
-                    className="flex-1 min-w-0 bg-white/5 border border-playzenha-yellow/20 rounded-lg px-4 text-base focus:border-playzenha-yellow outline-none transition-colors text-white"
-                    placeholder="Nome do jogador"
+                    className="playzenha-setup-name-input compact"
+                    placeholder={`Jogador ${idx + 1}`}
                     value={name}
                     onChange={(e) => updatePlayerName(idx, e.target.value)}
                   />
                   <button
                     onClick={() => removePlayerSlot(idx)}
-                    className="p-3 text-red-500/50 hover:text-red-500 shrink-0 transition-colors"
+                    className="playzenha-setup-remove-button"
+                    type="button"
+                    aria-label={`Remover jogador ${idx + 1}`}
                   >
                     <Trash2 size={20} />
                   </button>
-                </div>
+                </motion.div>
               ))}
+                </div>
 
               {playerNames.length < 10 && (
                 <button
                   onClick={addPlayerSlot}
-                  className="w-full py-3 border-2 border-dashed border-white/10 rounded-lg text-gray-500 hover:text-white hover:border-white/30 font-bold transition-all"
+                  className="playzenha-setup-add-button"
                 >
                   + Adicionar Jogador
                 </button>
@@ -500,11 +506,15 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
                   Nenhum jogador adicionado ainda.
                 </div>
               )}
+              </div>
             </div>
 
-            <GameButton theme="yellow" onClick={startWritingPhase} className="w-full py-4 text-lg mb-6">
-              INICIAR JOGO
-            </GameButton>
+            <div className="playzenha-game-spacer" />
+            <div className="playzenha-game-action">
+              <GameButton theme="yellow" onClick={startWritingPhase} disabled={!canStartWritingPhase} className="w-full py-4 text-lg mb-6">
+                INICIAR JOGO
+              </GameButton>
+            </div>
           </motion.div>
         )}
 
@@ -514,7 +524,7 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="h-screen px-6 flex flex-col items-center justify-center text-center bg-dark-bg"
+            className="playzenha-game-screen h-screen px-6 flex flex-col items-center text-center bg-dark-bg"
           >
             <div className="w-24 h-24 bg-white/10 rounded-full flex items-center justify-center mb-6 animate-pulse border border-white/20">
               <Users className="w-10 h-10 text-white" />
@@ -538,7 +548,7 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="h-screen pt-24 px-6 flex flex-col"
+            className="playzenha-game-screen h-screen pt-24 px-6 flex flex-col"
           >
             <div className="text-center mb-6">
               <span className="text-xs uppercase tracking-[0.2em] text-gray-500">
@@ -576,7 +586,7 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="h-screen px-6 flex flex-col items-center justify-center text-center bg-dark-bg"
+            className="playzenha-game-screen h-screen px-6 flex flex-col items-center text-center bg-dark-bg"
           >
             <UserCircle2 className="w-24 h-24 text-playzenha-yellow mb-6" />
             <h1 className="text-4xl md:text-5xl font-black mb-3">Vez de {currentGuesser.name}!</h1>
@@ -593,7 +603,7 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="h-screen px-6 flex flex-col items-center justify-center text-center bg-dark-bg"
+            className="playzenha-game-screen h-screen px-6 flex flex-col items-center justify-center text-center bg-dark-bg"
           >
             <p className="text-gray-400 uppercase tracking-[0.2em] mb-6">Posicione o celular na testa</p>
             <motion.div
@@ -724,7 +734,7 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="h-screen px-6 flex flex-col items-center justify-center text-center bg-dark-bg"
+            className="playzenha-game-screen h-screen px-6 flex flex-col items-center text-center bg-dark-bg"
           >
             <div className="mb-6">
               {lastRoundResult.status === 'acertou' ? (
@@ -762,7 +772,7 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="h-screen pt-24 px-6 flex flex-col"
+            className="playzenha-game-screen h-screen pt-24 px-6 flex flex-col"
           >
             <div className="text-center mb-6">
               <Trophy className="w-14 h-14 text-playzenha-yellow mx-auto mb-2" />

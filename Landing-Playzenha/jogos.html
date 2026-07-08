@@ -1,0 +1,967 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jogos | Playzenha</title>
+  <meta name="description" content="Biblioteca de jogos do Playzenha para descobrir modos de festa, blefe, casal, família, quebra-gelo e IA." />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .library-page {
+      background:
+        radial-gradient(circle at 12% 0%, color-mix(in oklch, var(--brand-yellow) 34%, transparent), transparent 26rem),
+        radial-gradient(circle at 88% 10%, color-mix(in oklch, var(--brand-blue) 22%, transparent), transparent 28rem),
+        linear-gradient(180deg, oklch(98% 0.018 255), oklch(94% 0.026 255));
+    }
+
+    .nav-links a[aria-current="page"] {
+      color: var(--fg);
+      font-weight: 760;
+    }
+
+    .library-shell {
+      width: min(1240px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: clamp(34px, 6vw, 72px) 0 90px;
+    }
+
+    .library-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.75fr);
+      gap: clamp(22px, 4vw, 48px);
+      align-items: end;
+      padding: clamp(28px, 5vw, 54px);
+      border: 1px solid color-mix(in oklch, var(--border) 72%, transparent);
+      border-radius: var(--radius-xl);
+      background:
+        linear-gradient(135deg, color-mix(in oklch, var(--surface) 96%, var(--brand-yellow) 4%), var(--surface)),
+        var(--surface);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .library-hero::after {
+      content: "";
+      position: absolute;
+      right: -70px;
+      top: -70px;
+      width: 240px;
+      height: 240px;
+      border-radius: 46px;
+      background: var(--brand-yellow);
+      transform: rotate(16deg);
+      opacity: 0.82;
+    }
+
+    .library-hero > * { position: relative; z-index: 1; }
+
+    .library-title {
+      max-width: 780px;
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(3.2rem, 9vw, 6.8rem);
+      line-height: 0.88;
+      letter-spacing: -0.04em;
+      text-wrap: balance;
+    }
+
+    .library-lead {
+      max-width: 62ch;
+      margin: 20px 0 0;
+      color: var(--muted);
+      font-size: clamp(1rem, 2vw, 1.18rem);
+    }
+
+    .hero-library-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .hero-game-tile {
+      min-height: 116px;
+      display: grid;
+      grid-template-columns: 82px 1fr;
+      gap: 14px;
+      align-items: center;
+      padding: 14px;
+      border: 1px solid color-mix(in oklch, var(--border) 78%, transparent);
+      border-radius: 24px;
+      background: color-mix(in oklch, var(--surface) 82%, transparent);
+      box-shadow: 0 18px 48px rgba(4, 22, 86, 0.1);
+    }
+
+    .tile-art {
+      width: 82px;
+      height: 82px;
+      border-radius: 23px;
+      display: grid;
+      place-items: center;
+      color: var(--tile-fg, var(--fg));
+      background:
+        radial-gradient(circle at 70% 18%, rgba(255,255,255,0.45), transparent 34%),
+        var(--tile-bg, var(--brand-blue));
+      overflow: hidden;
+    }
+
+    .tile-art svg,
+    .game-art svg,
+    .section-icon svg,
+    .action-icon svg {
+      width: 58%;
+      height: 58%;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .library-controls {
+      margin-top: 22px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .search-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+    }
+
+    .search-box {
+      min-height: 58px;
+      display: grid;
+      grid-template-columns: 24px 1fr;
+      align-items: center;
+      gap: 12px;
+      padding: 0 18px;
+      border: 1px solid color-mix(in oklch, var(--border) 84%, transparent);
+      border-radius: 999px;
+      background: var(--surface);
+      box-shadow: 0 16px 48px rgba(4, 22, 86, 0.08);
+    }
+
+    .search-box svg {
+      width: 22px;
+      height: 22px;
+      stroke: var(--brand-blue);
+      stroke-width: 2;
+      fill: none;
+    }
+
+    .search-box input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--fg);
+      font: inherit;
+    }
+
+    .category-rail,
+    .shelf-row {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: max-content;
+      gap: 10px;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      padding: 4px 4px 14px;
+      scrollbar-color: var(--brand-blue) transparent;
+    }
+
+    .category-chip,
+    .filter-chip-game,
+    .favorite-button {
+      min-height: 42px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--fg);
+      padding: 0 15px;
+      font-weight: 720;
+      cursor: pointer;
+      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+    }
+
+    .category-chip:hover,
+    .filter-chip-game:hover,
+    .favorite-button:hover { transform: translateY(-2px); }
+
+    .category-chip.is-active,
+    .filter-chip-game.is-active {
+      border-color: var(--brand-blue);
+      background: var(--brand-blue);
+      color: white;
+    }
+
+    .filter-panel {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(140px, 1fr));
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid color-mix(in oklch, var(--border) 82%, transparent);
+      border-radius: 24px;
+      background: color-mix(in oklch, var(--surface) 90%, transparent);
+    }
+
+    .filter-field {
+      display: grid;
+      gap: 7px;
+    }
+
+    .filter-field label {
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 760;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .filter-field select {
+      min-height: 46px;
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--surface);
+      color: var(--fg);
+      padding: 0 12px;
+      font: inherit;
+      outline: 0;
+    }
+
+    .filter-field select:focus,
+    .search-box:focus-within {
+      border-color: color-mix(in oklch, var(--brand-blue) 68%, var(--border));
+      box-shadow: 0 0 0 4px rgba(4, 65, 242, 0.1);
+    }
+
+    .discover-section {
+      margin-top: clamp(34px, 5vw, 58px);
+    }
+
+    .section-title-row {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 14px;
+    }
+
+    .section-title-row h2 {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: clamp(1.55rem, 4vw, 2.45rem);
+    }
+
+    .section-title-row p {
+      max-width: 48ch;
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .section-icon {
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      color: var(--fg);
+      background: var(--brand-yellow);
+      flex: 0 0 auto;
+    }
+
+    .shelf-row {
+      grid-auto-columns: minmax(278px, 348px);
+      padding-bottom: 18px;
+    }
+
+    .library-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .library-game-card {
+      min-height: 418px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 16px;
+      border: 1px solid color-mix(in oklch, var(--border) 78%, transparent);
+      border-radius: 28px;
+      background: var(--surface);
+      box-shadow: 0 16px 48px rgba(4, 22, 86, 0.1);
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+      position: relative;
+    }
+
+    .library-game-card:hover {
+      transform: translateY(-7px) scale(1.015);
+      border-color: color-mix(in oklch, var(--brand-blue) 35%, var(--border));
+      box-shadow: 0 28px 76px rgba(4, 65, 242, 0.18);
+    }
+
+    .shelf-row .library-game-card {
+      min-height: 392px;
+    }
+
+    .game-art {
+      min-height: 154px;
+      display: grid;
+      place-items: center;
+      border-radius: 24px;
+      color: var(--art-fg, white);
+      background:
+        radial-gradient(circle at 76% 16%, rgba(255,255,255,0.42), transparent 26%),
+        linear-gradient(145deg, var(--art-a, var(--brand-blue)), var(--art-b, var(--party-purple)));
+      overflow: hidden;
+      position: relative;
+    }
+
+    .game-art::after {
+      content: "";
+      position: absolute;
+      width: 118px;
+      height: 118px;
+      right: -42px;
+      bottom: -44px;
+      border-radius: 32px;
+      background: color-mix(in oklch, var(--brand-yellow) 84%, white);
+      transform: rotate(18deg);
+      opacity: 0.9;
+    }
+
+    .game-art svg { position: relative; z-index: 1; }
+
+    .card-topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .category-label {
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 760;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .favorite-button {
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      color: var(--brand-blue);
+    }
+
+    .favorite-button.is-favorite {
+      background: var(--brand-yellow);
+      border-color: var(--brand-yellow);
+      color: var(--fg);
+    }
+
+    .favorite-button svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      stroke-width: 2;
+      fill: none;
+    }
+
+    .favorite-button.is-favorite svg { fill: currentColor; }
+
+    .game-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 1.45rem;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    .game-desc {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .game-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    .meta-pill,
+    .tag-pill {
+      min-height: 28px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 0 9px;
+      font-size: 0.78rem;
+      font-weight: 720;
+      background: color-mix(in oklch, var(--bg) 72%, white);
+      color: var(--muted);
+    }
+
+    .tag-pill {
+      background: color-mix(in oklch, var(--tag-color, var(--brand-yellow)) 26%, white);
+      color: var(--fg);
+    }
+
+    .card-actions {
+      display: grid;
+      grid-template-columns: 1fr 0.82fr;
+      gap: 10px;
+    }
+
+    .game-action {
+      min-height: 46px;
+      border: 0;
+      border-radius: 16px;
+      font-weight: 820;
+      cursor: pointer;
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .game-action.primary {
+      background: var(--brand-blue);
+      color: white;
+      box-shadow: 0 16px 32px rgba(4, 65, 242, 0.25);
+    }
+
+    .game-action.secondary {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--fg);
+    }
+
+    .game-action:hover { transform: translateY(-2px); }
+
+    .empty-state {
+      display: none;
+      padding: 32px;
+      border: 1px dashed var(--border);
+      border-radius: 24px;
+      color: var(--muted);
+      background: color-mix(in oklch, var(--surface) 74%, transparent);
+      text-align: center;
+    }
+
+    .empty-state.is-visible { display: block; }
+
+    .library-page .reveal {
+      opacity: 1;
+      transform: none;
+    }
+
+    .toast,
+    .rules-modal {
+      position: fixed;
+      z-index: 60;
+    }
+
+    .toast {
+      left: 50%;
+      bottom: 22px;
+      transform: translate(-50%, 22px);
+      opacity: 0;
+      pointer-events: none;
+      max-width: min(420px, calc(100vw - 32px));
+      padding: 13px 16px;
+      border-radius: 999px;
+      background: oklch(15% 0.075 262);
+      color: white;
+      box-shadow: var(--shadow-strong);
+      transition: opacity 180ms ease, transform 180ms ease;
+      font-weight: 720;
+      text-align: center;
+    }
+
+    .toast.is-visible {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    .rules-modal {
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      background: rgba(6, 17, 47, 0.42);
+      backdrop-filter: blur(10px);
+    }
+
+    .rules-modal.is-visible { display: grid; }
+
+    .rules-card {
+      width: min(520px, 100%);
+      padding: 24px;
+      border-radius: 28px;
+      background: var(--surface);
+      box-shadow: var(--shadow-strong);
+    }
+
+    .rules-card h3 {
+      margin: 0 0 10px;
+      font-size: 1.8rem;
+    }
+
+    .rules-card p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .rules-card ul {
+      margin: 18px 0 0;
+      padding-left: 20px;
+      color: var(--fg);
+    }
+
+    .rules-card li + li { margin-top: 8px; }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 22px;
+    }
+
+    @media (max-width: 980px) {
+      .library-hero,
+      .filter-panel,
+      .library-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .library-hero { align-items: start; }
+    }
+
+    @media (max-width: 720px) {
+      .library-shell { width: min(100% - 24px, 1240px); }
+      .library-hero,
+      .filter-panel,
+      .library-grid,
+      .search-row {
+        grid-template-columns: 1fr;
+      }
+      .library-title { font-size: clamp(3rem, 17vw, 4.7rem); }
+      .hero-game-tile { grid-template-columns: 72px 1fr; }
+      .tile-art { width: 72px; height: 72px; }
+      .section-title-row {
+        align-items: start;
+        flex-direction: column;
+      }
+      .shelf-row { grid-auto-columns: minmax(268px, 86vw); }
+      .library-game-card { min-height: 404px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body class="library-page">
+  <div class="page">
+    <nav class="nav" data-od-id="main-navigation" aria-label="Navegacao principal">
+      <div class="nav-inner">
+        <a class="brand" href="index.html" data-od-id="brand-link" aria-label="Playzenha inicio">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M7 8h10a4 4 0 0 1 4 4v1a4 4 0 0 1-4 4h-1.5l-2 2-2-2H7a4 4 0 0 1-4-4v-1a4 4 0 0 1 4-4Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>
+          </span>
+          Playzenha
+        </a>
+        <div class="nav-links" data-od-id="nav-links">
+          <a href="index.html#como-funciona">Como funciona</a>
+          <a href="jogos.html" aria-current="page">Jogos</a>
+          <a href="index.html#planos">Planos</a>
+          <a href="index.html#depoimentos">Depoimentos</a>
+        </div>
+        <div class="nav-actions">
+          <button class="button button-blue js-play-random" data-od-id="nav-primary-cta" type="button">Comecar a jogar</button>
+          <button class="menu-button" data-od-id="mobile-menu-button" type="button" aria-label="Abrir menu" aria-expanded="false">
+            <svg width="21" height="21" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <main class="library-shell" data-od-id="games-library-main">
+      <section class="library-hero reveal" data-od-id="games-library-hero">
+        <div>
+          <p class="eyebrow">Playzenha jogos</p>
+          <h1 class="library-title" data-od-id="games-library-title">Biblioteca de Jogos</h1>
+          <p class="library-lead" data-od-id="games-library-subtitle">Ache rapido o jogo certo para o clima da galera: festa cheia, date, churrasco, viagem, familia reunida ou aquele pre-role que precisa pegar no tranco.</p>
+        </div>
+        <div class="hero-library-stack" aria-label="Jogos em destaque">
+          <article class="hero-game-tile" data-od-id="hero-game-tile-impostor">
+            <span class="tile-art" style="--tile-bg: linear-gradient(145deg, #2b1138, #ff335f); --tile-fg: #ffc603;"><svg viewBox="0 0 24 24"><path d="M4 9c2-2 5-3 8-3s6 1 8 3v3c0 4-3.5 7-8 7s-8-3-8-7V9Z"/><path d="M8 12h.01M16 12h.01"/><path d="M9 16c2 1 4 1 6 0"/></svg></span>
+            <div><strong>Impostor</strong><p>Blefe, suspeita e votacao em grupo.</p></div>
+          </article>
+          <article class="hero-game-tile" data-od-id="hero-game-tile-ia">
+            <span class="tile-art" style="--tile-bg: var(--brand-blue); --tile-fg: white;"><svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M4.9 4.9 7 7M17 17l2.1 2.1M3 12h3M18 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/><rect x="8" y="8" width="8" height="8" rx="3"/></svg></span>
+            <div><strong>IA da Resenha</strong><p>Rodadas geradas para o momento.</p></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="library-controls reveal" data-od-id="games-library-controls" aria-label="Busca e filtros">
+        <div class="search-row">
+          <label class="search-box" data-od-id="game-search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"/><path d="m15 15 5 5"/></svg>
+            <input id="searchInput" type="search" placeholder="Buscar por Impostor, casal, festa, IA..." autocomplete="off" />
+          </label>
+          <button class="button button-primary js-play-random" type="button" data-od-id="random-game-button">Jogo aleatorio</button>
+        </div>
+        <div class="category-rail" id="categoryRail" data-od-id="game-category-rail" aria-label="Categorias"></div>
+        <div class="filter-panel" data-od-id="game-filter-panel">
+          <div class="filter-field">
+            <label for="playersFilter">Jogadores</label>
+            <select id="playersFilter">
+              <option value="all">Qualquer grupo</option>
+              <option value="2">2 pessoas</option>
+              <option value="4">3 a 4</option>
+              <option value="8">5 a 8</option>
+              <option value="12">9+</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label for="durationFilter">Duração</label>
+            <select id="durationFilter">
+              <option value="all">Qualquer tempo</option>
+              <option value="quick">Ate 10 min</option>
+              <option value="medium">10 a 20 min</option>
+              <option value="long">20+ min</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label for="difficultyFilter">Dificuldade</label>
+            <select id="difficultyFilter">
+              <option value="all">Todas</option>
+              <option value="facil">Facil</option>
+              <option value="media">Media</option>
+              <option value="alta">Alta</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label for="priceFilter">Acesso</label>
+            <select id="priceFilter">
+              <option value="all">Todos</option>
+              <option value="free">Gratuito</option>
+              <option value="premium">Premium</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label for="tagFilter">Tag</label>
+            <select id="tagFilter">
+              <option value="all">Todas</option>
+              <option value="Popular">Popular</option>
+              <option value="Novo">Novo</option>
+              <option value="IA">IA</option>
+              <option value="Premium">Premium</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <section class="discover-section reveal" data-od-id="trending-games-section">
+        <div class="section-title-row">
+          <h2><span class="section-icon"><svg viewBox="0 0 24 24"><path d="M13 3c1 4-2 5-2 8 0 2 1.5 3 3 3 2.5 0 4-2 4-5 2 2 3 4 3 6a8 8 0 0 1-16 0c0-4 3-7 8-12Z"/></svg></span>Em Alta</h2>
+          <p>Os jogos que mais combinam com resenha cheia e decisao rapida.</p>
+        </div>
+        <div class="shelf-row" id="trendingShelf" aria-label="Jogos em alta"></div>
+      </section>
+
+      <section class="discover-section reveal" data-od-id="most-played-games-section">
+        <div class="section-title-row">
+          <h2><span class="section-icon"><svg viewBox="0 0 24 24"><path d="M12 3 9.4 8.4 3.5 9.2l4.3 4.1-1 5.8 5.2-2.8 5.2 2.8-1-5.8 4.3-4.1-5.9-.8L12 3Z"/></svg></span>Mais Jogados</h2>
+          <p>Classicos para abrir sem pensar muito e colocar todo mundo dentro.</p>
+        </div>
+        <div class="shelf-row" id="mostPlayedShelf" aria-label="Mais jogados"></div>
+      </section>
+
+      <section class="discover-section reveal" data-od-id="recommended-games-section">
+        <div class="section-title-row">
+          <h2><span class="section-icon"><svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M4.9 4.9 7 7M17 17l2.1 2.1M3 12h3M18 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/><rect x="8" y="8" width="8" height="8" rx="3"/></svg></span>Recomendados para Você</h2>
+          <p>Modos com energia moderna, incluindo jogos com ideias geradas por IA.</p>
+        </div>
+        <div class="shelf-row" id="recommendedShelf" aria-label="Recomendados para você"></div>
+      </section>
+
+      <section class="discover-section reveal" data-od-id="party-games-section">
+        <div class="section-title-row">
+          <h2><span class="section-icon"><svg viewBox="0 0 24 24"><path d="M4 21v-7a8 8 0 0 1 16 0v7"/><path d="M8 21v-5a4 4 0 0 1 8 0v5"/><path d="M9 5h6M12 2v6"/></svg></span>Jogos para Festa</h2>
+          <p>Para churrasco, aniversario, sala cheia e pre-role barulhento.</p>
+        </div>
+        <div class="shelf-row" id="partyShelf" aria-label="Jogos para festa"></div>
+      </section>
+
+      <section class="discover-section reveal" data-od-id="all-games-section">
+        <div class="section-title-row">
+          <h2>Todos os jogos</h2>
+          <p id="resultCount">0 jogos encontrados</p>
+        </div>
+        <div class="library-grid" id="gameGrid" data-od-id="games-library-grid"></div>
+        <div class="empty-state" id="emptyState">Nenhum jogo encontrado com esses filtros. Tente uma categoria mais aberta.</div>
+      </section>
+    </main>
+  </div>
+
+  <div class="rules-modal" id="rulesModal" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
+    <article class="rules-card">
+      <h3 id="rulesTitle">Regras do jogo</h3>
+      <p id="rulesIntro"></p>
+      <ul id="rulesList"></ul>
+      <div class="modal-actions">
+        <button class="button button-blue" id="closeRules" type="button">Fechar</button>
+      </div>
+    </article>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const games = [
+      { id: "impostor", name: "Impostor", category: "Blefe", players: "4-12", minPlayers: 4, maxPlayers: 12, duration: 12, durationLabel: "12 min", difficulty: "media", premium: false, tags: ["Popular", "Blefe"], desc: "Um tema secreto, um blefe e a galera tentando descobrir quem esta fingindo.", shelves: ["trending", "party", "most"], colors: ["#2b1138", "#ff335f"], icon: "mask", rules: ["Passe o celular para cada pessoa ver seu papel.", "Todos recebem o tema, menos o Impostor.", "Conversem, votem e revelem se o grupo acertou."] },
+      { id: "verdade-desafio", name: "Verdade ou Desafio", category: "Festa", players: "3-10", minPlayers: 3, maxPlayers: 10, duration: 15, durationLabel: "15 min", difficulty: "facil", premium: false, tags: ["Popular", "Gratuito"], desc: "Perguntas e missoes rapidas para quebrar qualquer gelo sem deixar estranho.", shelves: ["trending", "most", "party"], colors: ["#0441f2", "#ffc603"], icon: "cards", rules: ["Escolha verdade ou desafio.", "O grupo le a rodada em voz alta.", "Cumpriu ou respondeu, passa para a proxima pessoa."] },
+      { id: "quem-provavel", name: "Quem e mais provavel?", category: "Quebra-Gelo", players: "3-14", minPlayers: 3, maxPlayers: 14, duration: 10, durationLabel: "10 min", difficulty: "facil", premium: false, tags: ["Popular"], desc: "Aponte quem do grupo mais combina com a situacao e prepare a defesa.", shelves: ["most", "party"], colors: ["#4cff9b", "#0441f2"], icon: "users", rules: ["Leia a pergunta.", "Todos apontam ao mesmo tempo.", "A pessoa mais votada precisa explicar."] },
+      { id: "ia-resenha", name: "IA da Resenha", category: "IA", players: "2-12", minPlayers: 2, maxPlayers: 12, duration: 8, durationLabel: "8 min", difficulty: "facil", premium: true, tags: ["IA", "Novo", "Premium"], desc: "Rodadas personalizadas para o clima, lugar e nivel de intimidade do grupo.", shelves: ["recommended", "trending"], colors: ["#0441f2", "#7d4dff"], icon: "spark", rules: ["Conte o clima do role.", "A IA cria perguntas e desafios.", "O grupo joga sem repetir rodada."] },
+      { id: "quiz-resenha", name: "Quiz da Resenha", category: "Festa", players: "4-16", minPlayers: 4, maxPlayers: 16, duration: 20, durationLabel: "20 min", difficulty: "media", premium: false, tags: ["Popular", "Grupo"], desc: "Perguntas sobre musica, cultura e memorias internas para jogar em times.", shelves: ["most", "party"], colors: ["#0441f2", "#4cff9b"], icon: "bolt", rules: ["Divida a galera em times.", "Leia a pergunta e marque quem respondeu primeiro.", "Ganha quem fizer mais pontos."] },
+      { id: "casal-sincero", name: "Casal Sincero", category: "Casal", players: "2", minPlayers: 2, maxPlayers: 2, duration: 18, durationLabel: "18 min", difficulty: "media", premium: true, tags: ["Premium", "Novo"], desc: "Perguntas leves, engraçadas e algumas sinceronas para jogar a dois.", shelves: ["recommended"], colors: ["#ff4faa", "#ffc603"], icon: "heart", rules: ["Cada pessoa responde a mesma pergunta.", "Sem interromper durante a resposta.", "Depois escolham uma resposta para comentar."] },
+      { id: "familia-em-jogo", name: "Família em Jogo", category: "Família", players: "3-12", minPlayers: 3, maxPlayers: 12, duration: 15, durationLabel: "15 min", difficulty: "facil", premium: false, tags: ["Gratuito"], desc: "Rodadas seguras e divertidas para jogar com primos, tios e todo mundo junto.", shelves: ["recommended"], colors: ["#ffc603", "#0441f2"], icon: "home", rules: ["Uma pessoa le a carta.", "Todos respondem sem pressa.", "Escolham juntos a resposta mais engraçada."] },
+      { id: "desafio-relampago", name: "Desafio Relampago", category: "Festa", players: "3-12", minPlayers: 3, maxPlayers: 12, duration: 7, durationLabel: "7 min", difficulty: "facil", premium: false, tags: ["Novo", "Gratuito"], desc: "Missoes de poucos segundos para levantar a energia quando o papo esfria.", shelves: ["trending", "party"], colors: ["#7d4dff", "#ffc603"], icon: "bolt", rules: ["Leia o desafio.", "A pessoa tem poucos segundos para fazer.", "O grupo decide se valeu ponto."] },
+      { id: "estrategia-caos", name: "Estratégia do Caos", category: "Estratégia", players: "4-8", minPlayers: 4, maxPlayers: 8, duration: 25, durationLabel: "25 min", difficulty: "alta", premium: true, tags: ["Premium"], desc: "Alianças, escolhas escondidas e reviravoltas para quem quer pensar um pouco mais.", shelves: ["recommended"], colors: ["#06112f", "#0441f2"], icon: "target", rules: ["Cada pessoa recebe um objetivo secreto.", "A rodada alterna conversa e decisao.", "Vence quem completar o objetivo primeiro."] },
+      { id: "eu-nunca", name: "Eu Nunca", category: "Quebra-Gelo", players: "3-14", minPlayers: 3, maxPlayers: 14, duration: 12, durationLabel: "12 min", difficulty: "facil", premium: false, tags: ["Popular"], desc: "Historias, confissoes leves e muita risada para descobrir causos do grupo.", shelves: ["most", "party"], colors: ["#ff4faa", "#0441f2"], icon: "cards", rules: ["Leia a frase.", "Quem ja fez, sinaliza.", "O grupo pode pedir a historia se a pessoa quiser contar."] },
+      { id: "modo-festa", name: "Modo Festa", category: "Festa", players: "6-20", minPlayers: 6, maxPlayers: 20, duration: 30, durationLabel: "30 min", difficulty: "media", premium: true, tags: ["Premium", "Grupo"], desc: "Experiencia grande com times, rodadas variadas e energia de evento.", shelves: ["trending", "party"], colors: ["#ffc603", "#ff4faa"], icon: "party", rules: ["Divida a sala em times.", "Escolha um capitão para cada grupo.", "Complete rodadas de quiz, desafio e voto."] },
+      { id: "date-rapido", name: "Date Rapido", category: "Casal", players: "2", minPlayers: 2, maxPlayers: 2, duration: 10, durationLabel: "10 min", difficulty: "facil", premium: false, tags: ["Novo", "Gratuito"], desc: "Perguntas boas para sair do basico sem transformar o encontro em entrevista.", shelves: ["recommended"], colors: ["#ff4faa", "#7d4dff"], icon: "heart", rules: ["Respondam alternando a vez.", "Uma pergunta pode ser pulada.", "No final, cada pessoa escolhe a melhor resposta."] }
+    ];
+
+    const categories = ["Todos", "Em Alta", "Novidades", "Festa", "Blefe", "Estratégia", "Casal", "Família", "Quebra-Gelo", "IA"];
+    const iconPaths = {
+      mask: '<path d="M4 9c2-2 5-3 8-3s6 1 8 3v3c0 4-3.5 7-8 7s-8-3-8-7V9Z"/><path d="M8 12h.01M16 12h.01"/><path d="M9 16c2 1 4 1 6 0"/>',
+      cards: '<rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 8h6M9 12h4"/>',
+      users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+      spark: '<path d="M12 3v3M12 18v3M4.9 4.9 7 7M17 17l2.1 2.1M3 12h3M18 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/><rect x="8" y="8" width="8" height="8" rx="3"/>',
+      bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/>',
+      heart: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/>',
+      home: '<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10Z"/>',
+      target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>',
+      party: '<path d="M4 21v-7a8 8 0 0 1 16 0v7"/><path d="M8 21v-5a4 4 0 0 1 8 0v5"/><path d="M9 5h6M12 2v6"/>'
+    };
+
+    const els = {
+      categoryRail: document.getElementById("categoryRail"),
+      searchInput: document.getElementById("searchInput"),
+      playersFilter: document.getElementById("playersFilter"),
+      durationFilter: document.getElementById("durationFilter"),
+      difficultyFilter: document.getElementById("difficultyFilter"),
+      priceFilter: document.getElementById("priceFilter"),
+      tagFilter: document.getElementById("tagFilter"),
+      grid: document.getElementById("gameGrid"),
+      empty: document.getElementById("emptyState"),
+      resultCount: document.getElementById("resultCount"),
+      toast: document.getElementById("toast"),
+      modal: document.getElementById("rulesModal"),
+      rulesTitle: document.getElementById("rulesTitle"),
+      rulesIntro: document.getElementById("rulesIntro"),
+      rulesList: document.getElementById("rulesList")
+    };
+
+    let activeCategory = "Todos";
+    let savedFavorites = [];
+    try {
+      savedFavorites = JSON.parse(localStorage.getItem("playzenha:favorites") || "[]");
+    } catch (error) {
+      savedFavorites = [];
+    }
+    const favoriteIds = new Set(savedFavorites);
+
+    function normalize(value) {
+      return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+
+    function showToast(message) {
+      els.toast.textContent = message;
+      els.toast.classList.add("is-visible");
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => els.toast.classList.remove("is-visible"), 2200);
+    }
+
+    function gameIcon(game) {
+      return `<svg viewBox="0 0 24 24" aria-hidden="true">${iconPaths[game.icon] || iconPaths.cards}</svg>`;
+    }
+
+    function tagColor(tag) {
+      if (tag === "Premium") return "var(--brand-yellow)";
+      if (tag === "IA") return "var(--party-purple)";
+      if (tag === "Novo") return "var(--party-green)";
+      return "var(--brand-yellow)";
+    }
+
+    function cardTemplate(game) {
+      const [a, b] = game.colors;
+      const tags = game.tags.map((tag) => `<span class="tag-pill" style="--tag-color:${tagColor(tag)}">${tag}</span>`).join("");
+      const favClass = favoriteIds.has(game.id) ? " is-favorite" : "";
+      return `
+        <article class="library-game-card" data-game-id="${game.id}" data-od-id="game-card-${game.id}">
+          <div class="game-art" style="--art-a:${a}; --art-b:${b};">${gameIcon(game)}</div>
+          <div class="card-topline">
+            <span class="category-label">${game.category}</span>
+            <button class="favorite-button${favClass}" type="button" data-action="favorite" aria-label="Favoritar ${game.name}">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 9.4 8.4 3.5 9.2l4.3 4.1-1 5.8 5.2-2.8 5.2 2.8-1-5.8 4.3-4.1-5.9-.8L12 3Z"/></svg>
+            </button>
+          </div>
+          <h3 class="game-title">${game.name}</h3>
+          <p class="game-desc">${game.desc}</p>
+          <div class="game-meta">
+            <span class="meta-pill">${game.players} jogadores</span>
+            <span class="meta-pill">${game.durationLabel}</span>
+            <span class="meta-pill">${game.difficulty}</span>
+            ${tags}
+          </div>
+          <div class="card-actions">
+            <button class="game-action primary" type="button" data-action="play">Jogar</button>
+            <button class="game-action secondary" type="button" data-action="rules">Regras</button>
+          </div>
+        </article>`;
+    }
+
+    function matchesCategory(game) {
+      if (activeCategory === "Todos") return true;
+      if (activeCategory === "Em Alta") return game.shelves.includes("trending");
+      if (activeCategory === "Novidades") return game.tags.includes("Novo");
+      return normalize(game.category) === normalize(activeCategory);
+    }
+
+    function matchesFilters(game) {
+      const query = normalize(els.searchInput.value.trim());
+      const players = els.playersFilter.value;
+      const duration = els.durationFilter.value;
+      const difficulty = els.difficultyFilter.value;
+      const price = els.priceFilter.value;
+      const tag = els.tagFilter.value;
+      const searchable = normalize(`${game.name} ${game.category} ${game.desc} ${game.tags.join(" ")}`);
+      if (query && !searchable.includes(query)) return false;
+      if (!matchesCategory(game)) return false;
+      if (players !== "all") {
+        const target = Number(players);
+        if (target === 12 && game.maxPlayers < 9) return false;
+        if (target !== 12 && (game.minPlayers > target || game.maxPlayers < target)) return false;
+      }
+      if (duration === "quick" && game.duration > 10) return false;
+      if (duration === "medium" && (game.duration <= 10 || game.duration > 20)) return false;
+      if (duration === "long" && game.duration <= 20) return false;
+      if (difficulty !== "all" && game.difficulty !== difficulty) return false;
+      if (price === "free" && game.premium) return false;
+      if (price === "premium" && !game.premium) return false;
+      if (tag !== "all" && !game.tags.includes(tag)) return false;
+      return true;
+    }
+
+    function renderCategories() {
+      els.categoryRail.innerHTML = categories.map((category) => `<button class="category-chip${category === activeCategory ? " is-active" : ""}" type="button" data-category="${category}">${category}</button>`).join("");
+    }
+
+    function renderGrid() {
+      const filtered = games.filter(matchesFilters);
+      els.grid.innerHTML = filtered.map(cardTemplate).join("");
+      els.empty.classList.toggle("is-visible", filtered.length === 0);
+      els.resultCount.textContent = `${filtered.length} ${filtered.length === 1 ? "jogo encontrado" : "jogos encontrados"}`;
+    }
+
+    function renderShelf(id, shelfName) {
+      const shelf = document.getElementById(id);
+      shelf.innerHTML = games.filter((game) => game.shelves.includes(shelfName)).map(cardTemplate).join("");
+    }
+
+    function openRules(game) {
+      els.rulesTitle.textContent = game.name;
+      els.rulesIntro.textContent = game.desc;
+      els.rulesList.innerHTML = game.rules.map((rule) => `<li>${rule}</li>`).join("");
+      els.modal.classList.add("is-visible");
+    }
+
+    function handleCardAction(event) {
+      const action = event.target.closest("[data-action]");
+      if (!action) return;
+      const card = event.target.closest("[data-game-id]");
+      const game = games.find((item) => item.id === card.dataset.gameId);
+      if (!game) return;
+      if (action.dataset.action === "play") showToast(`${game.name} pronto para abrir.`);
+      if (action.dataset.action === "rules") openRules(game);
+      if (action.dataset.action === "favorite") {
+        favoriteIds.has(game.id) ? favoriteIds.delete(game.id) : favoriteIds.add(game.id);
+        try {
+          localStorage.setItem("playzenha:favorites", JSON.stringify(Array.from(favoriteIds)));
+        } catch (error) {}
+        document.querySelectorAll(`[data-game-id="${game.id}"] .favorite-button`).forEach((button) => button.classList.toggle("is-favorite", favoriteIds.has(game.id)));
+        showToast(favoriteIds.has(game.id) ? `${game.name} favoritado.` : `${game.name} saiu dos favoritos.`);
+      }
+    }
+
+    renderCategories();
+    renderShelf("trendingShelf", "trending");
+    renderShelf("mostPlayedShelf", "most");
+    renderShelf("recommendedShelf", "recommended");
+    renderShelf("partyShelf", "party");
+    renderGrid();
+
+    els.categoryRail.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-category]");
+      if (!button) return;
+      activeCategory = button.dataset.category;
+      renderCategories();
+      renderGrid();
+    });
+
+    [els.searchInput, els.playersFilter, els.durationFilter, els.difficultyFilter, els.priceFilter, els.tagFilter].forEach((control) => {
+      control.addEventListener("input", renderGrid);
+      control.addEventListener("change", renderGrid);
+    });
+
+    document.addEventListener("click", handleCardAction);
+    document.querySelectorAll(".js-play-random").forEach((button) => button.addEventListener("click", () => {
+      const game = games[Math.floor(Math.random() * games.length)];
+      showToast(`${game.name} escolhido para o role.`);
+    }));
+
+    document.getElementById("closeRules").addEventListener("click", () => els.modal.classList.remove("is-visible"));
+    els.modal.addEventListener("click", (event) => {
+      if (event.target === els.modal) els.modal.classList.remove("is-visible");
+    });
+
+    const menuButton = document.querySelector(".menu-button");
+    const navLinks = document.querySelector(".nav-links");
+    menuButton.addEventListener("click", () => {
+      const isOpen = document.body.classList.toggle("menu-open");
+      menuButton.setAttribute("aria-expanded", String(isOpen));
+    });
+    navLinks.addEventListener("click", () => {
+      document.body.classList.remove("menu-open");
+      menuButton.setAttribute("aria-expanded", "false");
+    });
+
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.14 });
+    document.querySelectorAll(".reveal").forEach((element) => revealObserver.observe(element));
+  </script>
+</body>
+</html>

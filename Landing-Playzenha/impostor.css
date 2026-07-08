@@ -476,6 +476,162 @@ p { margin: 0; color: var(--muted); line-height: 1.5; }
 }
 
 .error { color: var(--yellow); font-weight: 680; }
+
+.character-pair {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.mascot {
+  width: min(36vw, 148px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 32px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: 0 20px 48px rgba(0,0,0,0.22);
+  overflow: hidden;
+}
+
+.mascot.compact {
+  width: 88px;
+  border-radius: 24px;
+}
+
+.mascot svg {
+  width: 100%;
+  height: 100%;
+}
+
+.mascot-shadow { fill: rgba(0,0,0,0.2); }
+.mascot-impostor { background: linear-gradient(160deg, rgba(255,51,95,0.18), rgba(38,13,54,0.72)); }
+.mascot-impostor .hood { fill: #22092c; }
+.mascot-impostor .hood-light { fill: #541342; }
+.mascot-impostor .face-shadow { fill: #0b0711; }
+.mascot-impostor .eye { fill: var(--yellow); }
+.mascot-impostor .smirk {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+.mascot-impostor .cloak-pin { fill: var(--danger); }
+
+.mascot-citizen { background: linear-gradient(160deg, rgba(255,198,3,0.2), rgba(4,65,242,0.62)); }
+.mascot-citizen .body { fill: var(--blue); }
+.mascot-citizen .head { fill: #ffd88a; }
+.mascot-citizen .hair { fill: #06112f; }
+.mascot-citizen .eye,
+.mascot-citizen .smile,
+.mascot-citizen .handle {
+  fill: none;
+  stroke: #06112f;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.mascot-citizen .lens {
+  fill: rgba(255,255,255,0.24);
+  stroke: var(--yellow);
+  stroke-width: 6;
+}
+
+.role-identity {
+  width: fit-content;
+  margin-bottom: 4px;
+}
+
+.role-identity .mascot {
+  width: min(42vw, 156px);
+}
+
+.setup-hero .character-pair {
+  margin-top: 22px;
+}
+
+.discussion-hero {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 12px;
+}
+
+.discussion-hero .character-pair {
+  margin-top: 0;
+}
+
+.moment-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.moment-badge {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  color: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.14);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 760;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.moment-badge .icon svg {
+  width: 17px;
+  height: 17px;
+  stroke-width: 2;
+}
+
+.moment-badge.segredo,
+.moment-badge.suspeita,
+.moment-badge.derrota {
+  color: #fff;
+  background: rgba(255,51,95,0.18);
+  border-color: rgba(255,51,95,0.32);
+}
+
+.moment-badge.investigacao,
+.moment-badge.vitoria {
+  color: #06112f;
+  background: rgba(255,198,3,0.9);
+  border-color: rgba(255,198,3,0.9);
+}
+
+.moment-badge.votacao,
+.moment-badge.alerta {
+  color: #fff;
+  background: rgba(4,65,242,0.34);
+  border-color: rgba(255,255,255,0.18);
+}
+
+.character-token {
+  width: min(86vw, 300px);
+  height: auto;
+  min-height: 270px;
+  padding: 20px;
+  align-content: center;
+  gap: 6px;
+}
+
+.character-token .character-pair {
+  margin-top: 0;
+}
+
+.character-token .moment-badges {
+  justify-content: center;
+}
+
 .icon svg { width: 28px; height: 28px; stroke: currentColor; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
 @media (min-width: 760px) {
@@ -494,6 +650,24 @@ p { margin: 0; color: var(--muted); line-height: 1.5; }
   }
   .vote-grid {
     grid-template-columns: 1fr 1fr;
+  }
+  .character-pair {
+    gap: 12px;
+  }
+  .mascot.compact {
+    width: 104px;
+  }
+}
+
+@media (max-width: 380px) {
+  .discussion-hero {
+    grid-template-columns: 1fr;
+  }
+  .discussion-hero .character-pair {
+    justify-self: start;
+  }
+  .moment-badge {
+    font-size: 0.62rem;
   }
 }
 

@@ -5,8 +5,9 @@ import UltimaNoiteGame from './components/UltimaNoiteGame'
 import LoginPage from './components/LoginPage'
 import ContatoGame from './components/ContatoGame'
 import QuemSouEuGame from './components/QuemSouEuGame'
+import GameLibraryPage from './components/GameLibraryPage'
 
-export type GameView = 'home' | 'impostor' | 'ultima-noite' | 'contato' | 'quem-sou-eu' | 'login'
+export type GameView = 'home' | 'biblioteca' | 'impostor' | 'ultima-noite' | 'contato' | 'quem-sou-eu' | 'login'
 
 function App() {
   const [currentView, setCurrentView] = useState<GameView>('home')
@@ -26,6 +27,9 @@ function App() {
       )}
       {currentView === 'login' && (
         <LoginPage onBackToHome={backToHome} />
+      )}
+      {currentView === 'biblioteca' && (
+        <GameLibraryPage onBackToHome={backToHome} onStartGame={startGame} />
       )}
       {currentView === 'impostor' && (
         <ImpostorGame onBackToHome={backToHome} />

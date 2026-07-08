@@ -182,7 +182,7 @@ const HomePage: React.FC<HomePageProps> = ({ onStartGame }) => {
             </a>
             <div className="landing-nav-links">
               <a href="#como-funciona" onClick={(event) => { event.preventDefault(); scrollTo('#como-funciona') }}>Como funciona</a>
-              <a href="#jogos" onClick={(event) => { event.preventDefault(); scrollTo('#jogos') }}>Jogos</a>
+              <a href="#jogos" onClick={(event) => { event.preventDefault(); onStartGame('biblioteca') }}>Jogos</a>
               <a href="#planos" onClick={(event) => { event.preventDefault(); scrollTo('#planos') }}>Planos</a>
               <a href="#depoimentos" onClick={(event) => { event.preventDefault(); scrollTo('#depoimentos') }}>Depoimentos</a>
             </div>
@@ -204,7 +204,7 @@ const HomePage: React.FC<HomePageProps> = ({ onStartGame }) => {
                 <p className="landing-hero-lead">Jogos rapidos, engracados e interativos para jogar com seus amigos direto pelo celular. Sem baixar nada, sem explicar demais, sem deixar o role morrer.</p>
                 <div className="landing-hero-actions">
                   <button className="landing-button landing-button-primary" type="button" onClick={() => onStartGame('login')}>Comecar a jogar</button>
-                  <button className="landing-button landing-button-ghost" type="button" onClick={() => scrollTo('#jogos')}>Ver jogos disponiveis</button>
+                  <button className="landing-button landing-button-ghost" type="button" onClick={() => onStartGame('biblioteca')}>Ver jogos disponiveis</button>
                 </div>
                 <div className="landing-hero-proof">
                   <span className="landing-proof-pill">Direto no navegador</span>
