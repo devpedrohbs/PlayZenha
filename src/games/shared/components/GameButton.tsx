@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import Button from '../../../shared/components/ui/Button';
 
 interface GameButtonProps {
   children: React.ReactNode;
@@ -9,6 +9,12 @@ interface GameButtonProps {
   size?: 'sm' | 'md' | 'lg';
   disabled?: boolean;
   className?: string;
+}
+
+const variantMap: Record<NonNullable<GameButtonProps['variant']>, 'primary' | 'secondary' | 'danger'> = {
+  primary: 'primary',
+  secondary: 'secondary',
+  danger: 'danger'
 }
 
 const GameButton: React.FC<GameButtonProps> = ({ 
@@ -107,10 +113,11 @@ const GameButton: React.FC<GameButtonProps> = ({
       };
 
   return (
-    <motion.button
+    <Button
       onClick={onClick}
       disabled={disabled}
-      className={`game-button-modern game-button-${variant} ${theme ? `game-button-theme-${theme}` : ''} relative font-fredoka font-bold rounded-xl overflow-hidden shadow-lg ${getSizeClasses()} ${getTextColor()} ${getThemeClasses()} ${className} ${
+      variant={variantMap[variant]}
+      className={`game-button-modern game-button-${variant} ${theme ? `game-button-theme-${theme}` : ''} relative !rounded-xl overflow-hidden ${getSizeClasses()} ${getTextColor()} ${getThemeClasses()} ${className} ${
         disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
       }`}
       style={themedStyle}
@@ -131,7 +138,7 @@ const GameButton: React.FC<GameButtonProps> = ({
         variant === 'secondary' ? 'bg-playzenha-blue/30' :
         'bg-danger-red/30'
       }`} />
-    </motion.button>
+    </Button>
   );
 };
 

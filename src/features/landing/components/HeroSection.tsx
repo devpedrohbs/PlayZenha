@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { Button } from '../../../shared/components/ui'
 import type { GameCatalogItem } from '../../games-catalog'
 import { formatDuration } from '../../games-catalog'
 
@@ -43,8 +44,8 @@ export const HeroSection = ({ selectedGame, onShowToast }: HeroSectionProps) => 
               </div>
             </div>
             <div className="landing-phone-cta">
-              <button type="button" onClick={() => onShowToast('Proxima rodada pronta.')}>Rodar proxima</button>
-              <button type="button" onClick={() => onShowToast('Convite pronto para compartilhar.')}>Chamar a galera</button>
+              <Button size="sm" type="button" onClick={() => onShowToast('Proxima rodada pronta.')}>Rodar proxima</Button>
+              <Button size="sm" variant="ghost" type="button" onClick={() => onShowToast('Convite pronto para compartilhar.')}>Chamar a galera</Button>
             </div>
           </div>
         </article>

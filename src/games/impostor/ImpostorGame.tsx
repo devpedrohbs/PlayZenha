@@ -1,6 +1,8 @@
 import React from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft } from 'lucide-react'
+import Button from '../../shared/components/ui/Button'
+import GameActionButton from '../shared/components/GameActionButton'
 import { IMPOSTOR_MAX_PLAYERS } from './domain/impostor.constants'
 import { useImpostorGame } from './hooks/useImpostorGame'
 
@@ -116,7 +118,9 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToGames, onBackToHome
 
               <div className="impostor-spacer" />
               <div className="impostor-sticky-action">
-                <ImpostorButton className="impostor-start-button" disabled={!canStartGame} onClick={startGameSetup}>Comecar rodada</ImpostorButton>
+                <GameActionButton action="start" theme="blue" className="impostor-start-button" disabled={!canStartGame} onClick={startGameSetup}>
+                  Começar rodada
+                </GameActionButton>
               </div>
             </motion.section>
           )}
@@ -268,7 +272,7 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToGames, onBackToHome
               </div>
               <div className="impostor-result-actions">
                 <ImpostorButton variant={winner === 'Cidadaos' ? 'success' : 'danger'} onClick={restartGame}>Jogar de novo</ImpostorButton>
-                <ImpostorButton variant="ghost" onClick={onBackToGames}>Voltar aos jogos</ImpostorButton>
+                <GameActionButton action="backToGames" theme="blue" onClick={onBackToGames} />
               </div>
             </motion.section>
           )}
@@ -311,10 +315,23 @@ interface ImpostorButtonProps {
   className?: string
 }
 
+const impostorButtonVariantMap: Record<NonNullable<ImpostorButtonProps['variant']>, 'primary' | 'secondary' | 'danger' | 'ghost' | 'success'> = {
+  primary: 'primary',
+  blue: 'secondary',
+  danger: 'danger',
+  ghost: 'ghost',
+  success: 'success'
+}
+
 const ImpostorButton: React.FC<ImpostorButtonProps> = ({ children, variant = 'primary', disabled, onClick, className = '' }) => (
-  <button className={`impostor-game-button ${variant} ${disabled ? 'disabled' : ''} ${className}`} disabled={disabled} onClick={onClick} type="button">
+  <Button
+    className={`impostor-game-button ${variant} ${disabled ? 'disabled' : ''} ${className}`}
+    disabled={disabled}
+    onClick={onClick}
+    variant={impostorButtonVariantMap[variant]}
+  >
     {children}
-  </button>
+  </Button>
 )
 
 export default ImpostorGame

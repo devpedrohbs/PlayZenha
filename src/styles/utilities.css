@@ -1,0 +1,23 @@
+.glass-panel {
+  @apply bg-playzenha-surface/85 backdrop-blur-md border border-white/10 rounded-3xl shadow-xl;
+}
+  
+.glass-button {
+  @apply bg-white/10 hover:bg-playzenha-hover backdrop-blur-sm border border-white/10 rounded-2xl transition-all duration-300;
+}
+
+.page-shell {
+  @apply min-h-screen bg-dark-bg text-white font-comfortaa overflow-x-hidden;
+}
+
+.section-container {
+  @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+.premium-card {
+  @apply rounded-3xl border border-white/10 bg-playzenha-card/80 shadow-2xl shadow-black/20;
+}
+
+.soft-ring {
+  @apply ring-1 ring-white/10;
+}

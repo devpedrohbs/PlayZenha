@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import { Button, FormField, Input, Toast } from '../../../shared/components/ui'
 
 interface LoginPageProps {
   initialMode?: AuthMode
@@ -153,12 +154,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ initialMode = 'signup' }) => {
                   </div>
 
                   <p className="auth-page-error" role="alert">{error}</p>
-                  <button className="auth-page-button" type="submit">{cta}</button>
+                  <Button className="auth-page-button" type="submit" disabled={!canSubmit} fullWidth>{cta}</Button>
 
                   <div className="auth-page-divider">ou continue com</div>
                   <div className="auth-page-social-row">
-                    <button className="auth-page-social-button" type="button" onClick={() => setToast('Google conectado para teste visual.')}>Google</button>
-                    <button className="auth-page-social-button" type="button" onClick={() => setToast('Apple conectado para teste visual.')}>Apple</button>
+                    <Button className="auth-page-social-button" type="button" variant="ghost" onClick={() => setToast('Google conectado para teste visual.')}>Google</Button>
+                    <Button className="auth-page-social-button" type="button" variant="ghost" onClick={() => setToast('Apple conectado para teste visual.')}>Apple</Button>
                   </div>
                 </form>
               </motion.div>
@@ -172,7 +173,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ initialMode = 'signup' }) => {
           <article className="auth-page-perk-card"><h3>Planos e jogos</h3><p>Acesse Premium, Festa e favoritos em um so lugar.</p></article>
         </section>
 
-        <div className={`auth-page-toast ${toast ? 'visible' : ''}`} role="status" aria-live="polite">{toast}</div>
+        <Toast className="auth-page-toast" message={toast} visible={Boolean(toast)} variant="success" />
       </div>
     </div>
   )
@@ -192,15 +193,22 @@ const AuthField: React.FC<AuthFieldProps> = ({ label, type = 'text', value, plac
   const fieldType = type === 'password' && passwordVisible ? 'text' : type
 
   return (
-    <label className="auth-page-field">
-      <span>{label}</span>
+    <FormField label={label} className="auth-page-field">
       <span className="auth-page-input-wrap">
-        <input className={`auth-page-input ${type === 'password' ? 'password' : ''}`} type={fieldType} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
+        <Input
+          className={`auth-page-input ${type === 'password' ? 'password' : ''}`}
+          type={fieldType}
+          value={value}
+          placeholder={placeholder}
+          onChange={(event) => onChange(event.target.value)}
+        />
         {type === 'password' && (
-          <button className="auth-page-show-pass" type="button" onClick={onTogglePassword}>{passwordVisible ? 'Ocultar' : 'Mostrar'}</button>
+          <Button className="auth-page-show-pass" size="sm" variant="ghost" type="button" onClick={onTogglePassword}>
+            {passwordVisible ? 'Ocultar' : 'Mostrar'}
+          </Button>
         )}
       </span>
-    </label>
+    </FormField>
   )
 }
 

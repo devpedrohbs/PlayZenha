@@ -1,0 +1,17 @@
+:root {
+  --brand-blue: #0441F2;
+  --brand-yellow: #FFC603;
+  --brand-dark-bg: #0F0F23;
+  --brand-dark-blue: #0D1B3D;
+  --brand-card: #142857;
+  --brand-hover: #1D3670;
+  --brand-muted: #94A3B8;
+  --brand-success: #10B981;
+  --brand-danger: #EF4444;
+  --brand-party-pink: #ff4faa;
+  --brand-party-green: #4cff9b;
+  --brand-party-purple: #7d4dff;
+  --brand-game-danger: #ff335f;
+  --brand-game-success: #27d982;
+  --brand-auth-danger: #ff4d6d;
+}

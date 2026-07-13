@@ -1,6 +1,6 @@
 import React from 'react'
 
-type BadgeVariant = 'primary' | 'accent' | 'muted' | 'success'
+type BadgeVariant = 'primary' | 'accent' | 'muted' | 'success' | 'danger'
 
 interface BadgeProps {
   children: React.ReactNode
@@ -12,7 +12,8 @@ const variantClasses: Record<BadgeVariant, string> = {
   primary: 'bg-playzenha-blue/20 text-white border-playzenha-blue/40',
   accent: 'bg-playzenha-yellow text-dark-bg border-playzenha-yellow',
   muted: 'bg-white/5 text-playzenha-muted border-white/10',
-  success: 'bg-success-green/15 text-green-300 border-success-green/30'
+  success: 'bg-success-green/15 text-green-300 border-success-green/30',
+  danger: 'bg-danger-red/15 text-red-300 border-danger-red/30'
 }
 
 const Badge: React.FC<BadgeProps> = ({ children, variant = 'muted', className = '' }) => {

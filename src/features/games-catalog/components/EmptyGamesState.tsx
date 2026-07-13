@@ -1,3 +1,9 @@
+import { EmptyState } from '../../../shared/components/ui'
+
 export const EmptyGamesState = () => (
-  <div className="game-library-empty">Nenhum jogo encontrado com essa busca. Tente uma palavra mais geral.</div>
+  <EmptyState
+    className="game-library-empty"
+    title="Nenhum jogo encontrado"
+    description="Tente uma palavra mais geral."
+  />
 )

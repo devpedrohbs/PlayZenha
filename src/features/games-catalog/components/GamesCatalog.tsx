@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Dice5 } from 'lucide-react'
+import { Button } from '../../../shared/components/ui'
 import { GAMES_CATALOG } from '../games.data'
 import type { GameCatalogItem, GamesCatalogFilter } from '../games.types'
 import {
@@ -43,9 +44,9 @@ const GamesCatalog: React.FC = () => {
           <span>Playzenha</span>
           <strong>Biblioteca</strong>
         </div>
-        <button className="game-library-random compact" type="button" onClick={playRandom}>
+        <Button className="game-library-random compact" type="button" size="sm" variant="secondary" onClick={playRandom}>
           <Dice5 size={18} />
-        </button>
+        </Button>
       </nav>
 
       <main className="game-library-shell">

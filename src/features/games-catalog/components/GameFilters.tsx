@@ -1,4 +1,5 @@
 import { Dice5 } from 'lucide-react'
+import { Button } from '../../../shared/components/ui'
 import type { GamesCatalogFilter } from '../games.types'
 import { CategoryChips } from './CategoryChips'
 import { GameSearch } from './GameSearch'
@@ -20,10 +21,10 @@ export const GameFilters = ({
 }: GameFiltersProps) => (
   <section className="game-library-controls" aria-label="Busca e filtros">
     <GameSearch query={query} onQueryChange={onQueryChange} />
-    <button className="game-library-random" type="button" onClick={onRandomPlay}>
+    <Button className="game-library-random" type="button" variant="secondary" onClick={onRandomPlay}>
       <Dice5 size={19} />
       Jogo aleatorio
-    </button>
+    </Button>
     <CategoryChips activeCategory={activeCategory} onCategoryChange={onCategoryChange} />
   </section>
 )

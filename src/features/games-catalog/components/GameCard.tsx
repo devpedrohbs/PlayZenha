@@ -1,4 +1,5 @@
 import { Clock, Lock, Play, Users } from 'lucide-react'
+import { Badge, Button } from '../../../shared/components/ui'
 import type { GameCatalogItem } from '../games.types'
 import {
   formatDuration,
@@ -17,7 +18,11 @@ export const GameCard = ({ game, onPlay }: GameCardProps) => (
     <GameArt game={game} />
     <div className="game-library-card-top">
       <span>{game.category}</span>
-      {game.status === 'available' ? <span className="game-library-status ready">Disponivel</span> : <span className="game-library-status soon">Em breve</span>}
+      {game.status === 'available' ? (
+        <Badge className="game-library-status ready" variant="success">Disponivel</Badge>
+      ) : (
+        <Badge className="game-library-status soon" variant="muted">Em breve</Badge>
+      )}
     </div>
     <h3>{game.name}</h3>
     <p>{game.shortDescription}</p>
@@ -29,13 +34,15 @@ export const GameCard = ({ game, onPlay }: GameCardProps) => (
     <div className="game-library-tags">
       {game.tags.map((tag) => <span key={tag}>{tag}</span>)}
     </div>
-    <button
+    <Button
       className="game-library-play"
       type="button"
+      fullWidth
+      variant={game.status === 'available' ? 'secondary' : 'ghost'}
       disabled={game.status !== 'available'}
       onClick={() => onPlay(game)}
     >
       {game.status === 'available' ? <><Play size={17} /> Jogar</> : <><Lock size={17} /> Em breve</>}
-    </button>
+    </Button>
   </article>
 )

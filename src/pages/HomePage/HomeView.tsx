@@ -9,6 +9,7 @@ import { LandingNavbar } from '../../features/landing/components/LandingNavbar'
 import { PricingSection } from '../../features/landing/components/PricingSection'
 import { TestimonialsSection } from '../../features/landing/components/TestimonialsSection'
 import { UseCasesSection } from '../../features/landing/components/UseCasesSection'
+import { Toast } from '../../shared/components/ui'
 import { useHomePage } from './model/useHomePage'
 
 const HomeView: React.FC = () => {
@@ -54,7 +55,7 @@ const HomeView: React.FC = () => {
 
         <LandingFooter />
       </div>
-      <div className={`landing-toast ${toast ? 'is-visible' : ''}`} role="status" aria-live="polite">{toast}</div>
+      <Toast className="landing-toast" message={toast} visible={Boolean(toast)} />
     </div>
   )
 }

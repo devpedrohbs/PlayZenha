@@ -7,9 +7,23 @@ interface ModalProps {
   title: string
   children: React.ReactNode
   onClose: () => void
+  descriptionId?: string
 }
 
-const Modal: React.FC<ModalProps> = ({ open, title, children, onClose }) => {
+const Modal: React.FC<ModalProps> = ({ open, title, children, onClose, descriptionId }) => {
+  const titleId = React.useId()
+
+  React.useEffect(() => {
+    if (!open) return undefined
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onClose, open])
+
   return (
     <AnimatePresence>
       {open && (
@@ -21,6 +35,10 @@ const Modal: React.FC<ModalProps> = ({ open, title, children, onClose }) => {
           onClick={onClose}
         >
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            aria-describedby={descriptionId}
             initial={{ opacity: 0, y: 18, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 18, scale: 0.96 }}
@@ -28,7 +46,7 @@ const Modal: React.FC<ModalProps> = ({ open, title, children, onClose }) => {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-white/10 bg-playzenha-surface px-5 py-4">
-              <h2 className="font-fredoka text-2xl text-white">{title}</h2>
+              <h2 id={titleId} className="font-fredoka text-2xl text-white">{title}</h2>
               <button
                 type="button"
                 onClick={onClose}

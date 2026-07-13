@@ -11,10 +11,11 @@ import {
   CheckCircle2,
   XCircle,
   Trophy,
-  RotateCcw,
-  Gamepad2
+  RotateCcw
 } from 'lucide-react'
+import GameActionButton from '../shared/components/GameActionButton'
 import GameButton from '../shared/components/GameButton'
+import GameIconButton from '../shared/components/GameIconButton'
 import { useQuemSouEuGame } from './hooks/useQuemSouEuGame'
 
 interface QuemSouEuGameProps {
@@ -66,9 +67,9 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToGames, onBackToHo
   return (
     <div className="playzenha-game playzenha-game-quem-sou-eu min-h-screen bg-dark-bg text-white font-sans overflow-hidden relative selection:bg-playzenha-yellow/60 selection:text-dark-bg">
       <nav className="absolute top-0 w-full p-4 flex justify-between items-center z-50">
-        <button onClick={onBackToHome} className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
+        <GameIconButton label="Voltar para a home" onClick={onBackToHome} className="bg-white/10 hover:bg-white/20">
           <ArrowLeft size={24} />
-        </button>
+        </GameIconButton>
         <div className="flex items-center gap-2 rounded-2xl border border-playzenha-yellow/30 bg-playzenha-yellow/10 px-4 py-2 shadow-lg shadow-playzenha-yellow/10">
           <span className="text-2xl">🧠</span>
           <span className="text-xl font-bold tracking-wider text-yellow-100">QUEM SOU EU</span>
@@ -139,9 +140,9 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToGames, onBackToHo
 
             <div className="playzenha-game-spacer" />
             <div className="playzenha-game-action">
-              <GameButton theme="yellow" onClick={startWritingPhase} disabled={!canStartWritingPhase} className="w-full py-4 text-lg mb-6">
+              <GameActionButton action="start" theme="yellow" onClick={startWritingPhase} disabled={!canStartWritingPhase} className="mb-6">
                 INICIAR JOGO
-              </GameButton>
+              </GameActionButton>
             </div>
           </motion.div>
         )}
@@ -464,9 +465,7 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToGames, onBackToHo
               <GameButton theme="yellow" onClick={resetGame} className="w-full py-4 text-lg">
                 <RotateCcw className="w-5 h-5" /> JOGAR NOVAMENTE
               </GameButton>
-              <GameButton theme="yellow" onClick={onBackToGames} variant="secondary" className="w-full py-4 text-lg">
-                <Gamepad2 className="w-5 h-5" /> VOLTAR AOS JOGOS
-              </GameButton>
+              <GameActionButton action="backToGames" theme="yellow" onClick={onBackToGames} />
             </div>
           </motion.div>
         )}

@@ -6,13 +6,14 @@ import {
   Eye,
   EyeOff,
   Gavel,
-  Gamepad2,
   RotateCcw,
   ShieldCheck,
   Smartphone,
   Users
 } from 'lucide-react'
+import GameActionButton from '../shared/components/GameActionButton'
 import GameButton from '../shared/components/GameButton'
+import GameIconButton from '../shared/components/GameIconButton'
 import { useContatoGame } from './hooks/useContatoGame'
 
 interface ContatoGameProps {
@@ -64,9 +65,9 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToGames, onBackToHome }
   return (
     <div className="playzenha-game playzenha-game-contato min-h-screen bg-dark-bg text-white font-sans overflow-hidden relative selection:bg-emerald-400/60 selection:text-white">
       <nav className="absolute top-0 w-full p-4 flex justify-between items-center z-50">
-        <button onClick={onBackToHome} className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
+        <GameIconButton label="Voltar para a home" onClick={onBackToHome} className="bg-white/10 hover:bg-white/20">
           <ArrowLeft size={24} />
-        </button>
+        </GameIconButton>
         <div className="flex items-center gap-2 rounded-2xl border border-emerald-300/30 bg-emerald-400/10 px-4 py-2 shadow-lg shadow-emerald-400/10">
           <Smartphone className="h-6 w-6 text-emerald-100" />
           <span className="text-xl font-bold tracking-wider text-emerald-100">CONTATO</span>
@@ -133,9 +134,9 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToGames, onBackToHome }
 
             <div className="playzenha-game-spacer" />
             <div className="playzenha-game-action">
-              <GameButton theme="green" onClick={startGame} disabled={!canStartGame} className="w-full py-4 text-xl mb-6">
+              <GameActionButton action="start" theme="green" onClick={startGame} disabled={!canStartGame} className="mb-6">
                 COMEÇAR
-              </GameButton>
+              </GameActionButton>
             </div>
           </motion.div>
         )}
@@ -304,9 +305,7 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToGames, onBackToHome }
               <GameButton theme="green" onClick={resetMatch} variant="secondary" className="w-full">
                 NOVA PARTIDA
               </GameButton>
-              <GameButton theme="green" onClick={onBackToGames} variant="secondary" className="w-full">
-                <Gamepad2 className="w-5 h-5" /> VOLTAR AOS JOGOS
-              </GameButton>
+              <GameActionButton action="backToGames" theme="green" onClick={onBackToGames} />
             </div>
           </motion.div>
         )}

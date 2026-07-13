@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import Input from '../../../shared/components/ui/Input';
 
 interface GameInputProps {
   value: string;
@@ -40,15 +41,15 @@ const GameInput: React.FC<GameInputProps> = ({
           backgroundPosition: 'center'
         }}
       />
-      <input
+      <Input
         type="text"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         disabled={disabled}
         className={`
-          relative z-10 w-full px-4 py-3 
-          bg-transparent border-0 outline-none
+          relative z-10 w-full !border-0 !bg-transparent px-4 py-3 
+          outline-none focus:!ring-0
           font-comfortaa text-white placeholder-gray-400
           ${disabled ? 'cursor-not-allowed opacity-50' : ''}
         `}

@@ -4,7 +4,10 @@ import {
   ArrowLeft, Users, Moon, Sun, Shield, Search, 
   AlertTriangle, Skull, MessageCircle, CheckCircle
 } from 'lucide-react'
+import { Button } from '../../shared/components/ui'
+import GameActionButton from '../shared/components/GameActionButton'
 import GameButton from '../shared/components/GameButton'
+import GameIconButton from '../shared/components/GameIconButton'
 import { useUltimaNoiteGame } from './hooks/useUltimaNoiteGame'
 
 interface UltimaNoiteGameProps {
@@ -73,9 +76,9 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToGames, onBack
         {/* Header - Minimalist */}
         {phase !== 'night-intro' && !phase.startsWith('night-') && (
             <nav className="absolute top-0 w-full p-4 flex justify-between items-center z-50">
-                <button onClick={onBackToHome} className="p-2 bg-white/10 rounded-full hover:bg-white/20">
+                <GameIconButton label="Voltar para a home" onClick={onBackToHome} className="bg-white/10 hover:bg-white/20">
                     <ArrowLeft size={24} />
-                </button>
+                </GameIconButton>
                 <div className="flex items-center gap-2 rounded-2xl border border-purple-400/30 bg-purple-500/10 px-4 py-2 shadow-lg shadow-purple-500/10">
                     <Moon className="w-5 h-5 text-purple-400" />
                     <span className="text-xl tracking-wider">ÚLTIMA NOITE</span>
@@ -159,14 +162,15 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToGames, onBack
 
                     <div className="playzenha-game-spacer" />
                     <div className="playzenha-game-action">
-                    <GameButton
+                    <GameActionButton
+                        action="start"
                         theme="purple"
-                        onClick={startGameSetup} 
+                        onClick={startGameSetup}
                         disabled={playerNames.filter(n => n.trim()).length < 6}
-                        className="w-full py-4 text-xl shadow-lg shadow-purple-500/20 mb-6"
+                        className="shadow-lg shadow-purple-500/20 mb-6"
                     >
                         CONTINUAR
-                    </GameButton>
+                    </GameActionButton>
                     </div>
                 </motion.div>
             )}
@@ -461,12 +465,8 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToGames, onBack
                     </p>
 
                     <div className="ultima-noite-game-over-actions space-y-4 w-full max-w-xs">
-                        <GameButton theme="purple" onClick={() => setPhase('setup')} variant="secondary" className="w-full">
-                            JOGAR NOVAMENTE
-                        </GameButton>
-                        <GameButton theme="purple" onClick={onBackToGames} variant="secondary" className="w-full">
-                            VOLTAR AOS JOGOS
-                        </GameButton>
+                        <GameActionButton action="restart" theme="purple" onClick={() => setPhase('setup')} />
+                        <GameActionButton action="backToGames" theme="purple" onClick={onBackToGames} />
                     </div>
                 </motion.div>
             )}
@@ -488,12 +488,9 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToGames, onBack
                         </div>
                         <h3 className="text-xl font-bold text-white mb-2">Atenção!</h3>
                         <p className="text-gray-300 mb-6">{showErrorModal}</p>
-                        <button 
-                            onClick={() => setShowErrorModal(null)}
-                            className="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl transition-colors"
-                        >
+                        <Button variant="danger" fullWidth onClick={() => setShowErrorModal(null)}>
                             Entendi
-                        </button>
+                        </Button>
                      </motion.div>
                 </motion.div>
             )}
@@ -525,12 +522,9 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToGames, onBack
                             Clique no ícone de balão <MessageCircle size={14} className="inline mx-1"/> ao lado do nome da pessoa para selecioná-la.
                         </p>
                         
-                        <button 
-                            onClick={() => setShowMediatorInfo(false)}
-                            className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition-colors shadow-lg shadow-purple-900/50"
-                        >
+                        <Button variant="secondary" fullWidth onClick={() => setShowMediatorInfo(false)}>
                             Entendi, vou escolher!
-                        </button>
+                        </Button>
                      </motion.div>
                 </motion.div>
             )}

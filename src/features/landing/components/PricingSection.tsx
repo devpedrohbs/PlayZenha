@@ -1,3 +1,4 @@
+import { Button } from '../../../shared/components/ui'
 import { PRICING_PLANS } from '../../pricing/plans'
 import { SectionHead } from './SectionHead'
 
@@ -40,13 +41,14 @@ export const PricingSection = ({ onSignupClick }: PricingSectionProps) => (
               </div>
             ))}
           </div>
-          <button
+          <Button
             className={`landing-button landing-button-${plan.variant}`}
             type="button"
+            variant={plan.variant === 'blue' ? 'secondary' : plan.variant === 'ghost' ? 'ghost' : 'primary'}
             onClick={onSignupClick}
           >
             {plan.cta}
-          </button>
+          </Button>
         </article>
       ))}
     </div>
