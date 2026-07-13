@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
 
 interface LoginPageProps {
-  onBackToHome: () => void
+  initialMode?: AuthMode
 }
 
 type AuthMode = 'login' | 'signup'
@@ -21,8 +22,8 @@ const INITIAL_FORM: AuthForm = {
   remember: true
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ onBackToHome }) => {
-  const [mode, setMode] = useState<AuthMode>('signup')
+const LoginPage: React.FC<LoginPageProps> = ({ initialMode = 'signup' }) => {
+  const [mode, setMode] = useState<AuthMode>(initialMode)
   const [form, setForm] = useState<AuthForm>(INITIAL_FORM)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
@@ -34,6 +35,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onBackToHome }) => {
     ? 'Salve seus grupos, favoritos e jogos para comecar mais rapido no proximo role.'
     : 'Acesse seus jogos, planos e grupos salvos para chamar a galera sem enrolacao.'
   const cta = isCreate ? 'Criar conta e jogar' : 'Entrar e comecar'
+
+  useEffect(() => {
+    setMode(initialMode)
+    setError('')
+    setShowPassword(false)
+  }, [initialMode])
 
   const canSubmit = useMemo(() => {
     const emailOk = /.+@.+\..+/.test(form.email.trim())
@@ -72,11 +79,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onBackToHome }) => {
     <div className="auth-page">
       <div className="auth-page-shell">
         <header className="auth-page-topbar">
-          <button className="auth-page-brand" type="button" onClick={onBackToHome}>
+          <Link className="auth-page-brand" to="/">
             <BrandMark />
             Playzenha
-          </button>
-          <button className="auth-page-home-link" type="button" onClick={onBackToHome}>Home</button>
+          </Link>
+          <Link className="auth-page-home-link" to="/">Home</Link>
         </header>
 
         <section className="auth-page-layout">

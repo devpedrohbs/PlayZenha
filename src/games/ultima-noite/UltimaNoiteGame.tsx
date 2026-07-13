@@ -4,7 +4,7 @@ import {
   ArrowLeft, Users, Moon, Sun, Shield, Search, 
   AlertTriangle, Skull, MessageCircle, CheckCircle
 } from 'lucide-react'
-import GameButton from './GameButton'
+import GameButton from '../shared/components/GameButton'
 
 interface UltimaNoiteGameProps {
   onBackToHome: () => void

@@ -10,7 +10,7 @@ import {
   Gavel,
   Crown
 } from 'lucide-react'
-import GameButton from './GameButton'
+import GameButton from '../shared/components/GameButton'
 
 interface ContatoGameProps {
   onBackToHome: () => void

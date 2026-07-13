@@ -13,7 +13,7 @@ import {
   Trophy,
   RotateCcw
 } from 'lucide-react'
-import GameButton from './GameButton'
+import GameButton from '../shared/components/GameButton'
 
 interface QuemSouEuGameProps {
   onBackToHome: () => void
