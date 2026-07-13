@@ -1,5 +1,6 @@
 import { Button } from '../../../shared/components/ui'
-import { PRICING_PLANS } from '../../pricing/plans'
+import { getPlanByCode } from '../../subscriptions'
+import { PRICING_PLAN_CARDS } from '../../pricing/plans'
 import { SectionHead } from './SectionHead'
 
 interface PricingSectionProps {
@@ -12,23 +13,34 @@ export const PricingSection = ({ onSignupClick }: PricingSectionProps) => (
       Tres caminhos simples: testar, jogar sempre ou levar para uma festa grande com experiencias especiais.
     </SectionHead>
     <div className="landing-plans">
-      {PRICING_PLANS.map((plan) => (
-        <article className={`landing-plan-card ${plan.featured ? 'featured' : ''} ${plan.highlighted ? 'highlighted' : ''}`} key={plan.name}>
-          {plan.badge && <span className="landing-plan-badge">{plan.badge}</span>}
+      {PRICING_PLAN_CARDS.map((card) => {
+        const plan = getPlanByCode(card.planCode)
+        if (!plan) return null
+
+        const price = new Intl.NumberFormat('pt-BR', {
+          style: 'currency',
+          currency: plan.currency,
+          minimumFractionDigits: plan.priceCents === 0 ? 0 : 2
+        }).format(plan.priceCents / 100)
+        const priceLabel = plan.priceCents === 0 ? price : `${price}/${plan.billingInterval === 'month' ? 'mes' : 'ano'}`
+
+        return (
+        <article className={`landing-plan-card ${card.featured ? 'featured' : ''} ${card.highlighted ? 'highlighted' : ''}`} key={plan.code}>
+          {card.badge && <span className="landing-plan-badge">{card.badge}</span>}
           <div className="landing-plan-heading">
             <h3>{plan.name}</h3>
           </div>
           <div className="landing-price-card">
             <span>Plano</span>
-            <div className="landing-price">{plan.price}</div>
+            <div className="landing-price">{priceLabel}</div>
           </div>
           <div className="landing-plan-copy">
-            {plan.label && <strong className="landing-plan-label">{plan.label}</strong>}
-            <p>{plan.description}</p>
+            {card.label && <strong className="landing-plan-label">{card.label}</strong>}
+            <p>{card.description}</p>
           </div>
           <div className="landing-plan-sections">
-            {plan.sections.map((section, sectionIndex) => (
-              <div className="landing-plan-section" key={`${plan.name}-${section.title ?? sectionIndex}`}>
+            {card.sections.map((section, sectionIndex) => (
+              <div className="landing-plan-section" key={`${plan.code}-${section.title ?? sectionIndex}`}>
                 {section.title && <h4>{section.title}</h4>}
                 <ul className="landing-plan-list">
                   {section.items.map((item) => (
@@ -42,15 +54,16 @@ export const PricingSection = ({ onSignupClick }: PricingSectionProps) => (
             ))}
           </div>
           <Button
-            className={`landing-button landing-button-${plan.variant}`}
+            className={`landing-button landing-button-${card.variant}`}
             type="button"
-            variant={plan.variant === 'blue' ? 'secondary' : plan.variant === 'ghost' ? 'ghost' : 'primary'}
+            variant={card.variant === 'blue' ? 'secondary' : card.variant === 'ghost' ? 'ghost' : 'primary'}
             onClick={onSignupClick}
           >
-            {plan.cta}
+            {card.cta}
           </Button>
         </article>
-      ))}
+        )
+      })}
     </div>
   </section>
 )

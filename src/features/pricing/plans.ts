@@ -1,10 +1,9 @@
-import type { Plan } from './types'
+import type { PricingPlanCard } from './types'
 
-export const PRICING_PLANS: Plan[] = [
+export const PRICING_PLAN_CARDS: PricingPlanCard[] = [
   {
-    name: 'PlayZenha Free',
+    planCode: 'free',
     description: 'Perfeito para quem esta comecando e quer experimentar o PlayZenha com os amigos.',
-    price: 'R$ 0',
     cta: 'Comecar Gratuitamente',
     variant: 'ghost',
     label: 'Para conhecer a diversao.',
@@ -33,9 +32,8 @@ export const PRICING_PLANS: Plan[] = [
     ]
   },
   {
-    name: 'PlayZenha Premium',
+    planCode: 'premium',
     description: 'Ideal para quem joga frequentemente e quer acesso completo aos jogos do PlayZenha.',
-    price: 'R$ 24,90/mes',
     cta: 'Assinar Premium',
     variant: 'primary',
     badge: 'Mais Popular',
@@ -65,9 +63,8 @@ export const PRICING_PLANS: Plan[] = [
     ]
   },
   {
-    name: 'PlayZenha Ultimate',
+    planCode: 'ultimate',
     description: 'Aproximadamente R$ 3 por pessoa em uma mesa com 10 amigos.',
-    price: 'R$ 34,90/mes',
     cta: 'Assinar Ultimate',
     variant: 'blue',
     badge: 'Melhor plano para resenha',

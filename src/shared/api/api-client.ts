@@ -175,5 +175,5 @@ export class ApiClient {
 }
 
 export const apiClient = new ApiClient({
-  baseUrl: appEnv.apiBaseUrl
+  baseUrl: appEnv.apiUrl
 })

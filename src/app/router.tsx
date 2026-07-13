@@ -12,7 +12,7 @@ import SignupPage from '../pages/SignupPage'
 import SubscriptionPage from '../pages/SubscriptionPage'
 import UltimaNoiteGamePage from '../pages/GamesPage/UltimaNoiteGamePage'
 
-const AppRouter = () => (
+export const AppRouter = () => (
   <Routes>
     <Route path="/" element={<HomePage />} />
     <Route path="/jogos" element={<GamesPage />} />

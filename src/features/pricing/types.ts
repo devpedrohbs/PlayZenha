@@ -1,9 +1,10 @@
+import type { PlanCode } from '../subscriptions'
+
 export type PlanVariant = 'ghost' | 'primary' | 'blue'
 
-export interface Plan {
-  name: string
+export interface PricingPlanCard {
+  planCode: PlanCode
   description: string
-  price: string
   cta: string
   variant: PlanVariant
   badge?: string

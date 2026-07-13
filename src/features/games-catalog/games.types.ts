@@ -1,4 +1,6 @@
-export type GamePlan = 'free' | 'premium' | 'ultimate'
+import type { PlanCode } from '../subscriptions'
+
+export type GamePlan = PlanCode
 
 export type GameStatus = 'available' | 'coming-soon' | 'disabled'
 

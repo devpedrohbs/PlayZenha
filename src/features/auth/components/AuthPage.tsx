@@ -191,12 +191,14 @@ interface AuthFieldProps {
 
 const AuthField: React.FC<AuthFieldProps> = ({ label, type = 'text', value, placeholder, onChange, passwordVisible, onTogglePassword }) => {
   const fieldType = type === 'password' && passwordVisible ? 'text' : type
+  const fieldId = `auth-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
 
   return (
-    <FormField label={label} className="auth-page-field">
+    <FormField label={label} htmlFor={fieldId} className="auth-page-field">
       <span className="auth-page-input-wrap">
         <Input
           className={`auth-page-input ${type === 'password' ? 'password' : ''}`}
+          id={fieldId}
           type={fieldType}
           value={value}
           placeholder={placeholder}
