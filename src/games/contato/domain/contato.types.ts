@@ -6,10 +6,8 @@ export type ContatoPhase =
   | 'round-play'
   | 'round-result'
 
-export type ContatoRoundWinner = 'Adivinhadores' | 'Juiz'
-
 export interface ContatoPlayer {
-  id: number
+  id: string
   name: string
 }
 
@@ -19,16 +17,17 @@ export interface ContatoGameState {
   players: ContatoPlayer[]
   round: number
   rotateJudge: boolean
-  judgeId: number | null
+  judgeId: string | null
   currentWord: string
   revealedLetters: number
   lastWord: string
-  roundWinner: ContatoRoundWinner | null
+  roundStartedAtMs: number | null
+  wordRevealedAtMs: number | null
   feedback: string
 }
 
 export interface ContatoRoundSetup {
-  judgeId: number
+  judgeId: string
   word: string
   round: number
 }

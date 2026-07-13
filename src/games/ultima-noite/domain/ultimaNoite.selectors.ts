@@ -5,5 +5,5 @@ export const selectLivingUltimaNoitePlayers = (players: UltimaNoitePlayer[]) =>
 
 export const selectUltimaNoiteRole = (
   players: UltimaNoitePlayer[],
-  playerId: number
+  playerId: string
 ) => players.find((player) => player.id === playerId)?.role ?? 'Cidadão'

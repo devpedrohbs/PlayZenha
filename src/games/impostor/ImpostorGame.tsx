@@ -6,9 +6,10 @@ import { useImpostorGame } from './hooks/useImpostorGame'
 
 interface ImpostorGameProps {
   onBackToHome: () => void
+  onBackToGames: () => void
 }
 
-const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
+const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToGames, onBackToHome }) => {
   const {
     addDiscussionMinute,
     addPlayerSlot,
@@ -18,6 +19,7 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
     decreaseDiscussionTime,
     discussionTime,
     filledPlayerCount,
+    feedback,
     handleNextRoleReveal,
     increaseDiscussionTime,
     phase,
@@ -104,10 +106,10 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
                       </button>
                     </div>
                   </div>
-                  <p className={canStartGame ? 'impostor-hint' : 'impostor-hint error'}>
-                    {canStartGame
+                  <p className={canStartGame && !feedback ? 'impostor-hint' : 'impostor-hint error'}>
+                    {feedback || (canStartGame
                       ? `${filledPlayerCount} jogadores prontos para a investigacao.`
-                      : 'Minimo de 3 jogadores para comecar.'}
+                      : 'Minimo de 3 jogadores para comecar.')}
                   </p>
                 </div>
               </div>
@@ -266,7 +268,7 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
               </div>
               <div className="impostor-result-actions">
                 <ImpostorButton variant={winner === 'Cidadaos' ? 'success' : 'danger'} onClick={restartGame}>Jogar de novo</ImpostorButton>
-                <ImpostorButton variant="ghost" onClick={onBackToHome}>Voltar para inicio</ImpostorButton>
+                <ImpostorButton variant="ghost" onClick={onBackToGames}>Voltar aos jogos</ImpostorButton>
               </div>
             </motion.section>
           )}

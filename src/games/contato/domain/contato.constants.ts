@@ -36,6 +36,7 @@ export const INITIAL_CONTATO_STATE: ContatoGameState = {
   currentWord: '',
   revealedLetters: 1,
   lastWord: '',
-  roundWinner: null,
+  roundStartedAtMs: null,
+  wordRevealedAtMs: null,
   feedback: ''
 }

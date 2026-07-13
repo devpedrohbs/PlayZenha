@@ -13,7 +13,7 @@ export type ImpostorRole = 'Impostor' | 'Cidadao'
 export type ImpostorWinner = 'Impostor' | 'Cidadaos'
 
 export interface ImpostorPlayer {
-  id: number
+  id: string
   name: string
   role: ImpostorRole
   isAlive: boolean
@@ -24,24 +24,25 @@ export interface ImpostorGameState {
   phase: ImpostorPhase
   playerNames: string[]
   players: ImpostorPlayer[]
-  revealOrder: number[]
+  revealOrder: string[]
   currentRevealStep: number
   theme: string
   discussionTime: number
   timeLeft: number
-  selectedVote: number | null
+  selectedVote: string | null
   winner: ImpostorWinner | null
+  feedback: string
 }
 
 export interface CreateImpostorRoundInput {
   playerNames: string[]
   themeIndex: number
   impostorIndex: number
-  revealOrder: number[]
+  revealOrder: string[]
 }
 
 export interface CreateImpostorRoundResult {
   players: ImpostorPlayer[]
-  revealOrder: number[]
+  revealOrder: string[]
   theme: string
 }

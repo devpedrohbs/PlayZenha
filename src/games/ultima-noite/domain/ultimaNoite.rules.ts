@@ -21,8 +21,8 @@ export const resolveUltimaNoiteWinner = (
 }
 
 export const resolveUltimaNoiteNightVictim = (
-  wolfKill: number | null,
-  angelSave: number | null
+  wolfKill: string | null,
+  angelSave: string | null
 ) => {
   if (wolfKill === null) return null
   return angelSave === wolfKill ? null : wolfKill
@@ -30,7 +30,7 @@ export const resolveUltimaNoiteNightVictim = (
 
 export const applyUltimaNoiteDeath = <T extends UltimaNoitePlayer>(
   players: T[],
-  victimId: number | null
+  victimId: string | null
 ): T[] => {
   if (victimId === null) return players
   return players.map((player) => player.id === victimId ? { ...player, isAlive: false } : player)

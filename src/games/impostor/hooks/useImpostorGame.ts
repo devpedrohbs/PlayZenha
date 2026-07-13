@@ -9,7 +9,6 @@ import { impostorReducer } from '../domain/impostor.reducer'
 import {
   createImpostorRound,
   resolveImpostorVoteWinner,
-  shuffleArray,
   validateImpostorPlayerNames
 } from '../domain/impostor.rules'
 import {
@@ -57,18 +56,17 @@ export const useImpostorGame = () => {
   const startGameSetup = () => {
     const validationError = validateImpostorPlayerNames(state.playerNames)
     if (validationError) {
-      alert(validationError)
+      dispatch({ type: 'set-feedback', message: validationError })
       return
     }
 
     const activeNames = state.playerNames.map((name) => name.trim()).filter(Boolean)
-    const revealOrder = shuffleArray(activeNames.map((_, index) => index))
 
     const round = createImpostorRound({
       playerNames: state.playerNames,
       impostorIndex: getRandomIndex(activeNames.length),
       themeIndex: getRandomIndex(IMPOSTOR_THEMES.length),
-      revealOrder
+      revealOrder: []
     })
 
     dispatch({ type: 'start-round', round })
@@ -102,7 +100,7 @@ export const useImpostorGame = () => {
     increaseDiscussionTime: () => dispatch({ type: 'change-discussion-time', amount: IMPOSTOR_DISCUSSION_STEP }),
     removePlayerSlot: (index: number) => dispatch({ type: 'remove-player-slot', index }),
     restartGame: () => dispatch({ type: 'restart-game' }),
-    selectVote: (playerId: number | null) => dispatch({ type: 'select-vote', playerId }),
+    selectVote: (playerId: string | null) => dispatch({ type: 'select-vote', playerId }),
     setPhase: (phase: typeof state.phase) => dispatch({ type: 'set-phase', phase }),
     startDiscussion: () => dispatch({ type: 'start-discussion' }),
     startGameSetup,

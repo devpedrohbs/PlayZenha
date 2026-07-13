@@ -3,6 +3,8 @@ import {
   IMPOSTOR_MIN_PLAYERS,
   IMPOSTOR_THEMES
 } from './impostor.constants'
+import { shuffle } from '../../../shared/utils/shuffle'
+import { createId } from '../../../shared/utils/id'
 import type {
   CreateImpostorRoundInput,
   CreateImpostorRoundResult,
@@ -13,18 +15,19 @@ import type {
 export const normalizeImpostorPlayerName = (name: string) => name.trim().toUpperCase()
 
 export const getFilledImpostorPlayerNames = (playerNames: string[]) =>
-  playerNames.map(normalizeImpostorPlayerName).filter(Boolean)
+  playerNames.map((name) => name.trim()).filter(Boolean)
 
 export const validateImpostorPlayerNames = (playerNames: string[]): string | null => {
-  const usedNames = new Set<string>()
   const activeNames = getFilledImpostorPlayerNames(playerNames)
+  const usedNames = new Set<string>()
 
   for (const name of activeNames) {
-    if (usedNames.has(name)) {
+    const comparableName = normalizeImpostorPlayerName(name)
+    if (usedNames.has(comparableName)) {
       return `O nome "${name}" ja esta em uso!`
     }
 
-    usedNames.add(name)
+    usedNames.add(comparableName)
   }
 
   if (activeNames.length < IMPOSTOR_MIN_PLAYERS) {
@@ -38,29 +41,18 @@ export const validateImpostorPlayerNames = (playerNames: string[]): string | nul
   return null
 }
 
-export const shuffleArray = <T,>(items: T[]): T[] => {
-  const shuffled = [...items]
-
-  for (let index = shuffled.length - 1; index > 0; index--) {
-    const targetIndex = Math.floor(Math.random() * (index + 1))
-    ;[shuffled[index], shuffled[targetIndex]] = [shuffled[targetIndex], shuffled[index]]
-  }
-
-  return shuffled
-}
-
 export const createImpostorPlayers = (names: string[], impostorIndex: number): ImpostorPlayer[] =>
   names.map((name, index) => ({
-    id: index,
+    id: createId(),
     name,
     role: index === impostorIndex ? 'Impostor' : 'Cidadao',
     isAlive: true,
     votes: 0
   }))
 
-export const createRevealOrder = (players: ImpostorPlayer[], forcedOrder?: number[]) => {
-  if (forcedOrder) return forcedOrder
-  return shuffleArray(players.map((player) => player.id))
+export const createRevealOrder = (players: ImpostorPlayer[], forcedOrder?: string[]) => {
+  if (forcedOrder && forcedOrder.length > 0) return forcedOrder
+  return shuffle(players.map((player) => player.id))
 }
 
 export const createImpostorRound = ({
@@ -81,7 +73,7 @@ export const createImpostorRound = ({
 
 export const resolveImpostorVoteWinner = (
   players: ImpostorPlayer[],
-  selectedVote: number | null
+  selectedVote: string | null
 ): ImpostorWinner | null => {
   if (selectedVote === null) return null
 

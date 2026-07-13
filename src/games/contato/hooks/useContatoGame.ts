@@ -12,9 +12,9 @@ import {
   selectContatoFilledPlayerCount,
   selectContatoGuessers,
   selectContatoJudge,
+  selectContatoRevealElapsedSeconds,
   selectMaskedContatoWord
 } from '../domain/contato.selectors'
-import type { ContatoRoundWinner } from '../domain/contato.types'
 
 export const useContatoGame = () => {
   const [state, dispatch] = useReducer(contatoReducer, INITIAL_CONTATO_STATE)
@@ -24,11 +24,12 @@ export const useContatoGame = () => {
   const maskedWord = useMemo(() => selectMaskedContatoWord(state), [state])
   const filledPlayerCount = useMemo(() => selectContatoFilledPlayerCount(state), [state])
   const canStartGame = useMemo(() => selectCanStartContatoGame(state), [state])
+  const revealElapsedSeconds = useMemo(() => selectContatoRevealElapsedSeconds(state), [state])
 
   const startGame = () => {
     const validationError = validateContatoPlayerNames(state.playerNames)
     if (validationError) {
-      alert(validationError)
+      dispatch({ type: 'set-feedback', message: validationError })
       return
     }
 
@@ -61,12 +62,14 @@ export const useContatoGame = () => {
     guessers,
     judge,
     maskedWord,
-    finishRound: (winner: ContatoRoundWinner) => dispatch({ type: 'finish-round', winner }),
+    revealElapsedSeconds,
+    finishRound: () => dispatch({ type: 'finish-round' }),
     goToNextRound,
     resetMatch: () => dispatch({ type: 'reset-match' }),
-    revealNextLetter: () => dispatch({ type: 'reveal-next-letter' }),
-    revealWholeWord: () => dispatch({ type: 'reveal-whole-word' }),
+    revealNextLetter: () => dispatch({ type: 'reveal-next-letter', revealedAtMs: Date.now() }),
+    revealWholeWord: () => dispatch({ type: 'reveal-whole-word', revealedAtMs: Date.now() }),
     setPhase: (phase: typeof state.phase) => dispatch({ type: 'set-phase', phase }),
+    startRoundPlay: () => dispatch({ type: 'start-round-play', startedAtMs: Date.now() }),
     startGame,
     toggleRotateJudge: () => dispatch({ type: 'toggle-rotate-judge' }),
     updatePlayerName: (index: number, value: string) => dispatch({ type: 'update-player-name', index, value })

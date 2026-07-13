@@ -9,7 +9,6 @@ import {
   createQuemSouEuPlayers,
   createQuemSouEuRoundResult,
   normalizeQuemSouEuCharacter,
-  shuffleArray,
   validateQuemSouEuPlayerNames
 } from '../domain/quemSouEu.rules'
 import {
@@ -29,6 +28,7 @@ import type {
   QuemSouEuRoundResult,
   QuemSouEuRoundStatus
 } from '../domain/quemSouEu.types'
+import { shuffle } from '../../../shared/utils/shuffle'
 
 interface WakeLockSentinelLike {
   release: () => Promise<void>
@@ -45,10 +45,10 @@ export const useQuemSouEuGame = () => {
   const [playerNames, setPlayerNames] = useState<string[]>(['', ''])
   const [players, setPlayers] = useState<QuemSouEuPlayer[]>([])
   const [assignments, setAssignments] = useState<QuemSouEuAssignment[]>([])
-  const [writingOrder, setWritingOrder] = useState<number[]>([])
+  const [writingOrder, setWritingOrder] = useState<string[]>([])
   const [writingStep, setWritingStep] = useState(0)
   const [currentCharacterInput, setCurrentCharacterInput] = useState('')
-  const [guessOrder, setGuessOrder] = useState<number[]>([])
+  const [guessOrder, setGuessOrder] = useState<string[]>([])
   const [guessStep, setGuessStep] = useState(0)
   const [countdown, setCountdown] = useState(QUEM_SOU_EU_INITIAL_COUNTDOWN)
   const [resumeCountdown, setResumeCountdown] = useState<number | null>(null)
@@ -57,6 +57,7 @@ export const useQuemSouEuGame = () => {
   const [pendingAction, setPendingAction] = useState<QuemSouEuRoundStatus | null>(null)
   const [results, setResults] = useState<QuemSouEuRoundResult[]>([])
   const [lastRoundResult, setLastRoundResult] = useState<QuemSouEuRoundResult | null>(null)
+  const [feedback, setFeedback] = useState('')
 
   const wakeLockRef = useRef<WakeLockSentinelLike | null>(null)
   const fallbackAudioRef = useRef<HTMLAudioElement | null>(null)
@@ -101,13 +102,14 @@ export const useQuemSouEuGame = () => {
   }
 
   const updatePlayerName = (index: number, value: string) => {
+    setFeedback('')
     setPlayerNames(playerNames.map((name, itemIndex) => (itemIndex === index ? value : name)))
   }
 
   const startWritingPhase = () => {
     const validationError = validateQuemSouEuPlayerNames(playerNames)
     if (validationError) {
-      alert(validationError)
+      setFeedback(validationError)
       return
     }
 
@@ -117,7 +119,7 @@ export const useQuemSouEuGame = () => {
 
     setPlayers(nextPlayers)
     setAssignments(generatedAssignments)
-    setWritingOrder(shuffleArray(playerIds))
+    setWritingOrder(shuffle(playerIds))
     setWritingStep(0)
     setCurrentCharacterInput('')
     setGuessOrder([])
@@ -125,13 +127,14 @@ export const useQuemSouEuGame = () => {
     setResults([])
     setLastRoundResult(null)
     setIsScreenMasked(false)
+    setFeedback('')
     setPhase('writing-pass')
   }
 
   const confirmCharacter = () => {
     const value = normalizeQuemSouEuCharacter(currentCharacterInput)
     if (!value || !currentWriter) {
-      alert('Digite um personagem para continuar.')
+      setFeedback('Digite um personagem para continuar.')
       return
     }
 
@@ -146,13 +149,15 @@ export const useQuemSouEuGame = () => {
     if (writingStep < writingOrder.length - 1) {
       setWritingStep((previousStep) => previousStep + 1)
       setCurrentCharacterInput('')
+      setFeedback('')
       setPhase('writing-pass')
       return
     }
 
-    setGuessOrder(shuffleArray(players.map((player) => player.id)))
+    setGuessOrder(shuffle(players.map((player) => player.id)))
     setGuessStep(0)
     setCurrentCharacterInput('')
+    setFeedback('')
     setPhase('round-intro')
   }
 
@@ -211,6 +216,7 @@ export const useQuemSouEuGame = () => {
     setIsScreenMasked(false)
     setResults([])
     setLastRoundResult(null)
+    setFeedback('')
   }
 
   const requestWakeLock = async () => {
@@ -345,6 +351,7 @@ export const useQuemSouEuGame = () => {
     currentTarget,
     currentWriter,
     finishRound,
+    feedback,
     guessOrder,
     guessStep,
     isScreenMasked,
@@ -359,7 +366,10 @@ export const useQuemSouEuGame = () => {
     resetGame,
     results,
     resumeCountdown,
-    setCurrentCharacterInput,
+    setCurrentCharacterInput: (value: string) => {
+      setFeedback('')
+      setCurrentCharacterInput(value)
+    },
     setIsScreenMasked,
     setPendingAction,
     setResumeCountdown,

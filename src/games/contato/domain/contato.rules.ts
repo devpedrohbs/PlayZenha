@@ -1,16 +1,17 @@
 import { CONTATO_PLAYER_COUNT, CONTATO_WORD_BANK } from './contato.constants'
 import type { ContatoPlayer, ContatoRoundSetup } from './contato.types'
+import { createId } from '../../../shared/utils/id'
 
 export const normalizeContatoPlayerName = (name: string) => name.trim().toUpperCase()
 
 export const createContatoPlayers = (playerNames: string[]): ContatoPlayer[] =>
-  playerNames.map(normalizeContatoPlayerName).map((name, index) => ({
-    id: index,
+  playerNames.map((name) => name.trim()).map((name) => ({
+    id: createId(),
     name
   }))
 
 export const validateContatoPlayerNames = (playerNames: string[]): string | null => {
-  const normalizedNames = playerNames.map(normalizeContatoPlayerName)
+  const normalizedNames = playerNames.map((name) => name.trim())
 
   if (normalizedNames.some((name) => !name)) {
     return 'Preencha os 3 nomes para começar.'
@@ -20,7 +21,7 @@ export const validateContatoPlayerNames = (playerNames: string[]): string | null
     return 'Contato precisa de exatamente 3 jogadores.'
   }
 
-  const unique = new Set(normalizedNames)
+  const unique = new Set(normalizedNames.map(normalizeContatoPlayerName))
   if (unique.size !== CONTATO_PLAYER_COUNT) {
     return 'Os 3 nomes precisam ser diferentes.'
   }
@@ -36,7 +37,7 @@ export const pickContatoWord = (lastWord = ''): string => {
 export const pickContatoJudge = (players: ContatoPlayer[]) =>
   players[Math.floor(Math.random() * players.length)]?.id ?? null
 
-export const getNextContatoJudgeId = (players: ContatoPlayer[], currentJudgeId: number) => {
+export const getNextContatoJudgeId = (players: ContatoPlayer[], currentJudgeId: string) => {
   const currentIndex = players.findIndex((player) => player.id === currentJudgeId)
   if (currentIndex === -1) return pickContatoJudge(players)
   return players[(currentIndex + 1) % players.length].id
@@ -46,9 +47,9 @@ export const createContatoRound = (
   players: ContatoPlayer[],
   round: number,
   lastWord: string,
-  forcedJudgeId?: number
+  forcedJudgeId?: string
 ): ContatoRoundSetup => ({
-  judgeId: typeof forcedJudgeId === 'number' ? forcedJudgeId : pickContatoJudge(players) ?? 0,
+  judgeId: typeof forcedJudgeId === 'string' ? forcedJudgeId : pickContatoJudge(players) ?? '',
   word: pickContatoWord(lastWord),
   round
 })

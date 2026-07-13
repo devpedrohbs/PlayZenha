@@ -4,7 +4,7 @@ import ImpostorGame from '../../games/impostor/ImpostorGame'
 const ImpostorGamePage = () => {
   const navigate = useNavigate()
 
-  return <ImpostorGame onBackToHome={() => navigate('/')} />
+  return <ImpostorGame onBackToGames={() => navigate('/jogos')} onBackToHome={() => navigate('/')} />
 }
 
 export default ImpostorGamePage

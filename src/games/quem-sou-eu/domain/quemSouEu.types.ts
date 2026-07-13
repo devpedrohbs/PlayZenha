@@ -9,20 +9,20 @@ export type QuemSouEuPhase =
   | 'final-results'
 
 export interface QuemSouEuPlayer {
-  id: number
+  id: string
   name: string
 }
 
 export interface QuemSouEuAssignment {
-  writerId: number
-  targetId: number
+  writerId: string
+  targetId: string
   character: string
 }
 
 export type QuemSouEuRoundStatus = 'acertou' | 'desistiu'
 
 export interface QuemSouEuRoundResult {
-  playerId: number
+  playerId: string
   status: QuemSouEuRoundStatus
   timeUsed: number
   character: string

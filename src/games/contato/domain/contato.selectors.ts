@@ -16,3 +16,11 @@ export const selectCanStartContatoGame = (state: ContatoGameState) =>
 
 export const selectMaskedContatoWord = (state: ContatoGameState) =>
   state.currentWord ? maskContatoWord(state.currentWord, state.revealedLetters) : ''
+
+export const selectContatoRevealElapsedSeconds = (state: ContatoGameState) => {
+  if (state.roundStartedAtMs === null || state.wordRevealedAtMs === null) {
+    return null
+  }
+
+  return Math.max(0, Math.ceil((state.wordRevealedAtMs - state.roundStartedAtMs) / 1000))
+}

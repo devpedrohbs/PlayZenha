@@ -19,7 +19,7 @@ export type UltimaNoitePhase =
 export type UltimaNoiteWinner = 'Lobos' | 'Cidadãos'
 
 export interface UltimaNoitePlayer {
-  id: number
+  id: string
   name: string
   role: UltimaNoiteRole
   isAlive: boolean
@@ -28,7 +28,7 @@ export interface UltimaNoitePlayer {
 
 export interface UltimaNoiteVotingResolution {
   players: UltimaNoitePlayer[]
-  eliminatedPlayerId: number | null
+  eliminatedPlayerId: string | null
   isTie: boolean
   winner: UltimaNoiteWinner | null
 }
@@ -39,3 +39,5 @@ export interface UltimaNoiteSettings {
   hasDetective: boolean
   hasMediator: boolean
 }
+
+export type UltimaNoiteVoteSelection = string | 'skip' | null

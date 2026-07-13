@@ -4,7 +4,7 @@ import UltimaNoiteGame from '../../games/ultima-noite/UltimaNoiteGame'
 const UltimaNoiteGamePage = () => {
   const navigate = useNavigate()
 
-  return <UltimaNoiteGame onBackToHome={() => navigate('/')} />
+  return <UltimaNoiteGame onBackToGames={() => navigate('/jogos')} onBackToHome={() => navigate('/')} />
 }
 
 export default UltimaNoiteGamePage

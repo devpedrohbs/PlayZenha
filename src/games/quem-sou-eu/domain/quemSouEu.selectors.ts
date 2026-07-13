@@ -11,7 +11,7 @@ export const selectCanStartWritingPhase = (playerNames: string[]) =>
 
 export const selectCurrentWriter = (
   players: QuemSouEuPlayer[],
-  writingOrder: number[],
+  writingOrder: string[],
   writingStep: number
 ) => {
   const writerId = writingOrder[writingStep]
@@ -20,7 +20,7 @@ export const selectCurrentWriter = (
 
 export const selectCurrentGuesser = (
   players: QuemSouEuPlayer[],
-  guessOrder: number[],
+  guessOrder: string[],
   guessStep: number
 ) => {
   const guesserId = guessOrder[guessStep]

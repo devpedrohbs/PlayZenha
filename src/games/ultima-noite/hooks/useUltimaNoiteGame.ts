@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ULTIMA_NOITE_DEFAULT_PLAYER_NAMES, ULTIMA_NOITE_MAX_PLAYERS, ULTIMA_NOITE_MIN_PLAYERS } from '../domain/ultimaNoite.constants'
 import {
   applyUltimaNoiteDeath,
@@ -14,24 +14,28 @@ import type {
   UltimaNoitePlayer,
   UltimaNoiteRole,
   UltimaNoiteSettings,
+  UltimaNoiteVoteSelection,
   UltimaNoiteWinner
 } from '../domain/ultimaNoite.types'
+import { shuffle } from '../../../shared/utils/shuffle'
+import { createId } from '../../../shared/utils/id'
 
 const DEFAULT_DISCUSSION_TIME = 120
 
 export const useUltimaNoiteGame = () => {
+  const timeoutRefs = useRef<ReturnType<typeof setTimeout>[]>([])
   const [phase, setPhase] = useState<UltimaNoitePhase>('setup')
   const [players, setPlayers] = useState<UltimaNoitePlayer[]>([])
   const [playerNames, setPlayerNames] = useState<string[]>(ULTIMA_NOITE_DEFAULT_PLAYER_NAMES)
   const [mediatorIndex, setMediatorIndex] = useState<number | null>(null)
   const [currentPlayerIdx, setCurrentPlayerIdx] = useState(0)
-  const [wolfKill, setWolfKill] = useState<number | null>(null)
-  const [angelSave, setAngelSave] = useState<number | null>(null)
+  const [wolfKill, setWolfKill] = useState<string | null>(null)
+  const [angelSave, setAngelSave] = useState<string | null>(null)
   const [investigatedRole, setInvestigatedRole] = useState<UltimaNoiteRole | null>(null)
   const [discussionTime, setDiscussionTime] = useState(DEFAULT_DISCUSSION_TIME)
   const [timeLeft, setTimeLeft] = useState(0)
   const [winner, setWinner] = useState<UltimaNoiteWinner | null>(null)
-  const [selectedVote, setSelectedVote] = useState<number | null>(null)
+  const [selectedVote, setSelectedVote] = useState<UltimaNoiteVoteSelection>(null)
   const [showErrorModal, setShowErrorModal] = useState<string | null>(null)
   const [showMediatorInfo, setShowMediatorInfo] = useState(false)
   const [settings, setSettings] = useState<UltimaNoiteSettings>({
@@ -40,6 +44,22 @@ export const useUltimaNoiteGame = () => {
     hasDetective: true,
     hasMediator: false
   })
+
+  const clearScheduledTimeouts = () => {
+    timeoutRefs.current.forEach((timeoutId) => clearTimeout(timeoutId))
+    timeoutRefs.current = []
+  }
+
+  const scheduleTimeout = (callback: () => void, delay: number) => {
+    const timeoutId = setTimeout(() => {
+      timeoutRefs.current = timeoutRefs.current.filter((id) => id !== timeoutId)
+      callback()
+    }, delay)
+
+    timeoutRefs.current.push(timeoutId)
+  }
+
+  useEffect(() => () => clearScheduledTimeouts(), [])
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>
@@ -72,7 +92,7 @@ export const useUltimaNoiteGame = () => {
     if (playerNames.length > ULTIMA_NOITE_MIN_PLAYERS) {
       setPlayerNames(playerNames.filter((_, itemIndex) => itemIndex !== index))
       if (mediatorIndex === index) setMediatorIndex(null)
-      if (mediatorIndex && mediatorIndex > index) setMediatorIndex(mediatorIndex - 1)
+      if (mediatorIndex !== null && mediatorIndex > index) setMediatorIndex(mediatorIndex - 1)
       return
     }
 
@@ -81,6 +101,8 @@ export const useUltimaNoiteGame = () => {
   }
 
   const startGameSetup = () => {
+    clearScheduledTimeouts()
+
     const activePlayers: UltimaNoitePlayer[] = []
     let assignedMediator: UltimaNoitePlayer | undefined
     let validCount = 0
@@ -100,8 +122,8 @@ export const useUltimaNoiteGame = () => {
       validCount++
 
       const newPlayer: UltimaNoitePlayer = {
-        id: 0,
-        name: upperName,
+        id: createId(),
+        name: rawName,
         role: 'Cidadão',
         isAlive: true,
         votes: 0
@@ -117,7 +139,7 @@ export const useUltimaNoiteGame = () => {
 
     if (!assignedMediator) {
       setShowErrorModal('É obrigatório escolher um MEDIADOR antes de iniciar!')
-      setTimeout(() => setShowMediatorInfo(true), 1500)
+      scheduleTimeout(() => setShowMediatorInfo(true), 1500)
       return
     }
 
@@ -127,10 +149,6 @@ export const useUltimaNoiteGame = () => {
     }
 
     setSettings((currentSettings) => ({ ...currentSettings, hasMediator: Boolean(assignedMediator) }))
-    activePlayers.forEach((player, index) => {
-      player.id = index
-    })
-
     let availableRoles: UltimaNoiteRole[] = Array(settings.wolvesCount).fill('Lobo')
     if (settings.hasAngel) availableRoles.push('Anjo')
     if (settings.hasDetective) availableRoles.push('Detetive')
@@ -142,12 +160,12 @@ export const useUltimaNoiteGame = () => {
     }
 
     availableRoles = [...availableRoles, ...Array(remainingSlots).fill('Cidadão')]
-    availableRoles = availableRoles.sort(() => Math.random() - 0.5)
+    availableRoles = shuffle(availableRoles)
     activePlayers.forEach((player, index) => {
       player.role = availableRoles[index]
     })
 
-    const shuffledActivePlayers = activePlayers.sort(() => Math.random() - 0.5)
+    const shuffledActivePlayers = shuffle(activePlayers)
     setPlayers(shuffledActivePlayers)
     setPhase('role-distribution-start')
     setCurrentPlayerIdx(0)
@@ -170,17 +188,17 @@ export const useUltimaNoiteGame = () => {
     }
 
     setPhase('night-intro')
-    setTimeout(() => startNightPhase(), 4000)
+    scheduleTimeout(() => startNightPhase(), 4000)
   }
 
-  const finishNight = (overrideWolfKill?: number | null) => {
+  const finishNight = (overrideWolfKill?: string | null) => {
     const effectiveKill = overrideWolfKill !== undefined ? overrideWolfKill : wolfKill
     const victimId = resolveUltimaNoiteNightVictim(effectiveKill, angelSave)
     setPlayers((currentPlayers) => applyUltimaNoiteDeath(currentPlayers, victimId))
     setPhase('morning')
   }
 
-  const handleNightAction = (targetId: number | null) => {
+  const handleNightAction = (targetId: string | null) => {
     if (phase === 'night-angel') {
       setAngelSave(targetId)
       setPhase('night-wolf')
@@ -201,7 +219,7 @@ export const useUltimaNoiteGame = () => {
       if (targetId !== null) {
         const target = players.find((player) => player.id === targetId)
         setInvestigatedRole(target?.role || 'Cidadão')
-        setTimeout(() => {
+        scheduleTimeout(() => {
           setInvestigatedRole(null)
           finishNight()
         }, 3000)
@@ -230,8 +248,8 @@ export const useUltimaNoiteGame = () => {
     handleNextRoundOrEnd()
   }
 
-  const handleVoteSelection = (targetId: number) => {
-    if (targetId !== -1) {
+  const handleVoteSelection = (targetId: string | 'skip') => {
+    if (targetId !== 'skip') {
       const target = players.find((player) => player.id === targetId)
       if (!target?.isAlive) return
     }
@@ -261,7 +279,7 @@ export const useUltimaNoiteGame = () => {
     }
 
     setPhase('voting-suspense')
-    setTimeout(() => {
+    scheduleTimeout(() => {
       finishVoting(updatedPlayers)
     }, 1500)
   }
@@ -278,7 +296,7 @@ export const useUltimaNoiteGame = () => {
     }
 
     setPhase('night-intro')
-    setTimeout(() => startNightPhase(), 3000)
+    scheduleTimeout(() => startNightPhase(), 3000)
   }
 
   return {

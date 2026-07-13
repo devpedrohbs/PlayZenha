@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   ArrowLeft, Users, Moon, Sun, Shield, Search, 
@@ -9,11 +9,12 @@ import { useUltimaNoiteGame } from './hooks/useUltimaNoiteGame'
 
 interface UltimaNoiteGameProps {
   onBackToHome: () => void
+  onBackToGames: () => void
 }
 
 type Role = 'Lobo' | 'Anjo' | 'Detetive' | 'Cidadão' | 'Mediador'
 interface Player {
-  id: number
+  id: string
   name: string
   role: Role
   isAlive: boolean
@@ -28,7 +29,7 @@ const ROLES_CONFIG = {
   Mediador: { color: 'text-purple-400', bg: 'bg-purple-500/20', border: 'border-purple-400', icon: '🗣️' },
 }
 
-const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
+const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToGames, onBackToHome }) => {
   const {
     addPlayerSlot,
     angelSave,
@@ -370,9 +371,9 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
                             ))}
                             {/* Skip Vote Option */}
                             <button 
-                                onClick={() => handleVoteSelection(-1)} 
+                                onClick={() => handleVoteSelection('skip')} 
                                 className={`w-full py-3 text-sm font-bold uppercase tracking-wider transition-colors border rounded-xl ${
-                                    selectedVote === -1 ? 'bg-purple-400 text-white border-white/30' : 'text-gray-500 border-transparent hover:bg-white/5'
+                                    selectedVote === 'skip' ? 'bg-purple-400 text-white border-white/30' : 'text-gray-500 border-transparent hover:bg-white/5'
                                 }`}
                             >
                                 Pular Voto
@@ -463,9 +464,9 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
                         <GameButton theme="purple" onClick={() => setPhase('setup')} variant="secondary" className="w-full">
                             JOGAR NOVAMENTE
                         </GameButton>
-                        <button onClick={onBackToHome} className="text-sm font-bold opacity-60 hover:opacity-100 transition-opacity">
-                            VOLTAR AO MENU
-                        </button>
+                        <GameButton theme="purple" onClick={onBackToGames} variant="secondary" className="w-full">
+                            VOLTAR AOS JOGOS
+                        </GameButton>
                     </div>
                 </motion.div>
             )}
@@ -548,14 +549,21 @@ interface ActionPhaseProps {
     title: string
     subtitle: string
     players: Player[]
-    onAction: (targetId: number | null) => void
+    onAction: (targetId: string | null) => void
     color: ActionPhaseColor
     embedded?: boolean
 }
 
 const ActionPhase = ({ title, subtitle, players, onAction, color, embedded = false }: ActionPhaseProps) => {
-    const [selectedId, setSelectedId] = useState<number | null>(null)
+    const [selectedId, setSelectedId] = useState<string | null>(null)
     const [isExiting, setIsExiting] = useState(false)
+    const confirmTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    useEffect(() => () => {
+        if (confirmTimeoutRef.current) {
+            clearTimeout(confirmTimeoutRef.current)
+        }
+    }, [])
 
     // Helper to get color classes because dynamic purging fails
     const getColors = () => {
@@ -597,7 +605,7 @@ const ActionPhase = ({ title, subtitle, players, onAction, color, embedded = fal
 
     const theme = getColors()
 
-    const handleSelect = (id: number) => {
+    const handleSelect = (id: string) => {
         if (isExiting) return
         setSelectedId(id)
     }
@@ -605,7 +613,8 @@ const ActionPhase = ({ title, subtitle, players, onAction, color, embedded = fal
     const handleConfirm = () => {
         if (isExiting) return
         setIsExiting(true)
-        setTimeout(() => {
+        confirmTimeoutRef.current = setTimeout(() => {
+            confirmTimeoutRef.current = null
             onAction(selectedId)
         }, 1000)
     }

@@ -26,8 +26,9 @@ type ImpostorAction =
   | { type: 'add-discussion-minute' }
   | { type: 'tick-discussion' }
   | { type: 'start-voting' }
-  | { type: 'select-vote'; playerId: number | null }
+  | { type: 'select-vote'; playerId: string | null }
   | { type: 'finish-voting'; winner: ImpostorWinner }
+  | { type: 'set-feedback'; message: string }
   | { type: 'restart-game' }
 
 export const impostorReducer = (
@@ -37,26 +38,29 @@ export const impostorReducer = (
   switch (action.type) {
     case 'add-player-slot':
       if (state.playerNames.length >= IMPOSTOR_MAX_PLAYERS) return state
-      return { ...state, playerNames: [...state.playerNames, ''] }
+      return { ...state, playerNames: [...state.playerNames, ''], feedback: '' }
 
     case 'remove-player-slot': {
       if (state.playerNames.length > IMPOSTOR_DEFAULT_PLAYER_NAMES.length) {
         return {
           ...state,
-          playerNames: state.playerNames.filter((_, index) => index !== action.index)
+          playerNames: state.playerNames.filter((_, index) => index !== action.index),
+          feedback: ''
         }
       }
 
       return {
         ...state,
-        playerNames: state.playerNames.map((name, index) => (index === action.index ? '' : name))
+        playerNames: state.playerNames.map((name, index) => (index === action.index ? '' : name)),
+        feedback: ''
       }
     }
 
     case 'update-player-name':
       return {
         ...state,
-        playerNames: state.playerNames.map((name, index) => (index === action.index ? action.value : name))
+        playerNames: state.playerNames.map((name, index) => (index === action.index ? action.value : name)),
+        feedback: ''
       }
 
     case 'set-discussion-time':
@@ -80,6 +84,7 @@ export const impostorReducer = (
         currentRevealStep: 0,
         selectedVote: null,
         winner: null,
+        feedback: '',
         phase: 'role-distribution-start'
       }
 
@@ -120,6 +125,9 @@ export const impostorReducer = (
     case 'finish-voting':
       return { ...state, winner: action.winner, phase: 'voting-results' }
 
+    case 'set-feedback':
+      return { ...state, feedback: action.message }
+
     case 'restart-game':
       return {
         ...state,
@@ -128,7 +136,8 @@ export const impostorReducer = (
         revealOrder: [],
         currentRevealStep: 0,
         selectedVote: null,
-        winner: null
+        winner: null,
+        feedback: ''
       }
 
     default:

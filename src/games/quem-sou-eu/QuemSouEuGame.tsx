@@ -11,16 +11,18 @@ import {
   CheckCircle2,
   XCircle,
   Trophy,
-  RotateCcw
+  RotateCcw,
+  Gamepad2
 } from 'lucide-react'
 import GameButton from '../shared/components/GameButton'
 import { useQuemSouEuGame } from './hooks/useQuemSouEuGame'
 
 interface QuemSouEuGameProps {
   onBackToHome: () => void
+  onBackToGames: () => void
 }
 
-const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
+const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToGames, onBackToHome }) => {
   const {
     addPlayerSlot,
     bestPlayers,
@@ -34,6 +36,7 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
     currentTarget,
     currentWriter,
     finishRound,
+    feedback,
     guessOrder,
     guessStep,
     isScreenMasked,
@@ -128,6 +131,12 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
               </div>
             </div>
 
+            {feedback && (
+              <div className="mt-4 rounded-xl border border-red-400/30 bg-red-500/10 p-4 text-center text-sm font-bold text-red-100">
+                {feedback}
+              </div>
+            )}
+
             <div className="playzenha-game-spacer" />
             <div className="playzenha-game-action">
               <GameButton theme="yellow" onClick={startWritingPhase} disabled={!canStartWritingPhase} className="w-full py-4 text-lg mb-6">
@@ -192,6 +201,12 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
                 autoFocus
               />
             </div>
+
+            {feedback && (
+              <div className="mb-4 rounded-xl border border-red-400/30 bg-red-500/10 p-4 text-center text-sm font-bold text-red-100">
+                {feedback}
+              </div>
+            )}
 
             <GameButton theme="yellow" onClick={confirmCharacter} className="w-full py-4 text-lg mb-6 mt-auto">
               <PenSquare className="w-5 h-5" /> CONFIRMAR
@@ -445,9 +460,12 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
               })}
             </div>
 
-            <div className="pb-8">
+            <div className="space-y-3 pb-8">
               <GameButton theme="yellow" onClick={resetGame} className="w-full py-4 text-lg">
                 <RotateCcw className="w-5 h-5" /> JOGAR NOVAMENTE
+              </GameButton>
+              <GameButton theme="yellow" onClick={onBackToGames} variant="secondary" className="w-full py-4 text-lg">
+                <Gamepad2 className="w-5 h-5" /> VOLTAR AOS JOGOS
               </GameButton>
             </div>
           </motion.div>

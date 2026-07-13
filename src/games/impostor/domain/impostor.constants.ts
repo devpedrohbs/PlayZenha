@@ -44,5 +44,6 @@ export const INITIAL_IMPOSTOR_STATE: ImpostorGameState = {
   discussionTime: IMPOSTOR_DEFAULT_DISCUSSION_TIME,
   timeLeft: 0,
   selectedVote: null,
-  winner: null
+  winner: null,
+  feedback: ''
 }
