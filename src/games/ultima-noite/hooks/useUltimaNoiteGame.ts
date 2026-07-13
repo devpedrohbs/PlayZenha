@@ -78,7 +78,7 @@ export const useUltimaNoiteGame = () => {
     }
 
     return undefined
-  }, [])
+  }, [phase])
 
   const updatePlayerName = (index: number, value: string) => {
     setPlayerNames(playerNames.map((name, itemIndex) => (itemIndex === index ? value : name)))

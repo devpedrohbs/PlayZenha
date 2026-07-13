@@ -13,7 +13,13 @@ import './styles/globals.css'
 import './games/shared/game-shell.css'
 import './features/games-catalog/games-catalog.css'
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+const rootElement = document.getElementById('root')
+
+if (!rootElement) {
+  throw new Error('Root element not found')
+}
+
+ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
