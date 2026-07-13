@@ -1,192 +1,44 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft } from 'lucide-react'
+import { IMPOSTOR_MAX_PLAYERS } from './domain/impostor.constants'
+import { useImpostorGame } from './hooks/useImpostorGame'
 
 interface ImpostorGameProps {
   onBackToHome: () => void
 }
 
-type Phase =
-  | 'setup'
-  | 'role-distribution-start'
-  | 'role-reveal'
-  | 'game-start'
-  | 'discussion'
-  | 'voting-intro'
-  | 'voting'
-  | 'voting-results'
-
-type Role = 'Impostor' | 'Cidadao'
-
-interface Player {
-  id: number
-  name: string
-  role: Role
-  isAlive: boolean
-  votes: number
-}
-
-const THEMES = [
-  'Lua', 'Copa do Mundo', 'Praia', 'Netflix', 'Pizza',
-  'Carnaval', 'Black Friday', 'Festa Junina', 'Aniversario', 'Trabalho',
-  'Escola', 'Hospital', 'Shopping', 'Igreja', 'Cinema', 'Uber', 'Instagram', 'TikTok', 'WhatsApp',
-  'Padaria', 'Churrasco', 'Barbearia', 'Salao de Beleza', 'Farmacia', 'Rodoviaria',
-  'Metro', 'Elevador', 'Formatura', 'Natal', 'Ano Novo', 'Halloween', 'Videogame', 'YouTube',
-  'Spotify', 'Bicicleta', 'Feira', 'Pet Shop', 'Supermercado', 'Academia', 'Aeroporto',
-  'Acampamento', 'Parque de Diversoes', 'Museu', 'Teatro', 'Restaurante', 'Lanchonete',
-  'Sorveteria', 'Cafeteria', 'Biblioteca', 'Delegacia', 'Tribunal', 'Banco', 'Correios',
-  'Posto de Gasolina', 'Oficina', 'Condominio', 'Hotel', 'Pousada', 'Cruzeiro',
-  'Praca', 'Floresta', 'Montanha', 'Deserto', 'Ilha', 'Cachoeira', 'Piquenique',
-  'Parque Aquatico', 'Karaoke', 'Show', 'Festival', 'Casamento', 'Reuniao',
-  'Home Office', 'Delivery', 'Loja de Roupas', 'Transito'
-]
-
-const phaseLabel: Record<Phase, string> = {
-  setup: 'Configuracao',
-  'role-distribution-start': 'Passe o celular',
-  'role-reveal': 'Papel secreto',
-  'game-start': 'Investigacao',
-  discussion: 'Timer',
-  'voting-intro': 'Alerta',
-  voting: 'Votacao',
-  'voting-results': 'Resultado'
-}
-
-const shuffleArray = <T,>(arr: T[]): T[] => {
-  const shuffled = [...arr]
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-  }
-  return shuffled
-}
-
 const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
-  const [phase, setPhase] = useState<Phase>('setup')
-  const [playerNames, setPlayerNames] = useState<string[]>(['', '', ''])
-  const [players, setPlayers] = useState<Player[]>([])
-  const [revealOrder, setRevealOrder] = useState<number[]>([])
-  const [currentRevealStep, setCurrentRevealStep] = useState(0)
-  const [theme, setTheme] = useState('')
-  const [discussionTime, setDiscussionTime] = useState(180)
-  const [timeLeft, setTimeLeft] = useState(0)
-  const [selectedVote, setSelectedVote] = useState<number | null>(null)
-  const [winner, setWinner] = useState<'Impostor' | 'Cidadaos' | null>(null)
-
-  const currentPlayerForReveal = useMemo(
-    () => players.find((player) => player.id === revealOrder[currentRevealStep]) ?? null,
-    [players, revealOrder, currentRevealStep]
-  )
-
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval>
-    if (phase === 'discussion' && timeLeft > 0) {
-      interval = setInterval(() => setTimeLeft((prev) => prev - 1), 1000)
-    } else if (phase === 'discussion' && timeLeft === 0) {
-      setPhase('voting-intro')
-    }
-
-    return () => clearInterval(interval)
-  }, [phase, timeLeft])
-
-  const addPlayerSlot = () => {
-    if (playerNames.length < 16) setPlayerNames([...playerNames, ''])
-  }
-
-  const removePlayerSlot = (idx: number) => {
-    if (playerNames.length > 3) {
-      setPlayerNames(playerNames.filter((_, i) => i !== idx))
-      return
-    }
-
-    const newNames = [...playerNames]
-    newNames[idx] = ''
-    setPlayerNames(newNames)
-  }
-
-  const updatePlayerName = (idx: number, val: string) => {
-    const newNames = [...playerNames]
-    newNames[idx] = val
-    setPlayerNames(newNames)
-  }
-
-  const startGameSetup = () => {
-    const activeNames: string[] = []
-    const usedNames = new Set<string>()
-
-    for (const name of playerNames) {
-      const trimmed = name.trim()
-      if (!trimmed) continue
-
-      if (usedNames.has(trimmed.toUpperCase())) {
-        alert(`O nome "${trimmed}" ja esta em uso!`)
-        return
-      }
-
-      usedNames.add(trimmed.toUpperCase())
-      activeNames.push(trimmed.toUpperCase())
-    }
-
-    if (activeNames.length < 3) {
-      alert('Minimo de 3 jogadores para o Impostor.')
-      return
-    }
-
-    const impostorIdx = Math.floor(Math.random() * activeNames.length)
-    const selectedTheme = THEMES[Math.floor(Math.random() * THEMES.length)]
-    const newPlayers: Player[] = activeNames.map((name, i) => ({
-      id: i,
-      name,
-      role: i === impostorIdx ? 'Impostor' : 'Cidadao',
-      isAlive: true,
-      votes: 0
-    }))
-
-    setPlayers(newPlayers)
-    setTheme(selectedTheme)
-    setRevealOrder(shuffleArray(newPlayers.map((player) => player.id)))
-    setCurrentRevealStep(0)
-    setPhase('role-distribution-start')
-  }
-
-  const handleNextRoleReveal = () => {
-    if (currentRevealStep < revealOrder.length - 1) {
-      setCurrentRevealStep((prev) => prev + 1)
-      setPhase('role-distribution-start')
-      return
-    }
-
-    setPhase('game-start')
-  }
-
-  const startDiscussion = () => {
-    setTimeLeft(discussionTime)
-    setPhase('discussion')
-  }
-
-  const startVoting = () => {
-    setPlayers((prev) => prev.map((player) => ({ ...player, votes: 0 })))
-    setSelectedVote(null)
-    setPhase('voting')
-  }
-
-  const submitVote = () => {
-    if (selectedVote === null) return
-    const votedPlayer = players.find((player) => player.id === selectedVote)
-    if (!votedPlayer) return
-
-    setWinner(votedPlayer.role === 'Impostor' ? 'Cidadaos' : 'Impostor')
-    setPhase('voting-results')
-  }
-
-  const restartGame = () => {
-    setPhase('setup')
-    setWinner(null)
-    setPlayers([])
-    setRevealOrder([])
-    setCurrentRevealStep(0)
-    setSelectedVote(null)
-  }
+  const {
+    addDiscussionMinute,
+    addPlayerSlot,
+    canStartGame,
+    currentPlayerForReveal,
+    currentRevealStep,
+    decreaseDiscussionTime,
+    discussionTime,
+    filledPlayerCount,
+    handleNextRoleReveal,
+    increaseDiscussionTime,
+    phase,
+    phaseLabel,
+    playerNames,
+    players,
+    removePlayerSlot,
+    restartGame,
+    revealOrder,
+    selectedVote,
+    selectVote,
+    setPhase,
+    startDiscussion,
+    startGameSetup,
+    startVoting,
+    submitVote,
+    theme,
+    timeLeft,
+    updatePlayerName,
+    winner
+  } = useImpostorGame()
 
   return (
     <div className="impostor-game">
@@ -200,7 +52,7 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
             <span className="impostor-brand-mark"><Icon name="mask" /></span>
             Playzenha
           </div>
-          <span className="impostor-round-chip">{phaseLabel[phase]}</span>
+          <span className="impostor-round-chip">{phaseLabel}</span>
         </header>
 
         <AnimatePresence mode="wait">
@@ -231,7 +83,7 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
                       </motion.div>
                     ))}
                   </div>
-                  <ImpostorButton variant="ghost" onClick={addPlayerSlot} disabled={playerNames.length >= 16} className="impostor-add-player-button">
+                  <ImpostorButton variant="ghost" onClick={addPlayerSlot} disabled={playerNames.length >= IMPOSTOR_MAX_PLAYERS} className="impostor-add-player-button">
                     <Icon name="plus" /> Adicionar jogador
                   </ImpostorButton>
                 </div>
@@ -243,18 +95,18 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
                       <h3>Tempo da rodada</h3>
                     </div>
                     <div className="impostor-stepper">
-                      <button className="impostor-icon-button" type="button" onClick={() => setDiscussionTime(Math.max(60, discussionTime - 60))}>
+                      <button className="impostor-icon-button" type="button" onClick={decreaseDiscussionTime}>
                         <Icon name="minus" />
                       </button>
                       <strong>{discussionTime / 60} min</strong>
-                      <button className="impostor-icon-button" type="button" onClick={() => setDiscussionTime(Math.min(900, discussionTime + 60))}>
+                      <button className="impostor-icon-button" type="button" onClick={increaseDiscussionTime}>
                         <Icon name="plus" />
                       </button>
                     </div>
                   </div>
-                  <p className={playerNames.filter((name) => name.trim()).length >= 3 ? 'impostor-hint' : 'impostor-hint error'}>
-                    {playerNames.filter((name) => name.trim()).length >= 3
-                      ? `${playerNames.filter((name) => name.trim()).length} jogadores prontos para a investigacao.`
+                  <p className={canStartGame ? 'impostor-hint' : 'impostor-hint error'}>
+                    {canStartGame
+                      ? `${filledPlayerCount} jogadores prontos para a investigacao.`
                       : 'Minimo de 3 jogadores para comecar.'}
                   </p>
                 </div>
@@ -262,7 +114,7 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
 
               <div className="impostor-spacer" />
               <div className="impostor-sticky-action">
-                <ImpostorButton className="impostor-start-button" disabled={playerNames.filter((name) => name.trim()).length < 3} onClick={startGameSetup}>Comecar rodada</ImpostorButton>
+                <ImpostorButton className="impostor-start-button" disabled={!canStartGame} onClick={startGameSetup}>Comecar rodada</ImpostorButton>
               </div>
             </motion.section>
           )}
@@ -355,7 +207,7 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
                 </div>
               </div>
               <div className="impostor-split">
-                <ImpostorButton variant="ghost" onClick={() => { setTimeLeft((prev) => prev + 60); setDiscussionTime((prev) => prev + 60) }}>+1 minuto</ImpostorButton>
+                <ImpostorButton variant="ghost" onClick={addDiscussionMinute}>+1 minuto</ImpostorButton>
                 <ImpostorButton variant="danger" onClick={() => setPhase('voting-intro')}>Votar agora</ImpostorButton>
               </div>
             </motion.section>
@@ -386,7 +238,7 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToHome }) => {
               </div>
               <div className="impostor-vote-grid">
                 {players.map((player) => (
-                  <button className={`impostor-vote-card ${selectedVote === player.id ? 'selected' : ''}`} key={player.id} type="button" onClick={() => setSelectedVote(player.id)}>
+                  <button className={`impostor-vote-card ${selectedVote === player.id ? 'selected' : ''}`} key={player.id} type="button" onClick={() => selectVote(player.id)}>
                     <span className="impostor-avatar">{player.name.slice(0, 1)}</span>
                     <strong>{player.name}</strong>
                     {selectedVote === player.id && <Icon name="alert" />}

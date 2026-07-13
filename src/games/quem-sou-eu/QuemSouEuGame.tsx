@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft,
@@ -14,432 +14,51 @@ import {
   RotateCcw
 } from 'lucide-react'
 import GameButton from '../shared/components/GameButton'
+import { useQuemSouEuGame } from './hooks/useQuemSouEuGame'
 
 interface QuemSouEuGameProps {
   onBackToHome: () => void
 }
 
-type Phase =
-  | 'setup'
-  | 'writing-pass'
-  | 'writing-reveal'
-  | 'round-intro'
-  | 'countdown'
-  | 'guessing'
-  | 'round-result'
-  | 'final-results'
-
-interface Player {
-  id: number
-  name: string
-}
-
-interface Assignment {
-  writerId: number
-  targetId: number
-  character: string
-}
-
-interface RoundResult {
-  playerId: number
-  status: 'acertou' | 'desistiu'
-  timeUsed: number
-  character: string
-}
-
-interface WakeLockSentinelLike {
-  release: () => Promise<void>
-}
-
-type WakeLockNavigator = {
-  wakeLock?: {
-    request: (type: 'screen') => Promise<WakeLockSentinelLike>
-  }
-}
-
-const shuffleArray = <T,>(arr: T[]): T[] => {
-  const cloned = [...arr]
-  for (let i = cloned.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[cloned[i], cloned[j]] = [cloned[j], cloned[i]]
-  }
-  return cloned
-}
-
-const buildDerangement = (ids: number[]): number[] => {
-  if (ids.length < 2) return [...ids]
-
-  for (let attempt = 0; attempt < 300; attempt++) {
-    const shuffled = shuffleArray(ids)
-    const valid = shuffled.every((targetId, idx) => targetId !== ids[idx])
-    if (valid) return shuffled
-  }
-
-  const rotated = [...ids.slice(1), ids[0]]
-  return rotated
-}
-
-const SILENT_WAV =
-  'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA='
-
 const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToHome }) => {
-  const [phase, setPhase] = useState<Phase>('setup')
-
-  const [playerNames, setPlayerNames] = useState<string[]>(['', ''])
-  const [players, setPlayers] = useState<Player[]>([])
-
-  const [assignments, setAssignments] = useState<Assignment[]>([])
-  const [writingOrder, setWritingOrder] = useState<number[]>([])
-  const [writingStep, setWritingStep] = useState(0)
-  const [currentCharacterInput, setCurrentCharacterInput] = useState('')
-
-  const [guessOrder, setGuessOrder] = useState<number[]>([])
-  const [guessStep, setGuessStep] = useState(0)
-
-  const [countdown, setCountdown] = useState(3)
-  const [resumeCountdown, setResumeCountdown] = useState<number | null>(null)
-  const [isScreenMasked, setIsScreenMasked] = useState(false)
-
-  const [timeLeft, setTimeLeft] = useState(0)
-  const [pendingAction, setPendingAction] = useState<'acertou' | 'desistiu' | null>(null)
-
-  const [results, setResults] = useState<RoundResult[]>([])
-  const [lastRoundResult, setLastRoundResult] = useState<RoundResult | null>(null)
-
-  const wakeLockRef = useRef<WakeLockSentinelLike | null>(null)
-  const fallbackAudioRef = useRef<HTMLAudioElement | null>(null)
-  const fallbackTickRef = useRef<number | null>(null)
-
-  const currentWriter = useMemo(() => {
-    const writerId = writingOrder[writingStep]
-    return players.find((p) => p.id === writerId) ?? null
-  }, [players, writingOrder, writingStep])
-
-  const currentGuesser = useMemo(() => {
-    const guesserId = guessOrder[guessStep]
-    return players.find((p) => p.id === guesserId) ?? null
-  }, [players, guessOrder, guessStep])
-
-  const currentAssignment = useMemo(() => {
-    if (!currentGuesser) return null
-    return assignments.find((item) => item.targetId === currentGuesser.id) ?? null
-  }, [assignments, currentGuesser])
-
-  const currentTarget = useMemo(() => {
-    if (!currentWriter) return null
-    const assignment = assignments.find((item) => item.writerId === currentWriter.id)
-    if (!assignment) return null
-    return players.find((p) => p.id === assignment.targetId) ?? null
-  }, [assignments, currentWriter, players])
-
-  const bestTime = useMemo(() => {
-    const winners = results.filter((result) => result.status === 'acertou')
-    if (winners.length === 0) return null
-    return Math.min(...winners.map((result) => result.timeUsed))
-  }, [results])
-
-  const bestPlayers = useMemo(() => {
-    if (bestTime === null) return []
-    return results.filter((result) => result.status === 'acertou' && result.timeUsed === bestTime)
-  }, [results, bestTime])
-
-  const orderedResults = useMemo(() => {
-    return [...results].sort((left, right) => {
-      if (left.status !== right.status) {
-        return left.status === 'acertou' ? -1 : 1
-      }
-
-      if (left.status === 'acertou' && right.status === 'acertou') {
-        return left.timeUsed - right.timeUsed
-      }
-
-      return right.timeUsed - left.timeUsed
-    })
-  }, [results])
-
-  const filledPlayerCount = playerNames.filter((name) => name.trim()).length
-  const canStartWritingPhase = filledPlayerCount >= 2
-
-  const addPlayerSlot = () => {
-    if (playerNames.length < 10) setPlayerNames([...playerNames, ''])
-  }
-
-  const removePlayerSlot = (idx: number) => {
-    if (playerNames.length > 2) {
-      setPlayerNames(playerNames.filter((_, i) => i !== idx))
-    } else {
-      const newNames = [...playerNames]
-      newNames[idx] = ''
-      setPlayerNames(newNames)
-    }
-  }
-
-  const updatePlayerName = (idx: number, value: string) => {
-    const newNames = [...playerNames]
-    newNames[idx] = value
-    setPlayerNames(newNames)
-  }
-
-  const startWritingPhase = () => {
-    const activeNames: string[] = []
-    const usedNames = new Set<string>()
-
-    for (const name of playerNames) {
-      const trimmed = name.trim()
-      if (!trimmed) continue
-
-      if (usedNames.has(trimmed.toUpperCase())) {
-        alert(`O nome "${trimmed}" ja esta em uso!`)
-        return
-      }
-
-      usedNames.add(trimmed.toUpperCase())
-      activeNames.push(trimmed.toUpperCase())
-    }
-
-    if (activeNames.length < 2) {
-      alert('Minimo de 2 jogadores para iniciar.')
-      return
-    }
-
-    const newPlayers: Player[] = activeNames.map((name, idx) => ({
-      id: idx,
-      name
-    }))
-
-    setPlayers(newPlayers)
-
-    const ids = newPlayers.map((player) => player.id)
-    const targets = buildDerangement(ids)
-
-    const generatedAssignments: Assignment[] = ids.map((writerId, idx) => ({
-      writerId,
-      targetId: targets[idx],
-      character: ''
-    }))
-
-    setAssignments(generatedAssignments)
-    setWritingOrder(shuffleArray(ids))
-    setWritingStep(0)
-    setCurrentCharacterInput('')
-    setGuessOrder([])
-    setGuessStep(0)
-    setResults([])
-    setLastRoundResult(null)
-    setIsScreenMasked(false)
-    setPhase('writing-pass')
-  }
-
-  const showWritingTarget = () => {
-    setPhase('writing-reveal')
-  }
-
-  const confirmCharacter = () => {
-    const value = currentCharacterInput.trim()
-    if (!value || !currentWriter) {
-      alert('Digite um personagem para continuar.')
-      return
-    }
-
-    setAssignments((prev) =>
-      prev.map((item) =>
-        item.writerId === currentWriter.id
-          ? { ...item, character: value.toUpperCase() }
-          : item
-      )
-    )
-
-    if (writingStep < writingOrder.length - 1) {
-      setWritingStep((prev) => prev + 1)
-      setCurrentCharacterInput('')
-      setPhase('writing-pass')
-      return
-    }
-
-    const randomGuessOrder = shuffleArray(players.map((player) => player.id))
-    setGuessOrder(randomGuessOrder)
-    setGuessStep(0)
-    setCurrentCharacterInput('')
-    setPhase('round-intro')
-  }
-
-  const startRoundCountdown = () => {
-    setCountdown(3)
-    setIsScreenMasked(false)
-    setPhase('countdown')
-  }
-
-  const finishRound = (status: 'acertou' | 'desistiu') => {
-    if (!currentGuesser || !currentAssignment) return
-
-    const roundResult: RoundResult = {
-      playerId: currentGuesser.id,
-      status,
-      timeUsed: timeLeft,
-      character: currentAssignment.character
-    }
-
-    setResults((prev) => [...prev, roundResult])
-    setLastRoundResult(roundResult)
-    setPendingAction(null)
-    setResumeCountdown(null)
-    setIsScreenMasked(false)
-    setPhase('round-result')
-  }
-
-  const nextRoundOrFinal = () => {
-    const isLast = guessStep >= guessOrder.length - 1
-    if (isLast) {
-      setPhase('final-results')
-      return
-    }
-
-    setGuessStep((prev) => prev + 1)
-    setTimeLeft(0)
-    setPendingAction(null)
-    setResumeCountdown(null)
-    setIsScreenMasked(false)
-    setPhase('round-intro')
-  }
-
-  const resetGame = () => {
-    setPhase('setup')
-    setPlayers([])
-    setAssignments([])
-    setWritingOrder([])
-    setWritingStep(0)
-    setCurrentCharacterInput('')
-    setGuessOrder([])
-    setGuessStep(0)
-    setCountdown(3)
-    setResumeCountdown(null)
-    setTimeLeft(0)
-    setPendingAction(null)
-    setIsScreenMasked(false)
-    setResults([])
-    setLastRoundResult(null)
-  }
-
-  const requestWakeLock = async () => {
-    try {
-      const wakeLockNavigator = navigator as unknown as WakeLockNavigator
-      if (wakeLockNavigator.wakeLock?.request) {
-        wakeLockRef.current = await wakeLockNavigator.wakeLock.request('screen')
-      }
-    } catch {
-      wakeLockRef.current = null
-    }
-
-    if (!wakeLockRef.current) {
-      if (!fallbackAudioRef.current) {
-        fallbackAudioRef.current = new Audio(SILENT_WAV)
-        fallbackAudioRef.current.loop = true
-        fallbackAudioRef.current.volume = 0.01
-      }
-
-      const keepPlaying = () => {
-        fallbackAudioRef.current?.play().catch(() => undefined)
-      }
-
-      keepPlaying()
-      fallbackTickRef.current = window.setInterval(keepPlaying, 15000)
-    }
-  }
-
-  const releaseWakeLock = async () => {
-    if (wakeLockRef.current) {
-      try {
-        await wakeLockRef.current.release()
-      } catch {
-        // noop
-      }
-      wakeLockRef.current = null
-    }
-
-    if (fallbackTickRef.current) {
-      window.clearInterval(fallbackTickRef.current)
-      fallbackTickRef.current = null
-    }
-
-    if (fallbackAudioRef.current) {
-      fallbackAudioRef.current.pause()
-      fallbackAudioRef.current.currentTime = 0
-    }
-  }
-
-  useEffect(() => {
-    if (phase === 'countdown') {
-      const interval = window.setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            window.clearInterval(interval)
-            setTimeLeft(0)
-            setPhase('guessing')
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
-
-      return () => window.clearInterval(interval)
-    }
-
-    return undefined
-  }, [phase])
-
-  useEffect(() => {
-    if (phase !== 'guessing') return undefined
-    if (pendingAction) return undefined
-    if (resumeCountdown !== null) return undefined
-
-    const interval = window.setInterval(() => {
-      setTimeLeft((prev) => prev + 1)
-    }, 1000)
-
-    return () => window.clearInterval(interval)
-  }, [phase, pendingAction, resumeCountdown])
-
-  useEffect(() => {
-    if (phase !== 'guessing') return undefined
-
-    requestWakeLock()
-
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible' && !wakeLockRef.current) {
-        requestWakeLock()
-      }
-    }
-
-    document.addEventListener('visibilitychange', handleVisibility)
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibility)
-      releaseWakeLock()
-    }
-  }, [phase])
-
-  useEffect(() => {
-    if (resumeCountdown === null) return undefined
-
-    const interval = window.setInterval(() => {
-      setResumeCountdown((prev) => {
-        if (prev === null) return null
-        if (prev <= 1) {
-          window.clearInterval(interval)
-          return null
-        }
-        return prev - 1
-      })
-    }, 1000)
-
-    return () => window.clearInterval(interval)
-  }, [resumeCountdown])
-
-  useEffect(() => {
-    if (phase === 'guessing' && pendingAction === null && resumeCountdown === null) {
-      setIsScreenMasked(false)
-    }
-  }, [phase, pendingAction, resumeCountdown])
+  const {
+    addPlayerSlot,
+    bestPlayers,
+    bestTime,
+    canStartWritingPhase,
+    confirmCharacter,
+    countdown,
+    currentAssignment,
+    currentCharacterInput,
+    currentGuesser,
+    currentTarget,
+    currentWriter,
+    finishRound,
+    guessOrder,
+    guessStep,
+    isScreenMasked,
+    lastRoundResult,
+    nextRoundOrFinal,
+    orderedResults,
+    pendingAction,
+    phase,
+    playerNames,
+    players,
+    removePlayerSlot,
+    resetGame,
+    resumeCountdown,
+    setCurrentCharacterInput,
+    setIsScreenMasked,
+    setPendingAction,
+    setResumeCountdown,
+    showWritingTarget,
+    startRoundCountdown,
+    startWritingPhase,
+    timeLeft,
+    updatePlayerName,
+    writingOrder,
+    writingStep
+  } = useQuemSouEuGame()
 
   return (
     <div className="playzenha-game playzenha-game-quem-sou-eu min-h-screen bg-dark-bg text-white font-sans overflow-hidden relative selection:bg-playzenha-yellow/60 selection:text-dark-bg">

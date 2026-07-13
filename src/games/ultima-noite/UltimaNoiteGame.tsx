@@ -1,32 +1,17 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   ArrowLeft, Users, Moon, Sun, Shield, Search, 
   AlertTriangle, Skull, MessageCircle, CheckCircle
 } from 'lucide-react'
 import GameButton from '../shared/components/GameButton'
+import { useUltimaNoiteGame } from './hooks/useUltimaNoiteGame'
 
 interface UltimaNoiteGameProps {
   onBackToHome: () => void
 }
 
 type Role = 'Lobo' | 'Anjo' | 'Detetive' | 'Cidadão' | 'Mediador'
-type Phase = 
-  | 'setup' 
-  | 'role-distribution-start'
-  | 'role-reveal'
-  | 'night-intro'
-  | 'night-angel' 
-  | 'night-wolf' 
-  | 'night-detective'
-  | 'morning' 
-  | 'discussion' 
-  | 'voting-start'
-  | 'voting'
-  | 'voting-suspense'
-  | 'voting-results'
-  | 'game-over'
-
 interface Player {
   id: number
   name: string
@@ -44,317 +29,41 @@ const ROLES_CONFIG = {
 }
 
 const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToHome }) => {
-  const [phase, setPhase] = useState<Phase>('setup')
-  const [players, setPlayers] = useState<Player[]>([])
-  const [playerNames, setPlayerNames] = useState<string[]>(['', '', '', '', '', '']) // Min 6
-  const [mediatorIndex, setMediatorIndex] = useState<number | null>(null)
-  const [currentPlayerIdx, setCurrentPlayerIdx] = useState(0)
-  
-  // Game State
-  const [wolfKill, setWolfKill] = useState<number | null>(null)
-  const [angelSave, setAngelSave] = useState<number | null>(null)
-  const [investigatedRole, setInvestigatedRole] = useState<Role | null>(null)
-  const [discussionTime, setDiscussionTime] = useState(120) // seconds
-  const [timeLeft, setTimeLeft] = useState(0)
-  const [winner, setWinner] = useState<'Lobos' | 'Cidadãos' | null>(null)
-  
-  const [selectedVote, setSelectedVote] = useState<number | null>(null)
-  const [showErrorModal, setShowErrorModal] = useState<string | null>(null)
-  const [showMediatorInfo, setShowMediatorInfo] = useState(false)
-  
-  // Settings
-  const [settings, setSettings] = useState({
-    wolvesCount: 1,
-    hasAngel: true,
-    hasDetective: true,
-    hasMediator: false
-  })
-
-  // Timer Effect
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval>
-    if (phase === 'discussion' && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft((prev) => prev - 1)
-      }, 1000)
-    }
-    return () => clearInterval(interval)
-  }, [phase, timeLeft])
-
-  // Show Mediator Tutorial on First Load (Setup Phase)
-  useEffect(() => {
-      if (phase === 'setup') {
-          // Small delay for better UX
-          const timer = setTimeout(() => setShowMediatorInfo(true), 500)
-          return () => clearTimeout(timer)
-      }
-  }, []) // Empty deps = run once on mount (which starts at setup)
-
-  // --- Setup Helpers ---
-
-  const updatePlayerName = (idx: number, val: string) => {
-    const newNames = [...playerNames]
-    newNames[idx] = val
-    setPlayerNames(newNames)
-  }
-
-  const addPlayerSlot = () => {
-    if (playerNames.length < 16) setPlayerNames([...playerNames, ''])
-  }
-
-  const removePlayerSlot = (idx: number) => {
-    if (playerNames.length > 6) {
-        setPlayerNames(playerNames.filter((_, i) => i !== idx))
-        if (mediatorIndex === idx) setMediatorIndex(null)
-        if (mediatorIndex && mediatorIndex > idx) setMediatorIndex(mediatorIndex - 1)
-    } else {
-        updatePlayerName(idx, '')
-        if (mediatorIndex === idx) setMediatorIndex(null)
-    }
-  }
-
-  const startGameSetup = () => {
-    // 1. Gather Active Players & Mediator
-    const activePlayers: Player[] = []
-    let assignedMediator: Player | undefined = undefined
-    
-    let validCount = 0
-    const usedNames = new Set<string>()
-
-    for (let i = 0; i < playerNames.length; i++) {
-        const rawName = playerNames[i].trim()
-        if (!rawName) continue
-
-        const upperName = rawName.toUpperCase()
-        if (usedNames.has(upperName)) {
-            setShowErrorModal(`O nome "${rawName}" já está em uso!`)
-            return
-        }
-        usedNames.add(upperName)
-        validCount++
-
-        const newPlayer: Player = {
-            id: 0, // Will assign proper ID later
-            name: upperName,
-            role: 'Cidadão', // Placeholder
-            isAlive: true,
-            votes: 0
-        }
-
-        if (i === mediatorIndex) {
-            newPlayer.role = 'Mediador'
-            assignedMediator = newPlayer
-        } else {
-            activePlayers.push(newPlayer)
-        }
-    }
-
-    if (!assignedMediator) {
-        setShowErrorModal("É obrigatório escolher um MEDIADOR antes de iniciar!")
-        // Optional: show mediator info automatically if they forget
-        setTimeout(() => setShowMediatorInfo(true), 1500) 
-        return
-    }
-
-    if (validCount < 6) {
-        setShowErrorModal("É necessário no mínimo 6 participantes (incluindo o mediador).")
-        return
-    }
-
-    // Update settings based on mediator existence
-    if (assignedMediator) {
-        setSettings(s => ({ ...s, hasMediator: true }))
-    } else {
-        setSettings(s => ({ ...s, hasMediator: false }))
-    }
-
-    // Assign IDs to active players consistently
-    activePlayers.forEach((p, idx) => p.id = idx)
-
-    // Assign Roles Logic for ACTIVE players only
-    let availableRoles: Role[] = Array(settings.wolvesCount).fill('Lobo')
-    if (settings.hasAngel) availableRoles.push('Anjo')
-    if (settings.hasDetective) availableRoles.push('Detetive')
-    
-    const remainingSlots = activePlayers.length - availableRoles.length
-    if (remainingSlots < 0) {
-        setShowErrorModal("Muitas funções especiais para poucos jogadores! Reduza os papéis.")
-        return
-    }
-    availableRoles = [...availableRoles, ...Array(remainingSlots).fill('Cidadão')]
-    
-    // Shuffle Roles
-    availableRoles = availableRoles.sort(() => Math.random() - 0.5)
-    
-    // Assign roles
-    activePlayers.forEach((p, i) => p.role = availableRoles[i])
-
-    // Shuffle Players Order (for gameplay sequence)
-    const shuffledActivePlayers = activePlayers.sort(() => Math.random() - 0.5)
-    
-    setPlayers(shuffledActivePlayers)
-    setPhase('role-distribution-start')
-    setCurrentPlayerIdx(0)
-  }
-
-  // --- Interaction Handlers ---
-
-  const handleNextRoleReveal = () => {
-    if (currentPlayerIdx < players.length - 1) {
-      setCurrentPlayerIdx(prev => prev + 1)
-      setPhase('role-distribution-start')
-    } else {
-      setPhase('night-intro')
-      setTimeout(() => startNightPhase(), 4000)
-    }
-  }
-
-  const startNightPhase = () => {
-    setWolfKill(null)
-    setAngelSave(null)
-    setInvestigatedRole(null)
-    
-    if (settings.hasAngel) setPhase('night-angel')
-    else setPhase('night-wolf')
-  }
-
-  const handleNightAction = (targetId: number | null) => {
-    if (phase === 'night-angel') {
-      setAngelSave(targetId)
-      setPhase('night-wolf')
-    } else if (phase === 'night-wolf') {
-      setWolfKill(targetId)
-      if (settings.hasDetective) {
-          setPhase('night-detective')
-      } else {
-          finishNight(targetId)
-      }
-    } else if (phase === 'night-detective') {
-        if (targetId !== null) {
-            const target = players.find(p => p.id === targetId)
-            setInvestigatedRole(target?.role || 'Cidadão')
-            // Pause to show result
-            setTimeout(() => {
-                setInvestigatedRole(null) // Clear for next time
-                finishNight()
-            }, 3000)
-        } else {
-            finishNight()
-        }
-    }
-  }
-
-  const finishNight = (overrideWolfKill?: number | null) => {
-    // Calculate deaths
-    // If angel save == wolf kill -> no death
-    // Else -> wolf kill dies
-    const effectiveKill = overrideWolfKill !== undefined ? overrideWolfKill : wolfKill
-    let victimId = effectiveKill
-    if (angelSave === effectiveKill) victimId = null
-
-    if (victimId !== null) {
-        setPlayers(prev => prev.map(p => p.id === victimId ? { ...p, isAlive: false } : p))
-    }
-
-    setPhase('morning')
-  }
-
-  const startDiscussion = () => {
-    setTimeLeft(discussionTime)
-    setPhase('discussion')
-  }
-
-  const startVoting = () => {
-    // Reset votes
-    setPlayers(prev => prev.map(p => ({ ...p, votes: 0 })))
-    setSelectedVote(null) // Reset selection
-    // Only living players vote
-    // Find first living player index
-     const firstAliveIdx = players.findIndex(p => p.isAlive)
-    if (firstAliveIdx !== -1) {
-        setCurrentPlayerIdx(firstAliveIdx)
-        setPhase('voting')
-    } else {
-        // Should not happen unless game over logic failed earlier
-        handleNextRoundOrEnd()
-    }
-  }
-
-  const handleVoteSelection = (targetId: number) => {
-    if (targetId !== -1) {
-        const target = players.find(p => p.id === targetId)
-        if (!target?.isAlive) return
-    }
-    setSelectedVote(targetId)
-  }
-
-  const submitVote = () => {
-    if (selectedVote === null) return
-
-    // Calculate updated state immediately to ensure correct flow
-    const updatedPlayers = players.map(p => p.id === selectedVote ? { ...p, votes: p.votes + 1 } : p)
-    setPlayers(updatedPlayers)
-    setSelectedVote(null) // Reset for next
-    
-    // Find next living voter
-    let nextIdx = currentPlayerIdx + 1
-    while (nextIdx < players.length && !players[nextIdx].isAlive) {
-        nextIdx++
-    }
-
-    if (nextIdx < players.length) {
-        setCurrentPlayerIdx(nextIdx)
-    } else {
-        // All votes cast
-        setPhase('voting-suspense')
-        setTimeout(() => {
-            finishVoting(updatedPlayers)
-        }, 1500)
-    }
-  }
-
-  const finishVoting = (finalPlayers: Player[]) => {
-    // Determine elimination using the passed state (crucial for accurate tally)
-    const sorted = [...finalPlayers].filter(p => p.isAlive).sort((a,b) => b.votes - a.votes)
-    const mostVoted = sorted[0]
-    
-    // Check for tie
-    const isTie = sorted.length > 1 && sorted[0].votes === sorted[1].votes
-    
-    if (!isTie && mostVoted) {
-        // Eliminate
-        const resolvedPlayers = finalPlayers.map(p => p.id === mostVoted.id ? { ...p, isAlive: false } : p)
-        setPlayers(resolvedPlayers)
-        
-        const possibleWinner = getWinner(resolvedPlayers)
-        if (possibleWinner) setWinner(possibleWinner)
-    } else {
-        const possibleWinner = getWinner(finalPlayers)
-        if (possibleWinner) setWinner(possibleWinner)
-    }
-    
-    setPhase('voting-results')
-  }
-
-  const getWinner = (currentPlayers: Player[] = players) => {
-    const liveWolves = currentPlayers.filter(p => p.isAlive && p.role === 'Lobo').length
-    const liveGood = currentPlayers.filter(p => p.isAlive && p.role !== 'Lobo').length
-    
-    if (liveWolves === 0) return 'Cidadãos'
-    if (liveWolves >= liveGood) return 'Lobos'
-    return null
-  }
-
-  const handleNextRoundOrEnd = () => {
-      const winner = getWinner()
-      if (winner) {
-          setWinner(winner)
-          setPhase('game-over')
-      } else {
-          setPhase('night-intro')
-          setTimeout(() => startNightPhase(), 3000)
-      }
-  }
+  const {
+    addPlayerSlot,
+    angelSave,
+    currentPlayerIdx,
+    discussionTime,
+    getWinner,
+    handleNextRoleReveal,
+    handleNextRoundOrEnd,
+    handleNightAction,
+    handleVoteSelection,
+    investigatedRole,
+    mediatorIndex,
+    phase,
+    playerNames,
+    players,
+    removePlayerSlot,
+    selectedVote,
+    setDiscussionTime,
+    setMediatorIndex,
+    setPhase,
+    setSettings,
+    setShowErrorModal,
+    setShowMediatorInfo,
+    settings,
+    showErrorModal,
+    showMediatorInfo,
+    startDiscussion,
+    startGameSetup,
+    startVoting,
+    submitVote,
+    timeLeft,
+    updatePlayerName,
+    winner,
+    wolfKill
+  } = useUltimaNoiteGame()
 
   // --- Renders ---
 
