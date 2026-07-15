@@ -12,3 +12,5 @@ export type {
   PlanCode,
   SubscriptionPlan
 } from './domain'
+export { listSubscriptionPlans } from './subscriptions.api'
+export { useSubscriptionPlans } from './use-subscription-plans'

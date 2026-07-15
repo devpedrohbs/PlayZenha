@@ -1,4 +1,5 @@
-export { GAMES_CATALOG } from './games.data'
+export { listGames, mapGameResponse } from './games.api'
+export { useGamesCatalog } from './use-games-catalog'
 export { GAME_CATALOG_FILTERS, GAME_DIFFICULTY_LABELS, GAME_PLAN_LABELS, GAME_ROUTE_PREFIX, GAME_STATUS_LABELS, GAMES_PAGE_FILTERS } from './games.constants'
 export {
   filterGamesCatalog,

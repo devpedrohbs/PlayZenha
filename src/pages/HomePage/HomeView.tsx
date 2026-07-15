@@ -17,7 +17,10 @@ const HomeView: React.FC = () => {
   const {
     activeFilter,
     filteredGames,
+    gamesError,
+    gamesLoading,
     menuOpen,
+    reloadGames,
     selectedGame,
     setActiveFilter,
     setMenuOpen,
@@ -42,10 +45,13 @@ const HomeView: React.FC = () => {
           <FeaturedGamesSection
             activeFilter={activeFilter}
             filteredGames={filteredGames}
+            error={gamesError}
+            isLoading={gamesLoading}
             selectedGame={selectedGame}
             onFilterChange={setActiveFilter}
             onGameSelect={selectGame}
             onGameNavigate={navigate}
+            onRetry={reloadGames}
           />
           <UseCasesSection />
           <BenefitsSection />

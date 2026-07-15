@@ -24,6 +24,11 @@ docker info >nul 2>&1 || (
 echo [2/6] Instalando dependencias do frontend...
 call npm.cmd ci || exit /b 1
 
+if not exist .env (
+  echo Criando .env a partir de .env.example...
+  copy /Y .env.example .env >nul || exit /b 1
+)
+
 echo [3/6] Instalando dependencias do backend...
 pushd backend
 call npm.cmd ci || (
