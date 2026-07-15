@@ -1,4 +1,4 @@
-import { CONTATO_PLAYER_COUNT, CONTATO_WORD_BANK } from './contato.constants'
+import { CONTATO_PLAYER_COUNT } from './contato.constants'
 import type { ContatoPlayer, ContatoRoundSetup } from './contato.types'
 import { createId } from '../../../shared/utils/id'
 
@@ -29,8 +29,8 @@ export const validateContatoPlayerNames = (playerNames: string[]): string | null
   return null
 }
 
-export const pickContatoWord = (lastWord = ''): string => {
-  const options = CONTATO_WORD_BANK.filter((word) => word !== lastWord)
+export const pickContatoWord = (wordBank: string[], lastWord = ''): string => {
+  const options = wordBank.filter((word) => word !== lastWord)
   return options[Math.floor(Math.random() * options.length)]
 }
 
@@ -47,10 +47,11 @@ export const createContatoRound = (
   players: ContatoPlayer[],
   round: number,
   lastWord: string,
+  wordBank: string[],
   forcedJudgeId?: string
 ): ContatoRoundSetup => ({
   judgeId: typeof forcedJudgeId === 'string' ? forcedJudgeId : pickContatoJudge(players) ?? '',
-  word: pickContatoWord(lastWord),
+  word: pickContatoWord(wordBank, lastWord),
   round
 })
 

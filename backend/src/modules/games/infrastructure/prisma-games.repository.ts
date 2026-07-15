@@ -20,6 +20,10 @@ export class PrismaGamesRepository implements GamesRepository {
 
   async findAll(): Promise<readonly Game[]> {
     const games = await this.prisma.game.findMany({
+      where: {
+        publishedAt: { not: null },
+        status: { in: ['available', 'comingSoon'] },
+      },
       orderBy: [{ featured: 'desc' }, { name: 'asc' }],
     });
 
@@ -27,7 +31,13 @@ export class PrismaGamesRepository implements GamesRepository {
   }
 
   async findBySlug(slug: string): Promise<Game | null> {
-    const game = await this.prisma.game.findUnique({ where: { slug } });
+    const game = await this.prisma.game.findFirst({
+      where: {
+        slug,
+        publishedAt: { not: null },
+        status: { in: ['available', 'comingSoon'] },
+      },
+    });
     return game ? mapGame(game) : null;
   }
 }

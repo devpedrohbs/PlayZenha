@@ -1,7 +1,6 @@
 import {
   IMPOSTOR_MAX_PLAYERS,
-  IMPOSTOR_MIN_PLAYERS,
-  IMPOSTOR_THEMES
+  IMPOSTOR_MIN_PLAYERS
 } from './impostor.constants'
 import { shuffle } from '../../../shared/utils/shuffle'
 import { createId } from '../../../shared/utils/id'
@@ -59,7 +58,8 @@ export const createImpostorRound = ({
   playerNames,
   themeIndex,
   impostorIndex,
-  revealOrder
+  revealOrder,
+  themes
 }: CreateImpostorRoundInput): CreateImpostorRoundResult => {
   const activeNames = getFilledImpostorPlayerNames(playerNames)
   const players = createImpostorPlayers(activeNames, impostorIndex)
@@ -67,7 +67,7 @@ export const createImpostorRound = ({
   return {
     players,
     revealOrder: createRevealOrder(players, revealOrder),
-    theme: IMPOSTOR_THEMES[themeIndex]
+    theme: themes[themeIndex]
   }
 }
 

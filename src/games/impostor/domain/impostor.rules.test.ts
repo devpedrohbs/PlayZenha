@@ -5,6 +5,8 @@ import {
   validateImpostorPlayerNames
 } from './impostor.rules'
 
+const TEST_THEMES = ['Tema de teste']
+
 describe('impostor rules', () => {
   it('rejects fewer than three players', () => {
     expect(validateImpostorPlayerNames(['Ana', 'Bia'])).toContain('Minimo de 3')
@@ -30,6 +32,7 @@ describe('impostor rules', () => {
       playerNames,
       themeIndex: 0,
       impostorIndex: 2,
+      themes: TEST_THEMES,
       revealOrder: []
     })
 
@@ -44,6 +47,7 @@ describe('impostor rules', () => {
       playerNames: ['Ana', 'Bia', 'Caio'],
       themeIndex: 0,
       impostorIndex: 1,
+      themes: TEST_THEMES,
       revealOrder: []
     })
 
@@ -56,6 +60,7 @@ describe('impostor rules', () => {
       playerNames: ['Ana', 'Bia', 'Caio'],
       themeIndex: 0,
       impostorIndex: 1,
+      themes: TEST_THEMES,
       revealOrder: []
     })
     const impostor = round.players.find((player) => player.role === 'Impostor')
@@ -68,6 +73,7 @@ describe('impostor rules', () => {
       playerNames: ['Ana', 'Bia', 'Caio'],
       themeIndex: 0,
       impostorIndex: 1,
+      themes: TEST_THEMES,
       revealOrder: []
     })
     const citizen = round.players.find((player) => player.role === 'Cidadao')

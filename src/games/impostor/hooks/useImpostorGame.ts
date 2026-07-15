@@ -2,7 +2,6 @@ import { useCallback, useMemo, useReducer } from 'react'
 import {
   IMPOSTOR_DISCUSSION_STEP,
   IMPOSTOR_PHASE_LABEL,
-  IMPOSTOR_THEMES,
   INITIAL_IMPOSTOR_STATE
 } from '../domain/impostor.constants'
 import { impostorReducer } from '../domain/impostor.reducer'
@@ -20,7 +19,7 @@ import { useGameTimer } from './useGameTimer'
 
 const getRandomIndex = (length: number) => Math.floor(Math.random() * length)
 
-export const useImpostorGame = () => {
+export const useImpostorGame = (themes: string[]) => {
   const [state, dispatch] = useReducer(impostorReducer, INITIAL_IMPOSTOR_STATE)
 
   const currentPlayerForReveal = useMemo(
@@ -65,7 +64,8 @@ export const useImpostorGame = () => {
     const round = createImpostorRound({
       playerNames: state.playerNames,
       impostorIndex: getRandomIndex(activeNames.length),
-      themeIndex: getRandomIndex(IMPOSTOR_THEMES.length),
+      themeIndex: getRandomIndex(themes.length),
+      themes,
       revealOrder: []
     })
 

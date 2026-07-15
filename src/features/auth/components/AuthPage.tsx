@@ -1,79 +1,155 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { ApiError } from '../../../shared/api/api-error'
 import { Button, FormField, Input, Toast } from '../../../shared/components/ui'
+import { useAuth } from '../model/auth-context'
 
 interface LoginPageProps {
   initialMode?: AuthMode
 }
 
-type AuthMode = 'login' | 'signup'
+type AuthMode = 'login' | 'signup' | 'recover'
+type RecoveryStage = 'request' | 'reset'
 
 interface AuthForm {
-  name: string
+  nickname: string
   email: string
   password: string
-  remember: boolean
+  resetToken: string
 }
 
 const INITIAL_FORM: AuthForm = {
-  name: '',
+  nickname: '',
   email: '',
   password: '',
-  remember: true
+  resetToken: ''
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ initialMode = 'signup' }) => {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const {
+    login,
+    register,
+    requestPasswordReset,
+    resetPassword,
+    status
+  } = useAuth()
   const [mode, setMode] = useState<AuthMode>(initialMode)
+  const [recoveryStage, setRecoveryStage] =
+    useState<RecoveryStage>('request')
   const [form, setForm] = useState<AuthForm>(INITIAL_FORM)
   const [showPassword, setShowPassword] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [toast, setToast] = useState('')
 
   const isCreate = mode === 'signup'
-  const title = isCreate ? 'Crie sua conta' : 'Entre na resenha'
-  const subtitle = isCreate
-    ? 'Salve seus grupos, favoritos e jogos para comecar mais rapido no proximo role.'
-    : 'Acesse seus jogos, planos e grupos salvos para chamar a galera sem enrolacao.'
-  const cta = isCreate ? 'Criar conta e jogar' : 'Entrar e comecar'
+  const isRecover = mode === 'recover'
+  const title = getTitle(mode, recoveryStage)
+  const subtitle = getSubtitle(mode, recoveryStage)
+  const cta = getCta(mode, recoveryStage)
+  const redirectPath = getRedirectPath(location.state)
 
   useEffect(() => {
     setMode(initialMode)
+    setRecoveryStage('request')
     setError('')
     setShowPassword(false)
   }, [initialMode])
 
+  useEffect(() => {
+    if (status === 'authenticated') {
+      navigate(redirectPath, { replace: true })
+    }
+  }, [navigate, redirectPath, status])
+
   const canSubmit = useMemo(() => {
     const emailOk = /.+@.+\..+/.test(form.email.trim())
-    const passwordOk = form.password.trim().length >= 6
-    const nameOk = !isCreate || form.name.trim().length >= 2
-    return emailOk && passwordOk && nameOk
-  }, [form, isCreate])
+    const passwordOk = form.password.trim().length >= 8
+    const nicknameOk = !isCreate || form.nickname.trim().length >= 2
+    const resetTokenOk =
+      !isRecover || recoveryStage === 'request' || form.resetToken.trim()
+
+    if (isRecover && recoveryStage === 'request') return emailOk
+
+    return emailOk && passwordOk && nicknameOk && Boolean(resetTokenOk)
+  }, [form, isCreate, isRecover, recoveryStage])
 
   useEffect(() => {
     if (!toast) return undefined
-    const id = window.setTimeout(() => setToast(''), 2400)
+    const id = window.setTimeout(() => setToast(''), 3200)
     return () => window.clearTimeout(id)
   }, [toast])
 
-  const updateField = <Field extends keyof AuthForm>(field: Field, value: AuthForm[Field]) => {
+  const updateField = <Field extends keyof AuthForm>(
+    field: Field,
+    value: AuthForm[Field]
+  ) => {
     setForm((current) => ({ ...current, [field]: value }))
     setError('')
   }
 
   const switchMode = (nextMode: AuthMode) => {
     setMode(nextMode)
+    setRecoveryStage('request')
     setError('')
     setShowPassword(false)
   }
 
-  const submit = (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent) => {
     event.preventDefault()
+
     if (!canSubmit) {
-      setError(isCreate ? 'Preencha nome, e-mail valido e senha com 6+ caracteres.' : 'Use um e-mail valido e uma senha com 6+ caracteres.')
+      setError(getValidationMessage(mode, recoveryStage))
       return
     }
-    setToast(isCreate ? 'Conta pronta. Bora comecar a resenha.' : 'Login aprovado. Seus jogos estao prontos.')
+
+    setIsSubmitting(true)
+    setError('')
+
+    try {
+      if (mode === 'signup') {
+        await register({
+          nickname: form.nickname,
+          email: form.email,
+          password: form.password
+        })
+        setToast('Conta criada. Bora jogar.')
+        return
+      }
+
+      if (mode === 'login') {
+        await login({ email: form.email, password: form.password })
+        setToast('Login aprovado. Seus jogos estao prontos.')
+        return
+      }
+
+      if (recoveryStage === 'request') {
+        const response = await requestPasswordReset(form.email)
+        if (response.resetToken) {
+          updateField('resetToken', response.resetToken)
+          setToast('Token gerado para ambiente local.')
+        } else {
+          setToast(response.message)
+        }
+        setRecoveryStage('reset')
+        return
+      }
+
+      await resetPassword({
+        token: form.resetToken,
+        password: form.password
+      })
+      setToast('Senha atualizada. Entre com sua nova senha.')
+      setForm((current) => ({ ...current, password: '', resetToken: '' }))
+      switchMode('login')
+    } catch (caughtError) {
+      setError(getAuthErrorMessage(caughtError))
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -113,14 +189,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ initialMode = 'signup' }) => {
 
             <AnimatePresence mode="wait">
               <motion.div
-                key={mode}
+                key={`${mode}-${recoveryStage}`}
                 initial={{ opacity: 0, x: isCreate ? 16 : -16 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: isCreate ? -16 : 16 }}
                 transition={{ duration: 0.18 }}
               >
                 <div className="auth-page-form-head">
-                  <p className="auth-page-small-label">{isCreate ? 'Novo por aqui' : 'Bem-vindo de volta'}</p>
+                  <p className="auth-page-small-label">{getSmallLabel(mode, recoveryStage)}</p>
                   <h2>{title}</h2>
                   <p>{subtitle}</p>
                 </div>
@@ -129,38 +205,51 @@ const LoginPage: React.FC<LoginPageProps> = ({ initialMode = 'signup' }) => {
                   {isCreate && (
                     <AuthField
                       label="Nome ou apelido"
-                      value={form.name}
+                      value={form.nickname}
                       placeholder="Como a galera te chama?"
-                      onChange={(value) => updateField('name', value)}
+                      onChange={(value) => updateField('nickname', value)}
                     />
                   )}
                   <AuthField label="E-mail" type="email" value={form.email} placeholder="voce@email.com" onChange={(value) => updateField('email', value)} />
-                  <AuthField
-                    label="Senha"
-                    type="password"
-                    value={form.password}
-                    placeholder="Minimo 6 caracteres"
-                    passwordVisible={showPassword}
-                    onTogglePassword={() => setShowPassword((value) => !value)}
-                    onChange={(value) => updateField('password', value)}
-                  />
+                  {(!isRecover || recoveryStage === 'reset') && (
+                    <AuthField
+                      label={isRecover ? 'Nova senha' : 'Senha'}
+                      type="password"
+                      value={form.password}
+                      placeholder="Minimo 8 caracteres"
+                      passwordVisible={showPassword}
+                      onTogglePassword={() => setShowPassword((value) => !value)}
+                      onChange={(value) => updateField('password', value)}
+                    />
+                  )}
+                  {isRecover && recoveryStage === 'reset' && (
+                    <AuthField
+                      label="Token de recuperacao"
+                      value={form.resetToken}
+                      placeholder="Cole o token recebido"
+                      onChange={(value) => updateField('resetToken', value)}
+                    />
+                  )}
 
-                  <div className="auth-page-inline-row">
-                    <label className="auth-page-checkbox">
-                      <input type="checkbox" checked={form.remember} onChange={(event) => updateField('remember', event.target.checked)} />
-                      <span>Manter conectado</span>
-                    </label>
-                    {!isCreate && <a className="auth-page-text-link" href="#recuperar">Esqueci a senha</a>}
-                  </div>
+                  {!isRecover && !isCreate && (
+                    <div className="auth-page-inline-row">
+                      <button className="auth-page-text-link" type="button" onClick={() => switchMode('recover')}>
+                        Esqueci a senha
+                      </button>
+                    </div>
+                  )}
+                  {isRecover && (
+                    <div className="auth-page-inline-row">
+                      <button className="auth-page-text-link" type="button" onClick={() => switchMode('login')}>
+                        Voltar para login
+                      </button>
+                    </div>
+                  )}
 
                   <p className="auth-page-error" role="alert">{error}</p>
-                  <Button className="auth-page-button" type="submit" disabled={!canSubmit} fullWidth>{cta}</Button>
-
-                  <div className="auth-page-divider">ou continue com</div>
-                  <div className="auth-page-social-row">
-                    <Button className="auth-page-social-button" type="button" variant="ghost" onClick={() => setToast('Google conectado para teste visual.')}>Google</Button>
-                    <Button className="auth-page-social-button" type="button" variant="ghost" onClick={() => setToast('Apple conectado para teste visual.')}>Apple</Button>
-                  </div>
+                  <Button className="auth-page-button" type="submit" disabled={!canSubmit || isSubmitting} fullWidth>
+                    {isSubmitting ? 'Enviando...' : cta}
+                  </Button>
                 </form>
               </motion.div>
             </AnimatePresence>
@@ -189,7 +278,15 @@ interface AuthFieldProps {
   onTogglePassword?: () => void
 }
 
-const AuthField: React.FC<AuthFieldProps> = ({ label, type = 'text', value, placeholder, onChange, passwordVisible, onTogglePassword }) => {
+const AuthField: React.FC<AuthFieldProps> = ({
+  label,
+  type = 'text',
+  value,
+  placeholder,
+  onChange,
+  passwordVisible,
+  onTogglePassword
+}) => {
   const fieldType = type === 'password' && passwordVisible ? 'text' : type
   const fieldId = `auth-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
 
@@ -222,5 +319,91 @@ const BrandMark: React.FC = () => (
     </svg>
   </span>
 )
+
+function getTitle(mode: AuthMode, recoveryStage: RecoveryStage): string {
+  if (mode === 'recover') {
+    return recoveryStage === 'request' ? 'Recupere sua senha' : 'Crie uma nova senha'
+  }
+
+  return mode === 'signup' ? 'Crie sua conta' : 'Entre na resenha'
+}
+
+function getSubtitle(mode: AuthMode, recoveryStage: RecoveryStage): string {
+  if (mode === 'recover') {
+    return recoveryStage === 'request'
+      ? 'Informe seu e-mail para receber um token de recuperacao.'
+      : 'Use o token recebido e escolha uma senha nova.'
+  }
+
+  return mode === 'signup'
+    ? 'Salve seus grupos, favoritos e jogos para comecar mais rapido no proximo role.'
+    : 'Acesse seus jogos, planos e grupos salvos para chamar a galera sem enrolacao.'
+}
+
+function getCta(mode: AuthMode, recoveryStage: RecoveryStage): string {
+  if (mode === 'recover') {
+    return recoveryStage === 'request' ? 'Enviar recuperacao' : 'Atualizar senha'
+  }
+
+  return mode === 'signup' ? 'Criar conta e jogar' : 'Entrar e comecar'
+}
+
+function getSmallLabel(mode: AuthMode, recoveryStage: RecoveryStage): string {
+  if (mode === 'recover') {
+    return recoveryStage === 'request' ? 'Esqueceu a senha' : 'Nova senha'
+  }
+
+  return mode === 'signup' ? 'Novo por aqui' : 'Bem-vindo de volta'
+}
+
+function getValidationMessage(
+  mode: AuthMode,
+  recoveryStage: RecoveryStage
+): string {
+  if (mode === 'recover' && recoveryStage === 'request') {
+    return 'Use um e-mail valido para recuperar a senha.'
+  }
+
+  if (mode === 'recover') {
+    return 'Informe token e uma nova senha com 8+ caracteres.'
+  }
+
+  return mode === 'signup'
+    ? 'Preencha nome, e-mail valido e senha com 8+ caracteres.'
+    : 'Use um e-mail valido e uma senha com 8+ caracteres.'
+}
+
+function getAuthErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.code === 'EMAIL_ALREADY_EXISTS') {
+      return 'Este e-mail ja esta cadastrado. Tente entrar.'
+    }
+
+    if (error.code === 'INVALID_CREDENTIALS') {
+      return 'E-mail ou senha invalidos.'
+    }
+
+    if (error.code === 'INVALID_PASSWORD_RESET_TOKEN') {
+      return 'Token de recuperacao invalido ou expirado.'
+    }
+
+    return error.message
+  }
+
+  return 'Nao foi possivel concluir agora. Tente novamente.'
+}
+
+function getRedirectPath(state: unknown): string {
+  if (
+    typeof state === 'object' &&
+    state !== null &&
+    'from' in state &&
+    typeof state.from === 'string'
+  ) {
+    return state.from
+  }
+
+  return '/perfil'
+}
 
 export default LoginPage

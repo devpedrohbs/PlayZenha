@@ -1,5 +1,6 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, HttpCode, Param, Post, UseGuards } from '@nestjs/common';
 import {
+  ApiBearerAuth,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -8,11 +9,19 @@ import {
 
 import { GamesService } from './games.service.js';
 import { GameResponseDto } from './presentation/game-response.dto.js';
+import { StartGameResponseDto } from './presentation/start-game-response.dto.js';
+import { AccessTokenGuard } from '../auth/guards/access-token.guard.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import type { AuthenticatedUser } from '../auth/auth.types.js';
+import { GameAccessPolicyService } from '../authorization/game-access-policy.service.js';
 
 @ApiTags('games')
 @Controller('v1/games')
 export class GamesController {
-  constructor(private readonly gamesService: GamesService) {}
+  constructor(
+    private readonly gamesService: GamesService,
+    private readonly gameAccessPolicy: GameAccessPolicyService
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'List catalog games' })
@@ -27,5 +36,18 @@ export class GamesController {
   @ApiNotFoundResponse({ description: 'Game not found' })
   findBySlug(@Param('slug') slug: string): Promise<GameResponseDto> {
     return this.gamesService.findBySlug(slug);
+  }
+
+  @Post(':slug/start')
+  @HttpCode(200)
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Authorize and start one game' })
+  @ApiOkResponse({ type: StartGameResponseDto })
+  start(
+    @Param('slug') slug: string,
+    @CurrentUser() user: AuthenticatedUser
+  ): Promise<StartGameResponseDto> {
+    return this.gameAccessPolicy.authorize(user.sub, slug);
   }
 }

@@ -19,6 +19,7 @@ import { useContatoGame } from './hooks/useContatoGame'
 interface ContatoGameProps {
   onBackToHome: () => void
   onBackToGames: () => void
+  words: string[]
 }
 
 const formatElapsedTime = (seconds: number | null) => {
@@ -36,7 +37,7 @@ const formatElapsedTime = (seconds: number | null) => {
   return `${minutes}min ${remainingSeconds.toString().padStart(2, '0')}s`
 }
 
-const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToGames, onBackToHome }) => {
+const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToGames, onBackToHome, words }) => {
   const {
     canStartGame,
     currentWord,
@@ -60,7 +61,7 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToGames, onBackToHome }
     startRoundPlay,
     toggleRotateJudge,
     updatePlayerName
-  } = useContatoGame()
+  } = useContatoGame(words)
 
   return (
     <div className="playzenha-game playzenha-game-contato min-h-screen bg-dark-bg text-white font-sans overflow-hidden relative selection:bg-emerald-400/60 selection:text-white">

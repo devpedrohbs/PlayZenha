@@ -58,6 +58,40 @@ export class EnvironmentVariables {
 
   @IsIn(APPLICATION_LOG_LEVELS)
   LOG_LEVEL: ApplicationLogLevel = 'log'
+
+  @IsString()
+  @IsNotEmpty()
+  AUTH_JWT_SECRET = 'development-only-playzenha-auth-secret-change-me'
+
+  @IsString()
+  @IsNotEmpty()
+  AUTH_JWT_ISSUER = 'playzenha-api'
+
+  @IsString()
+  @IsNotEmpty()
+  AUTH_JWT_AUDIENCE = 'playzenha-web'
+
+  @IsString()
+  @IsNotEmpty()
+  AUTH_REFRESH_COOKIE_NAME = 'playzenha.refresh'
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(60)
+  @Max(86400)
+  AUTH_ACCESS_TOKEN_TTL_SECONDS = 900
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(3600)
+  @Max(60 * 60 * 24 * 90)
+  AUTH_REFRESH_TOKEN_TTL_SECONDS = 60 * 60 * 24 * 30
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(300)
+  @Max(60 * 60 * 24)
+  AUTH_PASSWORD_RESET_TTL_SECONDS = 60 * 60
 }
 
 export function validateEnvironment(
@@ -80,12 +114,29 @@ export function validateEnvironment(
   }
 
   validateCorsOrigins(validated.CORS_ORIGINS, messages)
+  validateAuthSecret(validated, messages)
 
   if (messages.length > 0) {
     throw new Error(`Invalid environment configuration:\n- ${messages.join('\n- ')}`)
   }
 
   return validated
+}
+
+function validateAuthSecret(
+  config: EnvironmentVariables,
+  messages: string[]
+): void {
+  if (config.AUTH_JWT_SECRET.length < 32) {
+    messages.push('AUTH_JWT_SECRET must contain at least 32 characters')
+  }
+
+  if (
+    config.NODE_ENV === NodeEnvironment.Production &&
+    config.AUTH_JWT_SECRET === 'development-only-playzenha-auth-secret-change-me'
+  ) {
+    messages.push('AUTH_JWT_SECRET must be changed in production')
+  }
 }
 
 function parseBoolean(value: unknown): unknown {

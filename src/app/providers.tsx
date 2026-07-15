@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { BrowserRouter } from 'react-router-dom'
+import { AuthProvider } from '../features/auth/model/auth-context'
 
 interface AppProvidersProps {
   children: ReactNode
@@ -7,7 +8,9 @@ interface AppProvidersProps {
 
 const AppProviders = ({ children }: AppProvidersProps) => (
   <BrowserRouter>
-    {children}
+    <AuthProvider>
+      {children}
+    </AuthProvider>
   </BrowserRouter>
 )
 
