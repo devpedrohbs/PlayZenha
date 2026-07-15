@@ -40,6 +40,14 @@ export class LoginRequestDto {
   password!: string;
 }
 
+export class GoogleLoginRequestDto {
+  @ApiProperty({ description: 'Google Identity Services ID token' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(8192)
+  credential!: string;
+}
+
 export class RefreshTokenRequestDto {
   @ApiProperty()
   @IsString()

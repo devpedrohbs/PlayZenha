@@ -24,6 +24,7 @@ interface AuthContextValue {
   status: AuthStatus
   user: AuthUser | null
   login: (input: LoginInput) => Promise<AuthUser>
+  loginWithGoogle: (credential: string) => Promise<AuthUser>
   register: (input: RegisterInput) => Promise<AuthUser>
   logout: () => Promise<void>
   requestPasswordReset: (
@@ -99,6 +100,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       status,
       user,
       login: async (input) => applySession(await authApi.login(input)),
+      loginWithGoogle: async (credential) =>
+        applySession(await authApi.loginWithGoogle({ credential })),
       register: async (input) => applySession(await authApi.register(input)),
       logout: async () => {
         clearSession()

@@ -11,8 +11,13 @@ function getApiUrl(): string {
   return apiUrl ?? ''
 }
 
+function getGoogleClientId(): string {
+  return import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() ?? ''
+}
+
 export const appEnv = {
   apiUrl: getApiUrl(),
+  googleClientId: getGoogleClientId(),
   mode: import.meta.env.MODE,
   isDev: import.meta.env.DEV,
   isProd: import.meta.env.PROD

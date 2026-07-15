@@ -92,6 +92,11 @@ export class EnvironmentVariables {
   @Min(300)
   @Max(60 * 60 * 24)
   AUTH_PASSWORD_RESET_TTL_SECONDS = 60 * 60
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  AUTH_GOOGLE_CLIENT_ID?: string
 }
 
 export function validateEnvironment(

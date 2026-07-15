@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { ApiError } from '../../../shared/api/api-error'
 import { Button, FormField, Input, Toast } from '../../../shared/components/ui'
 import { useAuth } from '../model/auth-context'
+import { GoogleSignInButton } from './GoogleSignInButton'
 
 interface LoginPageProps {
   initialMode?: AuthMode
@@ -31,6 +32,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ initialMode = 'signup' }) => {
   const location = useLocation()
   const {
     login,
+    loginWithGoogle,
     register,
     requestPasswordReset,
     resetPassword,
@@ -152,6 +154,24 @@ const LoginPage: React.FC<LoginPageProps> = ({ initialMode = 'signup' }) => {
     }
   }
 
+  const submitGoogleCredential = async (credential: string) => {
+    setIsSubmitting(true)
+    setError('')
+
+    try {
+      await loginWithGoogle(credential)
+      setToast(
+        isCreate
+          ? 'Conta Google conectada. Bora jogar.'
+          : 'Login com Google aprovado.'
+      )
+    } catch (caughtError) {
+      setError(getAuthErrorMessage(caughtError))
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <div className="auth-page">
       <div className="auth-page-shell">
@@ -200,6 +220,22 @@ const LoginPage: React.FC<LoginPageProps> = ({ initialMode = 'signup' }) => {
                   <h2>{title}</h2>
                   <p>{subtitle}</p>
                 </div>
+
+                {!isRecover && (
+                  <div className="auth-page-google-section">
+                    <GoogleSignInButton
+                      mode={isCreate ? 'signup' : 'login'}
+                      disabled={isSubmitting}
+                      onCredential={(credential) => {
+                        void submitGoogleCredential(credential)
+                      }}
+                      onError={setError}
+                    />
+                    <div className="auth-page-divider">
+                      <span>ou continue com e-mail</span>
+                    </div>
+                  </div>
+                )}
 
                 <form className="auth-page-form" onSubmit={submit}>
                   {isCreate && (
@@ -385,6 +421,22 @@ function getAuthErrorMessage(error: unknown): string {
 
     if (error.code === 'INVALID_PASSWORD_RESET_TOKEN') {
       return 'Token de recuperacao invalido ou expirado.'
+    }
+
+    if (error.code === 'INVALID_GOOGLE_CREDENTIAL') {
+      return 'Nao foi possivel validar sua conta Google. Tente novamente.'
+    }
+
+    if (error.code === 'GOOGLE_AUTH_NOT_CONFIGURED') {
+      return 'O login com Google ainda nao foi configurado.'
+    }
+
+    if (error.code === 'GOOGLE_ACCOUNT_LINK_REQUIRES_PASSWORD') {
+      return 'Entre primeiro com e-mail e senha para vincular esta conta Google.'
+    }
+
+    if (error.code === 'GOOGLE_ACCOUNT_ALREADY_LINKED') {
+      return 'Esta conta ja esta vinculada a outro login Google.'
     }
 
     return error.message

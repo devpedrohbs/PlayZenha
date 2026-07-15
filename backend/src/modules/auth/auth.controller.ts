@@ -34,6 +34,7 @@ import {
 } from './dto/auth-response.dto.js';
 import {
   LoginRequestDto,
+  GoogleLoginRequestDto,
   RegisterRequestDto,
   RequestPasswordResetDto,
   ResetPasswordDto,
@@ -72,6 +73,22 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response
   ): Promise<AuthResponseDto> {
     return this.finishSession(await this.authService.login(body), response);
+  }
+
+  @Post('auth/google')
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Authenticate with a Google ID token' })
+  @ApiOkResponse({ type: AuthResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Invalid Google credential' })
+  async loginWithGoogle(
+    @Body() body: GoogleLoginRequestDto,
+    @Res({ passthrough: true }) response: Response
+  ): Promise<AuthResponseDto> {
+    return this.finishSession(
+      await this.authService.loginWithGoogle(body.credential),
+      response
+    );
   }
 
   @Post('auth/refresh')

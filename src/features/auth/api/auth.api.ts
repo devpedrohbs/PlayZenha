@@ -3,6 +3,7 @@ import { API_ENDPOINTS } from '../../../shared/api/endpoints'
 import type {
   AuthResponse,
   AuthUser,
+  GoogleLoginInput,
   LoginInput,
   PasswordResetRequestResponse,
   RegisterInput,
@@ -20,6 +21,13 @@ export const authApi = {
   login(input: LoginInput): Promise<AuthResponse> {
     return apiClient.post<AuthResponse, LoginInput>(
       API_ENDPOINTS.auth.login,
+      input
+    )
+  },
+
+  loginWithGoogle(input: GoogleLoginInput): Promise<AuthResponse> {
+    return apiClient.post<AuthResponse, GoogleLoginInput>(
+      API_ENDPOINTS.auth.google,
       input
     )
   },

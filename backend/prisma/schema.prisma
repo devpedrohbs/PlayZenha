@@ -75,6 +75,10 @@ enum PrivilegedAuditAction {
   accessGrantRevoked
 }
 
+enum IdentityProvider {
+  google
+}
+
 model Game {
   id                     String         @id @default(uuid()) @db.Uuid
   slug                   String         @unique
@@ -102,15 +106,15 @@ model Game {
 }
 
 model SubscriptionPlan {
-  code            PlanCode        @id
+  code            PlanCode           @id
   name            String
   priceCents      Int
-  currency        Currency        @default(BRL)
+  currency        Currency           @default(BRL)
   billingInterval BillingInterval
   entitlements    Entitlement[]
-  active          Boolean         @default(true)
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  active          Boolean            @default(true)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
   subscriptions   UserSubscription[]
 }
 
@@ -118,33 +122,49 @@ model User {
   id                  String               @id @default(uuid()) @db.Uuid
   nickname            String
   email               String               @unique
-  passwordHash        String               
+  passwordHash        String?
   role                UserRole             @default(player)
   status              AccountStatus        @default(active)
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
   refreshTokens       RefreshToken[]
   passwordResetTokens PasswordResetToken[]
+  externalIdentities  ExternalIdentity[]
   subscription        UserSubscription?
-  accessGrants        AccessGrant[]         @relation("GrantRecipient")
-  grantsCreated       AccessGrant[]         @relation("GrantCreator")
-  grantsRevoked       AccessGrant[]         @relation("GrantRevoker")
-  auditEventsAsActor  PrivilegedAuditLog[]  @relation("AuditActor")
-  auditEventsAsTarget PrivilegedAuditLog[]  @relation("AuditTarget")
+  accessGrants        AccessGrant[]        @relation("GrantRecipient")
+  grantsCreated       AccessGrant[]        @relation("GrantCreator")
+  grantsRevoked       AccessGrant[]        @relation("GrantRevoker")
+  auditEventsAsActor  PrivilegedAuditLog[] @relation("AuditActor")
+  auditEventsAsTarget PrivilegedAuditLog[] @relation("AuditTarget")
 
   @@index([status])
 }
 
+model ExternalIdentity {
+  id              String           @id @default(uuid()) @db.Uuid
+  userId          String           @db.Uuid
+  provider        IdentityProvider
+  providerSubject String
+  email           String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerSubject])
+  @@unique([userId, provider])
+  @@index([email])
+}
+
 model RefreshToken {
-  id        String    @id @default(uuid()) @db.Uuid
-  userId    String    @db.Uuid
-  tokenHash String    @unique
-  familyId  String    @db.Uuid
-  expiresAt DateTime
-  revokedAt DateTime?
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @db.Uuid
+  tokenHash     String    @unique
+  familyId      String    @db.Uuid
+  expiresAt     DateTime
+  revokedAt     DateTime?
   revokedReason String?
-  createdAt DateTime  @default(now())
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([familyId])
@@ -163,8 +183,8 @@ model UserSubscription {
   providerSubscriptionId String?            @unique
   createdAt              DateTime           @default(now())
   updatedAt              DateTime           @updatedAt
-  user                    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plan                    SubscriptionPlan   @relation(fields: [planCode], references: [code], onDelete: Restrict)
+  user                   User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan                   SubscriptionPlan   @relation(fields: [planCode], references: [code], onDelete: Restrict)
 
   @@index([status, currentPeriodEnd])
   @@index([planCode])
@@ -192,17 +212,17 @@ model AccessGrant {
 }
 
 model PrivilegedAuditLog {
-  id           String                 @id @default(uuid()) @db.Uuid
-  actorUserId  String                 @db.Uuid
-  targetUserId String?                @db.Uuid
+  id           String                @id @default(uuid()) @db.Uuid
+  actorUserId  String                @db.Uuid
+  targetUserId String?               @db.Uuid
   action       PrivilegedAuditAction
   resourceType String
   resourceId   String
   reason       String
   metadata     Json?
-  createdAt    DateTime               @default(now())
-  actor        User                   @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: Restrict)
-  target       User?                  @relation("AuditTarget", fields: [targetUserId], references: [id], onDelete: Restrict)
+  createdAt    DateTime              @default(now())
+  actor        User                  @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: Restrict)
+  target       User?                 @relation("AuditTarget", fields: [targetUserId], references: [id], onDelete: Restrict)
 
   @@index([actorUserId, createdAt])
   @@index([targetUserId, createdAt])

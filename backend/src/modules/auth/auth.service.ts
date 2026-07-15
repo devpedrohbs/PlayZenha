@@ -16,6 +16,7 @@ import type {
 } from './auth.types.js';
 import { PasswordService } from './password.service.js';
 import { TokenService } from './token.service.js';
+import { GoogleTokenVerifierService } from './google-token-verifier.service.js';
 
 const GENERIC_RESET_MESSAGE =
   'Se este e-mail existir, enviaremos as instrucoes de recuperacao.';
@@ -30,6 +31,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly passwordService: PasswordService,
     private readonly tokenService: TokenService,
+    private readonly googleTokenVerifier: GoogleTokenVerifierService,
     private readonly config: AppConfigService
   ) {}
 
@@ -73,7 +75,7 @@ export class AuthService {
       include: { subscription: true },
     });
 
-    if (!user) {
+    if (!user?.passwordHash) {
       throwInvalidCredentials();
     }
 
@@ -89,6 +91,95 @@ export class AuthService {
     assertAccountActive(user);
 
     return this.createSession(user);
+  }
+
+  async loginWithGoogle(credential: string): Promise<AuthSession> {
+    const identity = await this.googleTokenVerifier.verify(credential);
+
+    try {
+      const user = await this.prisma.$transaction(async (tx) => {
+        const linkedIdentity = await tx.externalIdentity.findUnique({
+          where: {
+            provider_providerSubject: {
+              provider: 'google',
+              providerSubject: identity.subject,
+            },
+          },
+          include: { user: { include: { subscription: true } } },
+        });
+
+        if (linkedIdentity) return linkedIdentity.user;
+
+        const existingUser = await tx.user.findUnique({
+          where: { email: identity.email },
+          include: { subscription: true },
+        });
+
+        if (existingUser) {
+          if (!identity.emailIsGoogleAuthoritative) {
+            throw new ConflictException({
+              code: 'GOOGLE_ACCOUNT_LINK_REQUIRES_PASSWORD',
+              message:
+                'Entre com e-mail e senha antes de vincular esta conta Google.',
+            });
+          }
+
+          await tx.externalIdentity.create({
+            data: {
+              userId: existingUser.id,
+              provider: 'google',
+              providerSubject: identity.subject,
+              email: identity.email,
+            },
+          });
+          return existingUser;
+        }
+
+        return tx.user.create({
+          data: {
+            nickname: identity.nickname,
+            email: identity.email,
+            passwordHash: null,
+            subscription: {
+              create: { planCode: 'free', status: 'active' },
+            },
+            externalIdentities: {
+              create: {
+                provider: 'google',
+                providerSubject: identity.subject,
+                email: identity.email,
+              },
+            },
+          },
+          include: { subscription: true },
+        });
+      });
+
+      assertAccountActive(user);
+      return this.createSession(user);
+    } catch (error) {
+      if (!isUniqueConstraintError(error)) throw error;
+
+      const linkedIdentity = await this.prisma.externalIdentity.findUnique({
+        where: {
+          provider_providerSubject: {
+            provider: 'google',
+            providerSubject: identity.subject,
+          },
+        },
+        include: { user: { include: { subscription: true } } },
+      });
+
+      if (!linkedIdentity) {
+        throw new ConflictException({
+          code: 'GOOGLE_ACCOUNT_ALREADY_LINKED',
+          message: 'Esta conta ja esta vinculada a outro login Google.',
+        });
+      }
+
+      assertAccountActive(linkedIdentity.user);
+      return this.createSession(linkedIdentity.user);
+    }
   }
 
   async refresh(refreshToken: string): Promise<AuthSession> {
