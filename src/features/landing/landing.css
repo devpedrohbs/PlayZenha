@@ -126,10 +126,65 @@
   color: var(--landing-fg);
 }
 
+.landing-nav-logout {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.landing-nav-logout:hover {
+  color: var(--landing-fg);
+}
+
 .landing-nav-actions {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.landing-profile-link {
+  display: inline-flex;
+  max-width: 190px;
+  align-items: center;
+  gap: 9px;
+  color: var(--landing-fg);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.landing-profile-avatar {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--brand-dark-bg);
+  background: var(--brand-yellow);
+}
+
+.landing-profile-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.landing-logout-button {
+  border: 0;
+  background: transparent;
+  color: var(--landing-muted);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.landing-logout-button:hover,
+.landing-profile-link:hover {
+  color: var(--brand-blue);
 }
 
 .landing-menu-button {
@@ -1178,6 +1233,11 @@
   }
 
   .landing-nav-actions .landing-button {
+    display: none;
+  }
+
+  .landing-profile-name,
+  .landing-logout-button {
     display: none;
   }
 }

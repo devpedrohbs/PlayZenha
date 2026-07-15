@@ -16,7 +16,7 @@ import {
   selectMaskedContatoWord
 } from '../domain/contato.selectors'
 
-export const useContatoGame = () => {
+export const useContatoGame = (words: string[]) => {
   const [state, dispatch] = useReducer(contatoReducer, INITIAL_CONTATO_STATE)
 
   const judge = useMemo(() => selectContatoJudge(state), [state])
@@ -34,7 +34,7 @@ export const useContatoGame = () => {
     }
 
     const players = createContatoPlayers(state.playerNames)
-    const round = createContatoRound(players, 1, state.lastWord)
+    const round = createContatoRound(players, 1, state.lastWord, words)
     dispatch({ type: 'start-game', players, round })
   }
 
@@ -49,6 +49,7 @@ export const useContatoGame = () => {
       state.players,
       state.round + 1,
       state.lastWord,
+      words,
       forcedJudgeId
     )
 

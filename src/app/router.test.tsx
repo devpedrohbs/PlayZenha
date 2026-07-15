@@ -2,12 +2,15 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
+import { AuthProvider } from '../features/auth/model/auth-context'
 import { AppRouter } from './router'
 
 const renderRoute = (initialRoute: string) =>
   render(
     <MemoryRouter initialEntries={[initialRoute]}>
-      <AppRouter />
+      <AuthProvider>
+        <AppRouter />
+      </AuthProvider>
     </MemoryRouter>
   )
 

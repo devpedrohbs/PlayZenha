@@ -1,5 +1,6 @@
 import { AsyncContentState, Button } from '../../../shared/components/ui'
 import { useSubscriptionPlans } from '../../subscriptions'
+import type { PlanCode } from '../../subscriptions'
 import { PRICING_PLAN_CARDS } from '../../pricing/plans'
 import { SectionHead } from './SectionHead'
 
@@ -9,13 +10,34 @@ interface PricingSectionProps {
 }
 
 export const PricingSection = ({ onSignupClick, reveal = true }: PricingSectionProps) => {
-  const { data: plans, error, isLoading, reload } = useSubscriptionPlans()
-
   return (
     <section className={`landing-section ${reveal ? 'reveal' : ''}`} id="planos">
-    <SectionHead eyebrow="Planos" title="Comece gratis, evolua quando o role pedir">
-      Tres caminhos simples: testar, jogar sempre ou levar para uma festa grande com experiencias especiais.
-    </SectionHead>
+      <SectionHead eyebrow="Planos" title="Comece gratis, evolua quando o role pedir">
+        Tres caminhos simples: testar, jogar sempre ou levar para uma festa grande com experiencias especiais.
+      </SectionHead>
+      <PricingPlanCards onPlanClick={() => onSignupClick()} />
+    </section>
+  )
+}
+
+interface PricingPlanCardsProps {
+  onPlanClick: (planCode: PlanCode) => void
+  currentPlanCode?: PlanCode | null
+  recommendedPlanCode?: PlanCode
+}
+
+/**
+ * Cards únicos para a página de planos e para fluxos de upgrade, sempre com
+ * preço e disponibilidade vindos da API de assinaturas.
+ */
+export const PricingPlanCards = ({
+  onPlanClick,
+  currentPlanCode,
+  recommendedPlanCode
+}: PricingPlanCardsProps) => {
+  const { data: plans, error, isLoading, reload } = useSubscriptionPlans()
+
+  return <>
     {isLoading ? (
       <AsyncContentState className="landing-data-state" title="Carregando planos" description="Consultando os planos ativos." isLoading />
     ) : error ? (
@@ -36,8 +58,8 @@ export const PricingSection = ({ onSignupClick, reveal = true }: PricingSectionP
         const priceLabel = plan.priceCents === 0 ? price : `${price}/${plan.billingInterval === 'month' ? 'mes' : 'ano'}`
 
         return (
-        <article className={`landing-plan-card ${card.featured ? 'featured' : ''} ${card.highlighted ? 'highlighted' : ''}`} key={plan.code}>
-          {card.badge && <span className="landing-plan-badge">{card.badge}</span>}
+        <article className={`landing-plan-card ${card.featured ? 'featured' : ''} ${card.highlighted ? 'highlighted' : ''} ${recommendedPlanCode === plan.code ? 'highlighted' : ''}`} key={plan.code}>
+          {(currentPlanCode === plan.code ? 'Plano atual' : card.badge) && <span className="landing-plan-badge">{currentPlanCode === plan.code ? 'Plano atual' : card.badge}</span>}
           <div className="landing-plan-heading">
             <h3>{plan.name}</h3>
           </div>
@@ -68,15 +90,15 @@ export const PricingSection = ({ onSignupClick, reveal = true }: PricingSectionP
             className={`landing-button landing-button-${card.variant}`}
             type="button"
             variant={card.variant === 'blue' ? 'secondary' : card.variant === 'ghost' ? 'ghost' : 'primary'}
-            onClick={onSignupClick}
+            onClick={() => onPlanClick(plan.code)}
+            disabled={currentPlanCode === plan.code}
           >
-            {card.cta}
+            {currentPlanCode === plan.code ? 'Plano atual' : card.cta}
           </Button>
         </article>
         )
       })}
       </div>
     )}
-  </section>
-  )
+  </>
 }

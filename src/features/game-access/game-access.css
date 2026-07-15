@@ -1,0 +1,76 @@
+.game-access-page {
+  --landing-bg: oklch(97% 0.015 255);
+  --landing-surface: oklch(100% 0 0);
+  --landing-surface-strong: oklch(15% 0.075 262);
+  --landing-fg: oklch(16% 0.035 263);
+  --landing-fg-invert: oklch(98% 0.004 95);
+  --landing-muted: oklch(48% 0.025 260);
+  --landing-border: oklch(89% 0.018 255);
+  --landing-success: var(--brand-success);
+  --landing-font-display: "Geist Pixel", "Inter", system-ui, sans-serif;
+  --landing-font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --landing-font-mono: "Geist Pixel", "Inter", system-ui, sans-serif;
+  --landing-font-fun: "Fredoka", "Inter", system-ui, sans-serif;
+  min-height: 100vh;
+  color: var(--landing-fg);
+  font-family: var(--landing-font-body);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(255, 198, 3, 0.32), transparent 26rem),
+    radial-gradient(circle at 88% 8%, rgba(4, 65, 242, 0.2), transparent 30rem),
+    linear-gradient(180deg, oklch(98% 0.018 255), oklch(94% 0.026 255));
+}
+
+.game-access-page *,
+.game-access-page *::before,
+.game-access-page *::after {
+  box-sizing: border-box;
+}
+
+.game-access-title,
+.game-access-panel-title,
+.game-access-benefit-title {
+  margin: 0;
+  font-family: var(--landing-font-fun);
+  overflow-wrap: anywhere;
+}
+
+.game-access-title {
+  max-width: 12ch;
+  color: var(--landing-fg);
+  font-size: clamp(2.45rem, 6.5vw, 5.2rem);
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+}
+
+.game-access-panel-title {
+  max-width: 11ch;
+  color: #ffffff;
+  font-size: clamp(2rem, 4.4vw, 3.45rem);
+  line-height: 0.96;
+  letter-spacing: -0.035em;
+}
+
+.game-access-benefit-title {
+  color: var(--landing-fg);
+  font-size: 1.25rem;
+  line-height: 1.08;
+}
+
+.game-access-copy {
+  max-width: 58ch;
+  color: var(--landing-muted);
+  font-size: clamp(1rem, 1.8vw, 1.15rem);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .game-access-title {
+    max-width: 11ch;
+    font-size: clamp(2.35rem, 12vw, 3.6rem);
+  }
+
+  .game-access-panel-title {
+    max-width: none;
+    font-size: clamp(2rem, 9.5vw, 2.8rem);
+  }
+}

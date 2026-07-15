@@ -9,9 +9,10 @@ import { useImpostorGame } from './hooks/useImpostorGame'
 interface ImpostorGameProps {
   onBackToHome: () => void
   onBackToGames: () => void
+  themes: string[]
 }
 
-const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToGames, onBackToHome }) => {
+const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToGames, onBackToHome, themes }) => {
   const {
     addDiscussionMinute,
     addPlayerSlot,
@@ -42,7 +43,7 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToGames, onBackToHome
     timeLeft,
     updatePlayerName,
     winner
-  } = useImpostorGame()
+  } = useImpostorGame(themes)
 
   return (
     <div className="impostor-game">

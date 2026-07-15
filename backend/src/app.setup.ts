@@ -2,14 +2,17 @@ import { ValidationPipe } from '@nestjs/common'
 import type { INestApplication } from '@nestjs/common'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import helmet from 'helmet'
+import cookieParser from 'cookie-parser'
 import { AppConfigService } from './config/app-config.service.js'
 
 export function configureApp(app: INestApplication) {
   const config = app.get(AppConfigService)
 
   app.use(helmet())
+  app.use(cookieParser())
   app.enableCors({
     origin: config.corsOrigins,
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
   })
   app.useGlobalPipes(

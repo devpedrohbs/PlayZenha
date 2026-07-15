@@ -47,6 +47,34 @@ enum GameStatus {
   disabled
 }
 
+enum UserRole {
+  player
+  admin
+}
+
+enum AccountStatus {
+  active
+  suspended
+  disabled
+}
+
+enum SubscriptionStatus {
+  active
+  trialing
+  pastDue
+  canceled
+  expired
+}
+
+enum AccessGrantType {
+  allGames
+}
+
+enum PrivilegedAuditAction {
+  accessGrantCreated
+  accessGrantRevoked
+}
+
 model Game {
   id                     String         @id @default(uuid()) @db.Uuid
   slug                   String         @unique
@@ -66,6 +94,8 @@ model Game {
   colors                 String[]
   createdAt              DateTime       @default(now())
   updatedAt              DateTime       @updatedAt
+  publishedAt            DateTime?
+  content                GameContent?
 
   @@index([status])
   @@index([requiredPlan])
@@ -81,4 +111,124 @@ model SubscriptionPlan {
   active          Boolean         @default(true)
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
+  subscriptions   UserSubscription[]
+}
+
+model User {
+  id                  String               @id @default(uuid()) @db.Uuid
+  nickname            String
+  email               String               @unique
+  passwordHash        String               
+  role                UserRole             @default(player)
+  status              AccountStatus        @default(active)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  refreshTokens       RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+  subscription        UserSubscription?
+  accessGrants        AccessGrant[]         @relation("GrantRecipient")
+  grantsCreated       AccessGrant[]         @relation("GrantCreator")
+  grantsRevoked       AccessGrant[]         @relation("GrantRevoker")
+  auditEventsAsActor  PrivilegedAuditLog[]  @relation("AuditActor")
+  auditEventsAsTarget PrivilegedAuditLog[]  @relation("AuditTarget")
+
+  @@index([status])
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  familyId  String    @db.Uuid
+  expiresAt DateTime
+  revokedAt DateTime?
+  revokedReason String?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([familyId])
+  @@index([expiresAt])
+}
+
+model UserSubscription {
+  id                     String             @id @default(uuid()) @db.Uuid
+  userId                 String             @unique @db.Uuid
+  planCode               PlanCode
+  status                 SubscriptionStatus @default(active)
+  startsAt               DateTime           @default(now())
+  currentPeriodEnd       DateTime?
+  canceledAt             DateTime?
+  provider               String?
+  providerSubscriptionId String?            @unique
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  user                    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan                    SubscriptionPlan   @relation(fields: [planCode], references: [code], onDelete: Restrict)
+
+  @@index([status, currentPeriodEnd])
+  @@index([planCode])
+}
+
+model AccessGrant {
+  id              String          @id @default(uuid()) @db.Uuid
+  userId          String          @db.Uuid
+  type            AccessGrantType
+  startsAt        DateTime        @default(now())
+  expiresAt       DateTime?
+  revokedAt       DateTime?
+  reason          String
+  grantedByUserId String          @db.Uuid
+  revokedByUserId String?         @db.Uuid
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  user            User            @relation("GrantRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  grantedBy       User            @relation("GrantCreator", fields: [grantedByUserId], references: [id], onDelete: Restrict)
+  revokedBy       User?           @relation("GrantRevoker", fields: [revokedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([userId, type, startsAt, expiresAt, revokedAt])
+  @@index([grantedByUserId])
+  @@index([revokedByUserId])
+}
+
+model PrivilegedAuditLog {
+  id           String                 @id @default(uuid()) @db.Uuid
+  actorUserId  String                 @db.Uuid
+  targetUserId String?                @db.Uuid
+  action       PrivilegedAuditAction
+  resourceType String
+  resourceId   String
+  reason       String
+  metadata     Json?
+  createdAt    DateTime               @default(now())
+  actor        User                   @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: Restrict)
+  target       User?                  @relation("AuditTarget", fields: [targetUserId], references: [id], onDelete: Restrict)
+
+  @@index([actorUserId, createdAt])
+  @@index([targetUserId, createdAt])
+  @@index([resourceType, resourceId])
+}
+
+model GameContent {
+  id        String   @id @default(uuid()) @db.Uuid
+  gameId    String   @unique @db.Uuid
+  version   Int      @default(1)
+  payload   Json
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }

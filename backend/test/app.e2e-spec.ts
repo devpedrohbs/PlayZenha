@@ -8,6 +8,9 @@ import type { Game } from '../src/modules/games/domain/game.js';
 import { GAMES_REPOSITORY } from '../src/modules/games/domain/games.repository.js';
 import { GamesController } from '../src/modules/games/games.controller.js';
 import { GamesService } from '../src/modules/games/games.service.js';
+import { GameAccessPolicyService } from '../src/modules/authorization/game-access-policy.service.js';
+import { AccessTokenGuard } from '../src/modules/auth/guards/access-token.guard.js';
+import { TokenService } from '../src/modules/auth/token.service.js';
 import { HealthController } from '../src/modules/health/health.controller.js';
 import { HealthService } from '../src/modules/health/health.service.js';
 import type { SubscriptionPlan } from '../src/modules/subscriptions/domain/subscription-plan.js';
@@ -57,6 +60,18 @@ describe('HTTP API (e2e)', () => {
       providers: [
         HealthService,
         GamesService,
+        {
+          provide: GameAccessPolicyService,
+          useValue: { authorize: async () => ({}) },
+        },
+        {
+          provide: AccessTokenGuard,
+          useValue: { canActivate: () => false },
+        },
+        {
+          provide: TokenService,
+          useValue: { verifyAccessToken: () => ({ sub: 'test-user' }) },
+        },
         SubscriptionsService,
         {
           provide: AppConfigService,

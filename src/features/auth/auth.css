@@ -327,6 +327,20 @@
   background: rgba(4, 65, 242, 0.06);
   font-size: 0.78rem;
   font-weight: 760;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.auth-page-show-pass:focus,
+.auth-page-show-pass:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.auth-page-show-pass:hover,
+.auth-page-show-pass:focus-visible {
+  border-color: var(--auth-blue);
+  color: #ffffff;
+  background: var(--auth-blue);
 }
 
 .auth-page-inline-row {

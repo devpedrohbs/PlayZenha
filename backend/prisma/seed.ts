@@ -12,6 +12,33 @@ const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString })
 })
 
+const PUBLISHED_AT = new Date('2026-07-15T00:00:00.000Z')
+
+const protectedGameContent: Record<string, Prisma.InputJsonValue> = {
+  impostor: {
+    themes: [
+      'Lua', 'Copa do Mundo', 'Praia', 'Netflix', 'Pizza', 'Carnaval', 'Black Friday',
+      'Festa Junina', 'Aniversario', 'Trabalho', 'Escola', 'Hospital', 'Shopping', 'Igreja',
+      'Cinema', 'Uber', 'Instagram', 'TikTok', 'WhatsApp', 'Padaria', 'Churrasco', 'Barbearia',
+      'Salao de Beleza', 'Farmacia', 'Rodoviaria', 'Metro', 'Elevador', 'Formatura', 'Natal',
+      'Ano Novo', 'Halloween', 'Videogame', 'YouTube', 'Spotify', 'Bicicleta', 'Feira', 'Pet Shop',
+      'Supermercado', 'Academia', 'Aeroporto', 'Acampamento', 'Parque de Diversoes', 'Museu',
+      'Teatro', 'Restaurante', 'Lanchonete', 'Sorveteria', 'Cafeteria', 'Biblioteca', 'Delegacia',
+      'Tribunal', 'Banco', 'Correios', 'Posto de Gasolina', 'Oficina', 'Condominio', 'Hotel',
+      'Pousada', 'Cruzeiro', 'Praca', 'Floresta', 'Montanha', 'Deserto', 'Ilha', 'Cachoeira',
+      'Piquenique', 'Parque Aquatico', 'Karaoke', 'Show', 'Festival', 'Casamento', 'Reuniao',
+      'Home Office', 'Delivery', 'Loja de Roupas', 'Transito'
+    ]
+  },
+  contato: {
+    words: [
+      'BACIA', 'ABACAXI', 'PIPOCA', 'CADEIRA', 'GIRAFA', 'BICICLETA', 'CHUVEIRO',
+      'ESTOJO', 'TOMATE', 'SORVETE', 'FUTEBOL', 'LANTERNA', 'CACHORRO', 'JANELA',
+      'VIOLAO', 'PANELA', 'TRAVESSEIRO', 'MELANCIA', 'PIRULITO', 'LIVRARIA'
+    ]
+  }
+}
+
 const plans = [
   {
     code: 'free',
@@ -84,8 +111,8 @@ const games = [
     averageDurationMinutes: 25,
     difficulty: 'medium',
     status: 'available',
-    requiredPlan: 'free',
-    tags: ['Grupo', 'Papeis secretos', 'Disponivel'],
+    requiredPlan: 'premium',
+    tags: ['Grupo', 'Papeis secretos', 'Premium', 'Disponivel'],
     colors: ['#24104a', '#7d4dff'],
     icon: 'spark',
     featured: true
@@ -100,8 +127,8 @@ const games = [
     averageDurationMinutes: 10,
     difficulty: 'easy',
     status: 'available',
-    requiredPlan: 'free',
-    tags: ['Palavra secreta', 'Disponivel'],
+    requiredPlan: 'premium',
+    tags: ['Palavra secreta', 'Premium', 'Disponivel'],
     colors: ['#04180e', '#37f28a'],
     icon: 'users'
   },
@@ -115,8 +142,8 @@ const games = [
     averageDurationMinutes: 15,
     difficulty: 'easy',
     status: 'available',
-    requiredPlan: 'free',
-    tags: ['Adivinhacao', 'Disponivel'],
+    requiredPlan: 'premium',
+    tags: ['Adivinhacao', 'Premium', 'Disponivel'],
     colors: ['#06112f', '#ffc603'],
     icon: 'brain'
   },
@@ -301,11 +328,21 @@ async function main() {
   }
 
   for (const game of games) {
-    await prisma.game.upsert({
+    const gameData = { ...game, publishedAt: PUBLISHED_AT }
+    const storedGame = await prisma.game.upsert({
       where: { slug: game.slug },
-      create: game,
-      update: game
+      create: gameData,
+      update: gameData
     })
+
+    if (game.status === 'available') {
+      const payload = protectedGameContent[game.slug] ?? {}
+      await prisma.gameContent.upsert({
+        where: { gameId: storedGame.id },
+        create: { gameId: storedGame.id, payload },
+        update: { payload, active: true }
+      })
+    }
   }
 }
 

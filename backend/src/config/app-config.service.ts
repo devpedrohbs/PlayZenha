@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common'
 import type { LogLevel } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 
-import type {
-  ApplicationLogLevel,
-  EnvironmentVariables,
-  NodeEnvironment
+import {
+  NodeEnvironment,
+  type ApplicationLogLevel,
+  type EnvironmentVariables
 } from './env.validation.js'
 
 const LOG_LEVELS: Record<ApplicationLogLevel, readonly LogLevel[]> = {
@@ -48,5 +48,43 @@ export class AppConfigService {
   get loggerLevels(): readonly LogLevel[] {
     const configuredLevel = this.configService.get('LOG_LEVEL', { infer: true })
     return LOG_LEVELS[configuredLevel]
+  }
+
+  get authJwtSecret(): string {
+    return this.configService.get('AUTH_JWT_SECRET', { infer: true })
+  }
+
+  get authJwtIssuer(): string {
+    return this.configService.get('AUTH_JWT_ISSUER', { infer: true })
+  }
+
+  get authJwtAudience(): string {
+    return this.configService.get('AUTH_JWT_AUDIENCE', { infer: true })
+  }
+
+  get authRefreshCookieName(): string {
+    return this.configService.get('AUTH_REFRESH_COOKIE_NAME', { infer: true })
+  }
+
+  get authCookieSecure(): boolean {
+    return this.nodeEnvironment === NodeEnvironment.Production
+  }
+
+  get authAccessTokenTtlSeconds(): number {
+    return this.configService.get('AUTH_ACCESS_TOKEN_TTL_SECONDS', {
+      infer: true
+    })
+  }
+
+  get authRefreshTokenTtlSeconds(): number {
+    return this.configService.get('AUTH_REFRESH_TOKEN_TTL_SECONDS', {
+      infer: true
+    })
+  }
+
+  get authPasswordResetTtlSeconds(): number {
+    return this.configService.get('AUTH_PASSWORD_RESET_TTL_SECONDS', {
+      infer: true
+    })
   }
 }

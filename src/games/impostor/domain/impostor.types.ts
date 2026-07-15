@@ -39,6 +39,7 @@ export interface CreateImpostorRoundInput {
   themeIndex: number
   impostorIndex: number
   revealOrder: string[]
+  themes: string[]
 }
 
 export interface CreateImpostorRoundResult {

@@ -10,10 +10,12 @@ import { PricingSection } from '../../features/landing/components/PricingSection
 import { TestimonialsSection } from '../../features/landing/components/TestimonialsSection'
 import { UseCasesSection } from '../../features/landing/components/UseCasesSection'
 import { Toast } from '../../shared/components/ui'
+import { useAuth } from '../../features/auth/model/auth-context'
 import { useHomePage } from './model/useHomePage'
 
 const HomeView: React.FC = () => {
   const navigate = useNavigate()
+  const { logout, user } = useAuth()
   const {
     activeFilter,
     filteredGames,
@@ -37,6 +39,8 @@ const HomeView: React.FC = () => {
           menuOpen={menuOpen}
           onMenuToggle={() => setMenuOpen((open) => !open)}
           onSectionLinkClick={scrollTo}
+          user={user}
+          onLogout={() => void logout()}
         />
 
         <main id="top">

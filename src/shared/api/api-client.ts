@@ -1,5 +1,6 @@
 import { appEnv } from '../../app/env'
 import { ApiError } from './api-error'
+import { authTokenStore } from './auth-token-store'
 import type {
   ApiCallOptions,
   ApiClientConfig,
@@ -149,6 +150,7 @@ export class ApiClient {
 
     try {
       response = await this.fetch(joinUrl(this.baseUrl, path), {
+        credentials: 'include',
         method: options.method ?? 'GET',
         headers,
         body: options.body === undefined ? undefined : JSON.stringify(options.body),
@@ -175,5 +177,6 @@ export class ApiClient {
 }
 
 export const apiClient = new ApiClient({
-  baseUrl: appEnv.apiUrl
+  baseUrl: appEnv.apiUrl,
+  getAccessToken: () => authTokenStore.getAccessToken()
 })

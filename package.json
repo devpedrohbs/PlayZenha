@@ -11,6 +11,7 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "security:bundle": "node ./scripts/check-protected-content.mjs",
     "preview": "node ./node_modules/vite/bin/vite.js preview --host 0.0.0.0 --port ${PORT:-4173}",
     "start": "node ./node_modules/vite/bin/vite.js preview --host 0.0.0.0 --port ${PORT:-4173}"
   },
