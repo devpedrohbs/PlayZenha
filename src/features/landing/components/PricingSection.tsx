@@ -1,20 +1,31 @@
-import { Button } from '../../../shared/components/ui'
-import { getPlanByCode } from '../../subscriptions'
+import { AsyncContentState, Button } from '../../../shared/components/ui'
+import { useSubscriptionPlans } from '../../subscriptions'
 import { PRICING_PLAN_CARDS } from '../../pricing/plans'
 import { SectionHead } from './SectionHead'
 
 interface PricingSectionProps {
   onSignupClick: () => void
+  reveal?: boolean
 }
 
-export const PricingSection = ({ onSignupClick }: PricingSectionProps) => (
-  <section className="landing-section reveal" id="planos">
+export const PricingSection = ({ onSignupClick, reveal = true }: PricingSectionProps) => {
+  const { data: plans, error, isLoading, reload } = useSubscriptionPlans()
+
+  return (
+    <section className={`landing-section ${reveal ? 'reveal' : ''}`} id="planos">
     <SectionHead eyebrow="Planos" title="Comece gratis, evolua quando o role pedir">
       Tres caminhos simples: testar, jogar sempre ou levar para uma festa grande com experiencias especiais.
     </SectionHead>
-    <div className="landing-plans">
+    {isLoading ? (
+      <AsyncContentState className="landing-data-state" title="Carregando planos" description="Consultando os planos ativos." isLoading />
+    ) : error ? (
+      <AsyncContentState className="landing-data-state" title="Nao foi possivel carregar os planos" description={error} onRetry={reload} />
+    ) : plans.length === 0 ? (
+      <AsyncContentState className="landing-data-state" title="Nenhum plano disponivel" description="Os planos ainda nao foram publicados." onRetry={reload} />
+    ) : (
+      <div className="landing-plans">
       {PRICING_PLAN_CARDS.map((card) => {
-        const plan = getPlanByCode(card.planCode)
+        const plan = plans.find((candidate) => candidate.code === card.planCode)
         if (!plan) return null
 
         const price = new Intl.NumberFormat('pt-BR', {
@@ -64,6 +75,8 @@ export const PricingSection = ({ onSignupClick }: PricingSectionProps) => (
         </article>
         )
       })}
-    </div>
+      </div>
+    )}
   </section>
-)
+  )
+}

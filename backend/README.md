@@ -40,7 +40,8 @@ A API fica em `http://localhost:3000` e o Swagger em
 | GET | `/v1/games/:slug` | Jogo por slug |
 | GET | `/v1/subscriptions` | Planos ativos |
 
-O frontend ainda nao chama estes endpoints.
+O frontend consome o catalogo e os planos por meio de `VITE_API_URL`, com
+estados de carregamento, erro, tentativa novamente e resposta vazia.
 
 ## Banco e Prisma
 

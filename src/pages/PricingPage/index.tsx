@@ -1,18 +1,22 @@
-import { Link } from 'react-router-dom'
-import { Card } from '../../shared/components/ui'
+import { Link, useNavigate } from 'react-router-dom'
+import { PricingSection } from '../../features/landing/components/PricingSection'
 
-const PricingPage = () => (
-  <main className="placeholder-page">
-    <Card className="placeholder-card" as="section">
-      <p className="placeholder-eyebrow">Planos</p>
-      <h1>Assinaturas PlayZenha</h1>
-      <p>Esta rota ja esta preparada para receber checkout, pagamentos e gestao de planos em uma etapa futura.</p>
-      <div className="placeholder-actions">
-        <Link className="placeholder-button primary" to="/">Ver planos na home</Link>
-        <Link className="placeholder-button" to="/jogos">Explorar jogos</Link>
-      </div>
-    </Card>
-  </main>
-)
+const PricingPage = () => {
+  const navigate = useNavigate()
+
+  return (
+    <main className="landing-page">
+      <nav className="game-library-nav" aria-label="Navegacao dos planos">
+        <Link className="game-library-back" to="/">Voltar para o inicio</Link>
+        <div className="game-library-brand">
+          <span>Playzenha</span>
+          <strong>Planos</strong>
+        </div>
+        <Link className="game-library-back" to="/jogos">Ver jogos</Link>
+      </nav>
+      <PricingSection reveal={false} onSignupClick={() => navigate('/cadastro')} />
+    </main>
+  )
+}
 
 export default PricingPage

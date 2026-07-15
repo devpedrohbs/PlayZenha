@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  GAMES_CATALOG,
   type GameCatalogItem,
-  getHomeFeaturedGames
+  getHomeFeaturedGames,
+  useGamesCatalog
 } from '../../../features/games-catalog'
 import {
   DEFAULT_TOAST_MESSAGE,
@@ -13,19 +13,27 @@ import {
 import type { GameCategory } from './models'
 import { filterHomeGames, getScrollTop } from './rules'
 
-const HOME_GAMES = getHomeFeaturedGames(GAMES_CATALOG)
-const DEFAULT_GAME = HOME_GAMES[1] ?? HOME_GAMES[0]
-
 export const useHomePage = () => {
+  const { data: games, error: gamesError, isLoading: gamesLoading, reload: reloadGames } = useGamesCatalog()
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeFilter, setActiveFilter] = useState<GameCategory>('all')
-  const [selectedGame, setSelectedGame] = useState<GameCatalogItem>(DEFAULT_GAME)
+  const [selectedGame, setSelectedGame] = useState<GameCatalogItem>()
   const [toast, setToast] = useState('')
 
+  const homeGames = useMemo(() => getHomeFeaturedGames(games), [games])
+
   const filteredGames = useMemo(
-    () => filterHomeGames(HOME_GAMES, activeFilter),
-    [activeFilter]
+    () => filterHomeGames(homeGames, activeFilter),
+    [activeFilter, homeGames]
   )
+
+  useEffect(() => {
+    setSelectedGame((currentGame) =>
+      homeGames.find((game) => game.id === currentGame?.id) ??
+      homeGames[1] ??
+      homeGames[0]
+    )
+  }, [homeGames])
 
   useEffect(() => {
     document.body.classList.toggle('menu-open', menuOpen)
@@ -76,7 +84,10 @@ export const useHomePage = () => {
   return {
     activeFilter,
     filteredGames,
+    gamesError,
+    gamesLoading,
     menuOpen,
+    reloadGames,
     selectedGame,
     setActiveFilter,
     setMenuOpen,

@@ -4,7 +4,7 @@ import type { GameCatalogItem } from '../../games-catalog'
 import { formatDuration } from '../../games-catalog'
 
 interface HeroSectionProps {
-  selectedGame: GameCatalogItem
+  selectedGame?: GameCatalogItem
   onShowToast: (message: string) => void
 }
 
@@ -34,9 +34,11 @@ export const HeroSection = ({ selectedGame, onShowToast }: HeroSectionProps) => 
               <span>Ao vivo</span>
             </div>
             <div className="landing-game-live">
-              <small>{selectedGame.category} - {formatDuration(selectedGame)}</small>
-              <h3>{selectedGame.name}</h3>
-              <div className="landing-prompt-card">{selectedGame.shortDescription}</div>
+              <small>{selectedGame ? `${selectedGame.category} - ${formatDuration(selectedGame)}` : 'Atualizando catalogo'}</small>
+              <h3>{selectedGame?.name ?? 'PlayZenha'}</h3>
+              <div className="landing-prompt-card">
+                {selectedGame?.shortDescription ?? 'Carregando o proximo jogo para a sua resenha.'}
+              </div>
               <div className="landing-players" aria-label="Jogadores ativos">
                 <div className="landing-player">Lu</div>
                 <div className="landing-player">Ca</div>

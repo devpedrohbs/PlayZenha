@@ -4,24 +4,31 @@ import { formatDuration, formatPlayersRange, getGamePath } from '../../games-cat
 import { GAME_FILTERS } from '../../../pages/HomePage/model/constants'
 import type { GameCategory } from '../../../pages/HomePage/model/models'
 import { isActivationKey } from '../../../shared/utils/keyboard'
+import { AsyncContentState } from '../../../shared/components/ui'
 import { SectionHead } from './SectionHead'
 
 interface FeaturedGamesSectionProps {
   activeFilter: GameCategory
   filteredGames: GameCatalogItem[]
-  selectedGame: GameCatalogItem
+  selectedGame?: GameCatalogItem
+  error: string | null
+  isLoading: boolean
   onFilterChange: (filter: GameCategory) => void
   onGameSelect: (game: GameCatalogItem) => void
   onGameNavigate: (path: string) => void
+  onRetry: () => void
 }
 
 export const FeaturedGamesSection = ({
   activeFilter,
+  error,
   filteredGames,
+  isLoading,
   selectedGame,
   onFilterChange,
   onGameSelect,
-  onGameNavigate
+  onGameNavigate,
+  onRetry
 }: FeaturedGamesSectionProps) => {
   const handleGameOpen = (game: GameCatalogItem) => {
     const path = getGamePath(game)
@@ -53,10 +60,31 @@ export const FeaturedGamesSection = ({
             </button>
           ))}
         </div>
-        <div className="landing-game-grid">
-          {filteredGames.map((game) => (
+        {isLoading ? (
+          <AsyncContentState
+            className="landing-data-state"
+            title="Carregando jogos"
+            description="Buscando os jogos disponiveis na API."
+            isLoading
+          />
+        ) : error ? (
+          <AsyncContentState
+            className="landing-data-state"
+            title="Nao foi possivel carregar os jogos"
+            description={error}
+            onRetry={onRetry}
+          />
+        ) : filteredGames.length === 0 ? (
+          <AsyncContentState
+            className="landing-data-state"
+            title="Nenhum jogo disponivel"
+            description="Nao encontramos jogos para este filtro."
+          />
+        ) : (
+          <div className="landing-game-grid">
+            {filteredGames.map((game) => (
             <article
-              className={`landing-game-card ${selectedGame.id === game.id ? 'is-selected' : ''}`}
+              className={`landing-game-card ${selectedGame?.id === game.id ? 'is-selected' : ''}`}
               key={game.id}
               style={{ '--card-color': game.colors?.[1] ?? 'var(--brand-blue)' } as CSSProperties}
               role="button"
@@ -72,8 +100,9 @@ export const FeaturedGamesSection = ({
               <p>{game.shortDescription}</p>
               <span className="landing-card-play">Jogar - {formatDuration(game)}</span>
             </article>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   )
