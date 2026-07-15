@@ -87,4 +87,8 @@ export class AppConfigService {
       infer: true
     })
   }
+
+  get authGoogleClientId(): string | undefined {
+    return this.configService.get('AUTH_GOOGLE_CLIENT_ID', { infer: true })
+  }
 }

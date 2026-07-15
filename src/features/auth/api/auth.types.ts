@@ -28,6 +28,10 @@ export interface LoginInput {
   password: string
 }
 
+export interface GoogleLoginInput {
+  credential: string
+}
+
 export interface RegisterInput extends LoginInput {
   nickname: string
 }

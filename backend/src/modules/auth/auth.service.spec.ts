@@ -13,6 +13,7 @@ import type { PrismaService } from '../../database/prisma.service.js';
 import { AuthService } from './auth.service.js';
 import { PasswordService } from './password.service.js';
 import { TokenService } from './token.service.js';
+import type { GoogleTokenVerifierService } from './google-token-verifier.service.js';
 
 jest.mock('../../database/prisma.service.js', () => ({
   PrismaService: class PrismaService {},
@@ -222,10 +223,14 @@ function createService() {
   const prisma = new InMemoryPrisma();
   const passwordService = new PasswordService();
   const tokenService = new TokenService(config, new JwtService());
+  const googleTokenVerifier = {
+    verify: jest.fn(),
+  } as unknown as GoogleTokenVerifierService;
   const authService = new AuthService(
     prisma as unknown as PrismaService,
     passwordService,
     tokenService,
+    googleTokenVerifier,
     config
   );
 

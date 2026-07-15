@@ -2,6 +2,7 @@ export const API_ENDPOINTS = {
   health: '/health',
   auth: {
     forgotPassword: '/v1/auth/forgot-password',
+    google: '/v1/auth/google',
     login: '/v1/auth/login',
     logout: '/v1/auth/logout',
     refresh: '/v1/auth/refresh',
