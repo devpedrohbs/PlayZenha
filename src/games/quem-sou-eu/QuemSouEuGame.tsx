@@ -19,11 +19,10 @@ import GameIconButton from '../shared/components/GameIconButton'
 import { useQuemSouEuGame } from './hooks/useQuemSouEuGame'
 
 interface QuemSouEuGameProps {
-  onBackToHome: () => void
   onBackToGames: () => void
 }
 
-const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToGames, onBackToHome }) => {
+const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToGames }) => {
   const {
     addPlayerSlot,
     bestPlayers,
@@ -67,7 +66,7 @@ const QuemSouEuGame: React.FC<QuemSouEuGameProps> = ({ onBackToGames, onBackToHo
   return (
     <div className="playzenha-game playzenha-game-quem-sou-eu min-h-screen bg-dark-bg text-white font-sans overflow-hidden relative selection:bg-playzenha-yellow/60 selection:text-dark-bg">
       <nav className="absolute top-0 w-full p-4 flex justify-between items-center z-50">
-        <GameIconButton label="Voltar para a home" onClick={onBackToHome} className="bg-white/10 hover:bg-white/20">
+        <GameIconButton label="Voltar para a biblioteca de jogos" onClick={onBackToGames} className="bg-white/10 hover:bg-white/20">
           <ArrowLeft size={24} />
         </GameIconButton>
         <div className="flex items-center gap-2 rounded-2xl border border-playzenha-yellow/30 bg-playzenha-yellow/10 px-4 py-2 shadow-lg shadow-playzenha-yellow/10">

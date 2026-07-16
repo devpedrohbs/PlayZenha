@@ -28,7 +28,7 @@ describe('PricingSection API integration', () => {
       )
     )
 
-    render(<PricingSection onSignupClick={vi.fn()} />)
+    render(<PricingSection onPlanClick={vi.fn()} />)
 
     expect(screen.getByText('Carregando planos')).toBeInTheDocument()
     expect(await screen.findByRole('heading', { name: 'Premium API' })).toBeInTheDocument()

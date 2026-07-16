@@ -7,7 +7,7 @@ const QuemSouEuGamePage = () => {
 
   return (
     <GameAccessGate<Record<string, never>> slug="quem-sou-eu">
-      {() => <QuemSouEuGame onBackToGames={() => navigate('/jogos')} onBackToHome={() => navigate('/')} />}
+      {() => <QuemSouEuGame onBackToGames={() => navigate('/jogos')} />}
     </GameAccessGate>
   )
 }

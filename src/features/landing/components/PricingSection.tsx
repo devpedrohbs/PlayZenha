@@ -5,17 +5,17 @@ import { PRICING_PLAN_CARDS } from '../../pricing/plans'
 import { SectionHead } from './SectionHead'
 
 interface PricingSectionProps {
-  onSignupClick: () => void
+  onPlanClick: (planCode: PlanCode) => void
   reveal?: boolean
 }
 
-export const PricingSection = ({ onSignupClick, reveal = true }: PricingSectionProps) => {
+export const PricingSection = ({ onPlanClick, reveal = true }: PricingSectionProps) => {
   return (
     <section className={`landing-section ${reveal ? 'reveal' : ''}`} id="planos">
-      <SectionHead eyebrow="Planos" title="Comece gratis, evolua quando o role pedir">
-        Tres caminhos simples: testar, jogar sempre ou levar para uma festa grande com experiencias especiais.
+      <SectionHead eyebrow="Planos" title="Teste gratis. Assine quando a galera pedir outro jogo.">
+        O Premium e a escolha recomendada hoje: libera os quatro jogos disponiveis para o grupo. O Ultimate acompanha os proximos modos especiais.
       </SectionHead>
-      <PricingPlanCards onPlanClick={() => onSignupClick()} />
+      <PricingPlanCards onPlanClick={onPlanClick} />
     </section>
   )
 }
@@ -56,6 +56,7 @@ export const PricingPlanCards = ({
           minimumFractionDigits: plan.priceCents === 0 ? 0 : 2
         }).format(plan.priceCents / 100)
         const priceLabel = plan.priceCents === 0 ? price : `${price}/${plan.billingInterval === 'month' ? 'mes' : 'ano'}`
+        const priceContext = getPriceContext(plan.code, plan.priceCents)
 
         return (
         <article className={`landing-plan-card ${card.featured ? 'featured' : ''} ${card.highlighted ? 'highlighted' : ''} ${recommendedPlanCode === plan.code ? 'highlighted' : ''}`} key={plan.code}>
@@ -64,8 +65,9 @@ export const PricingPlanCards = ({
             <h3>{plan.name}</h3>
           </div>
           <div className="landing-price-card">
-            <span>Plano</span>
+            <span>{plan.priceCents === 0 ? 'Para sempre' : 'Assinatura mensal'}</span>
             <div className="landing-price">{priceLabel}</div>
+            {priceContext && <small className="landing-price-context">{priceContext}</small>}
           </div>
           <div className="landing-plan-copy">
             {card.label && <strong className="landing-plan-label">{card.label}</strong>}
@@ -101,4 +103,16 @@ export const PricingPlanCards = ({
       </div>
     )}
   </>
+}
+
+function getPriceContext(planCode: PlanCode, priceCents: number): string | null {
+  if (planCode === 'free') return 'Sem cartao para comecar'
+  if (priceCents <= 0) return null
+
+  const perPerson = new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(priceCents / 100 / 10)
+
+  return `${perPerson} por pessoa em um grupo de 10`
 }

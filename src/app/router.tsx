@@ -8,6 +8,7 @@ import NotFoundPage from '../pages/NotFoundPage'
 import PricingPage from '../pages/PricingPage'
 import ProfilePage from '../pages/ProfilePage'
 import QuemSouEuGamePage from '../pages/GamesPage/QuemSouEuGamePage'
+import QuemEstaMentindoGamePage from '../pages/GamesPage/QuemEstaMentindoGamePage'
 import SignupPage from '../pages/SignupPage'
 import SubscriptionPage from '../pages/SubscriptionPage'
 import UltimaNoiteGamePage from '../pages/GamesPage/UltimaNoiteGamePage'
@@ -21,6 +22,7 @@ export const AppRouter = () => (
     <Route path="/jogos/ultima-noite" element={<ProtectedRoute><UltimaNoiteGamePage /></ProtectedRoute>} />
     <Route path="/jogos/contato" element={<ProtectedRoute><ContatoGamePage /></ProtectedRoute>} />
     <Route path="/jogos/quem-sou-eu" element={<ProtectedRoute><QuemSouEuGamePage /></ProtectedRoute>} />
+    <Route path="/jogos/quem-esta-mentindo" element={<ProtectedRoute><QuemEstaMentindoGamePage /></ProtectedRoute>} />
     <Route path="/login" element={<LoginPage />} />
     <Route path="/cadastro" element={<SignupPage />} />
     <Route path="/planos" element={<PricingPage />} />

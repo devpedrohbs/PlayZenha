@@ -184,6 +184,222 @@
   padding-top: 6px;
 }
 
+.playzenha-rules-trigger {
+  width: 100%;
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 18px;
+  border: 2px solid color-mix(in oklch, var(--rules-accent) 48%, white);
+  border-radius: 18px;
+  color: var(--rules-accent);
+  background: color-mix(in oklch, var(--rules-accent) 8%, white);
+  font-family: "Fredoka", system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 750;
+  cursor: pointer;
+  box-shadow: 0 12px 28px color-mix(in oklch, var(--rules-accent) 14%, transparent);
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.playzenha-rules-trigger svg {
+  width: 20px;
+  height: 20px;
+}
+
+.playzenha-rules-trigger:hover {
+  transform: translateY(-2px);
+  background: color-mix(in oklch, var(--rules-accent) 13%, white);
+  box-shadow: 0 18px 34px color-mix(in oklch, var(--rules-accent) 20%, transparent);
+}
+
+.playzenha-rules-trigger:focus-visible,
+.playzenha-rules-confirm:focus-visible,
+.playzenha-rules-header button:focus-visible {
+  outline: 3px solid color-mix(in oklch, var(--rules-accent) 42%, white);
+  outline-offset: 3px;
+}
+
+.playzenha-rules-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  overflow-y: auto;
+  color: #06112f;
+  background: rgba(6, 17, 47, 0.76);
+  backdrop-filter: blur(10px);
+}
+
+.playzenha-rules-card {
+  width: min(100%, 620px);
+  max-height: min(88vh, 820px);
+  overflow-y: auto;
+  padding: clamp(20px, 5vw, 30px);
+  border: 2px solid color-mix(in oklch, var(--rules-accent) 30%, white);
+  border-radius: 30px;
+  color: #06112f;
+  background:
+    radial-gradient(circle at 94% 0%, color-mix(in oklch, var(--rules-accent) 22%, transparent), transparent 13rem),
+    linear-gradient(180deg, #ffffff, #f5f8ff);
+  box-shadow: 0 34px 100px rgba(4, 22, 86, 0.34);
+  font-family: "Fredoka", system-ui, sans-serif;
+}
+
+.playzenha-rules-header {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) 42px;
+  align-items: center;
+  gap: 14px;
+}
+
+.playzenha-rules-icon {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  color: white;
+  background: var(--rules-accent);
+  box-shadow: 0 16px 34px color-mix(in oklch, var(--rules-accent) 30%, transparent);
+}
+
+.playzenha-rules-header p,
+.playzenha-rules-header h2,
+.playzenha-rules-summary,
+.playzenha-rules-list p,
+.playzenha-rules-tip p {
+  margin: 0;
+}
+
+.playzenha-rules-header p {
+  color: var(--rules-accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.playzenha-rules-header h2 {
+  margin-top: 2px;
+  color: #06112f;
+  font-family: "Geist Pixel", "Fredoka", system-ui, sans-serif;
+  font-size: clamp(1.7rem, 7vw, 2.5rem);
+  line-height: 1;
+}
+
+.playzenha-rules-header button {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #dfe5f0;
+  border-radius: 14px;
+  color: #536078;
+  background: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+}
+
+.playzenha-rules-summary {
+  margin-top: 22px;
+  color: #536078;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.playzenha-rules-list {
+  display: grid;
+  gap: 10px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.playzenha-rules-list li {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding: 13px;
+  border: 1px solid #e0e6f0;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.playzenha-rules-list li > span {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: white;
+  background: var(--rules-accent);
+  font-weight: 850;
+}
+
+.playzenha-rules-list p {
+  align-self: center;
+  color: #26324a;
+  line-height: 1.45;
+}
+
+.playzenha-rules-tip {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 10px;
+  margin-top: 16px;
+  padding: 15px;
+  border-radius: 18px;
+  color: #5e4800;
+  background: #fff6cc;
+}
+
+.playzenha-rules-tip svg {
+  color: #d99f00;
+}
+
+.playzenha-rules-tip strong {
+  display: block;
+  margin-bottom: 2px;
+  color: #493700;
+}
+
+.playzenha-rules-confirm {
+  width: 100%;
+  min-height: 54px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 18px;
+  border: 0;
+  border-radius: 18px;
+  color: white;
+  background: var(--rules-accent);
+  font-family: "Fredoka", system-ui, sans-serif;
+  font-size: 0.98rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 18px 38px color-mix(in oklch, var(--rules-accent) 28%, transparent);
+}
+
+@media (max-width: 520px) {
+  .playzenha-rules-overlay {
+    align-items: end;
+    padding: 8px;
+  }
+
+  .playzenha-rules-card {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 28px 28px 20px 20px;
+  }
+}
+
 .playzenha-player-row {
   align-items: center;
   padding: 10px;

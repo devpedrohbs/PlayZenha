@@ -59,7 +59,21 @@ const HomeView: React.FC = () => {
           />
           <UseCasesSection />
           <BenefitsSection />
-          <PricingSection onSignupClick={() => navigate('/cadastro')} />
+          <PricingSection
+            onPlanClick={(planCode) => {
+              if (planCode === 'free') {
+                navigate(user ? '/jogos/impostor' : '/cadastro', {
+                  state: user ? undefined : { from: '/jogos/impostor' }
+                })
+                return
+              }
+
+              const target = `/assinatura?plano=${planCode}`
+              navigate(user ? target : '/cadastro', {
+                state: user ? undefined : { from: target }
+              })
+            }}
+          />
           <TestimonialsSection />
         </main>
 

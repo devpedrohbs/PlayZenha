@@ -138,7 +138,7 @@ const ProfilePage = () => {
             <div className="absolute -bottom-12 -right-10 h-44 w-44 rotate-[18deg] rounded-[42px] bg-playzenha-yellow" aria-hidden="true" />
             {isAdmin ? (
               <>
-                <span className="relative w-fit rounded-full bg-playzenha-yellow px-3 py-2 font-geist-pixel text-xs font-bold uppercase tracking-[0.12em] text-dark-bg">Acesso administrativo</span>
+                <span className="relative inline-flex min-h-9 w-fit items-center justify-center rounded-full bg-playzenha-yellow px-3 py-2 font-geist-pixel text-xs font-bold uppercase leading-none tracking-[0.12em] text-dark-bg">Acesso administrativo</span>
                 <div className="relative">
                   <h2 className="max-w-[10ch] font-fredoka text-5xl leading-[0.92]">Admin ativo</h2>
                   <p className="mt-4 max-w-md leading-relaxed text-white/80">Seu papel libera o acesso comercial aos jogos publicados. As permissões operacionais continuam protegidas pelo backend.</p>

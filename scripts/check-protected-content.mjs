@@ -7,7 +7,9 @@ const protectedSentinels = [
   'Parque Aquatico',
   'BACIA',
   'ABACAXI',
-  'TRAVESSEIRO'
+  'TRAVESSEIRO',
+  'Qual foi a última coisa que você pesquisou?',
+  'Qual mentira boba você já contou para escapar de algo?'
 ]
 
 const assetNames = await readdir(assetsDirectory)

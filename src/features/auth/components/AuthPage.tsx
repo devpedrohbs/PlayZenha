@@ -49,10 +49,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ initialMode = 'signup' }) => {
 
   const isCreate = mode === 'signup'
   const isRecover = mode === 'recover'
-  const title = getTitle(mode, recoveryStage)
-  const subtitle = getSubtitle(mode, recoveryStage)
-  const cta = getCta(mode, recoveryStage)
   const redirectPath = getRedirectPath(location.state)
+  const signupIntent = getSignupIntent(redirectPath)
+  const title = getTitle(mode, recoveryStage)
+  const subtitle = getSubtitle(mode, recoveryStage, signupIntent)
+  const cta = getCta(mode, recoveryStage, signupIntent)
 
   useEffect(() => {
     setMode(initialMode)
@@ -187,8 +188,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ initialMode = 'signup' }) => {
           <motion.aside className="auth-page-hero-panel" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
             <div>
               <p className="auth-page-kicker">Sua conta Playzenha</p>
-              <h1>Entre, chame a galera e jogue.</h1>
-              <p className="auth-page-hero-copy">Uma conta simples para guardar seus jogos favoritos, planos e grupos. Abriu no celular, escolheu o jogo e a resenha comeca.</p>
+              <h1>Crie a conta. Abra o jogo. Passe o celular.</h1>
+              <p className="auth-page-hero-copy">O plano gratis libera o Impostor sem cartao. Quando a galera quiser variar, o Premium desbloqueia os quatro jogos disponiveis.</p>
             </div>
             <div className="auth-page-party-card">
               <div className="auth-page-avatars">
@@ -220,6 +221,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ initialMode = 'signup' }) => {
                   <h2>{title}</h2>
                   <p>{subtitle}</p>
                 </div>
+
+                {isCreate && signupIntent && (
+                  <div className="auth-page-intent" role="status">
+                    <strong>{signupIntent.title}</strong>
+                    <span>{signupIntent.description}</span>
+                  </div>
+                )}
 
                 {!isRecover && (
                   <div className="auth-page-google-section">
@@ -286,6 +294,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ initialMode = 'signup' }) => {
                   <Button className="auth-page-button" type="submit" disabled={!canSubmit || isSubmitting} fullWidth>
                     {isSubmitting ? 'Enviando...' : cta}
                   </Button>
+                  {isCreate && <p className="auth-page-click-trigger">Sem cartao. Voce continua exatamente de onde parou.</p>}
                 </form>
               </motion.div>
             </AnimatePresence>
@@ -293,9 +302,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ initialMode = 'signup' }) => {
         </section>
 
         <section className="auth-page-perks">
-          <article className="auth-page-perk-card"><h3>Sem baixar nada</h3><p>Conta leve, jogo direto no navegador do celular.</p></article>
-          <article className="auth-page-perk-card"><h3>Grupos salvos</h3><p>Volte para a mesma galera sem cadastrar tudo de novo.</p></article>
-          <article className="auth-page-perk-card"><h3>Planos e jogos</h3><p>Acesse Premium, Festa e favoritos em um so lugar.</p></article>
+          <article className="auth-page-perk-card"><h3>Sem baixar nada</h3><p>Jogo direto no navegador do celular.</p></article>
+          <article className="auth-page-perk-card"><h3>Impostor gratis</h3><p>Teste em uma resenha real antes de assinar.</p></article>
+          <article className="auth-page-perk-card"><h3>Uma conta por grupo</h3><p>Abra a partida e passe o celular para a galera.</p></article>
         </section>
 
         <Toast className="auth-page-toast" message={toast} visible={Boolean(toast)} variant="success" />
@@ -364,7 +373,7 @@ function getTitle(mode: AuthMode, recoveryStage: RecoveryStage): string {
   return mode === 'signup' ? 'Crie sua conta' : 'Entre na resenha'
 }
 
-function getSubtitle(mode: AuthMode, recoveryStage: RecoveryStage): string {
+function getSubtitle(mode: AuthMode, recoveryStage: RecoveryStage, intent: SignupIntent | null): string {
   if (mode === 'recover') {
     return recoveryStage === 'request'
       ? 'Informe seu e-mail para receber um token de recuperacao.'
@@ -372,16 +381,16 @@ function getSubtitle(mode: AuthMode, recoveryStage: RecoveryStage): string {
   }
 
   return mode === 'signup'
-    ? 'Salve seus grupos, favoritos e jogos para comecar mais rapido no proximo role.'
+    ? intent?.subtitle ?? 'Leva apenas 3 campos para liberar seu primeiro jogo.'
     : 'Acesse seus jogos, planos e grupos salvos para chamar a galera sem enrolacao.'
 }
 
-function getCta(mode: AuthMode, recoveryStage: RecoveryStage): string {
+function getCta(mode: AuthMode, recoveryStage: RecoveryStage, intent: SignupIntent | null): string {
   if (mode === 'recover') {
     return recoveryStage === 'request' ? 'Enviar recuperacao' : 'Atualizar senha'
   }
 
-  return mode === 'signup' ? 'Criar conta e jogar' : 'Entrar e comecar'
+  return mode === 'signup' ? intent?.cta ?? 'Criar conta gratis' : 'Entrar e comecar'
 }
 
 function getSmallLabel(mode: AuthMode, recoveryStage: RecoveryStage): string {
@@ -456,6 +465,35 @@ function getRedirectPath(state: unknown): string {
   }
 
   return '/perfil'
+}
+
+interface SignupIntent {
+  title: string
+  description: string
+  subtitle: string
+  cta: string
+}
+
+function getSignupIntent(redirectPath: string): SignupIntent | null {
+  if (redirectPath === '/jogos/impostor') {
+    return {
+      title: 'Seu jogo gratis esta pronto',
+      description: 'Depois do cadastro, voce entra direto no Impostor.',
+      subtitle: 'Crie a conta sem cartao e continue direto para a partida.',
+      cta: 'Criar conta e abrir o Impostor'
+    }
+  }
+
+  const match = redirectPath.match(/^\/assinatura\?plano=(premium|ultimate)$/)
+  if (!match) return null
+  const planName = match[1] === 'premium' ? 'Premium' : 'Ultimate'
+
+  return {
+    title: `Voce escolheu o ${planName}`,
+    description: 'Crie sua conta para continuar com esse plano.',
+    subtitle: `Falta apenas sua conta para continuar com o plano ${planName}.`,
+    cta: `Criar conta e continuar com ${planName}`
+  }
 }
 
 export default LoginPage

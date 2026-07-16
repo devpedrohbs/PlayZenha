@@ -3,8 +3,8 @@ import { SectionHead } from './SectionHead'
 
 export const HowItWorksSection = () => (
   <section className="landing-section reveal" id="como-funciona">
-    <SectionHead eyebrow="Como funciona" title="Da tela para a resenha em segundos">
-      A experiencia precisa ser obvia na primeira visita: abriu no celular, escolheu o clima do role e todo mundo entra na brincadeira.
+    <SectionHead eyebrow="Como funciona" title="Do cadastro a primeira rodada, sem adivinhar o proximo passo">
+      Comece pelo jogo gratis. Se a galera quiser variar, o Premium libera a biblioteca disponivel para o grupo inteiro.
     </SectionHead>
     <div className="landing-steps">
       {STEPS.map(({ number, title, text }) => (

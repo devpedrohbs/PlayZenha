@@ -17,3 +17,14 @@ export interface ImpostorContent {
 export interface ContatoContent {
   words: string[]
 }
+
+export interface QuemEstaMentindoQuestionContent {
+  category: 'Cotidiano' | 'Preferências' | 'Situações absurdas' | 'Relacionamentos' | 'Trabalho e estudos' | 'Constrangedoras'
+  text: string
+  personal: boolean
+  difficulty: 'Leve' | 'Médio' | 'Sem filtro'
+}
+
+export interface QuemEstaMentindoContent {
+  questions: QuemEstaMentindoQuestionContent[]
+}

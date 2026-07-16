@@ -7,10 +7,10 @@ export const BenefitsSection = () => (
       <div className="landing-benefit-hero">
         <div>
           <p className="landing-eyebrow">Beneficios</p>
-          <h2>Menos enrolacao. Mais risada.</h2>
-          <p>Playzenha foi pensado para entrar no meio do role sem virar uma explicacao longa. O jogo precisa caber na mao e no tempo da galera.</p>
+          <h2>Uma pessoa abre. A galera inteira joga.</h2>
+          <p>O Playzenha foi feito para a mesa, nao para cada pessoa ficar presa na propria tela. Uma conta inicia a partida e o celular circula pelo grupo.</p>
         </div>
-        <Link className="landing-button landing-button-primary" to="/cadastro">Comecar de boa</Link>
+        <Link className="landing-button landing-button-primary" to="/cadastro" state={{ from: '/jogos/impostor' }}>Testar com o Impostor</Link>
       </div>
       <div className="landing-benefit-stack">
         {BENEFITS.map(({ title, text }) => (

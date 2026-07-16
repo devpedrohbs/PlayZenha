@@ -5,7 +5,7 @@ import { SectionHead } from './SectionHead'
 export const UseCasesSection = () => (
   <section className="landing-section reveal">
     <SectionHead eyebrow="Feito para qualquer role" title="Quando junta gente, cabe Playzenha">
-      A linguagem e os cenarios sao brasileiros, sociais e diretos. Nada de app serio demais para um momento que precisa ser leve.
+      Churrasco, aniversario, viagem ou encontro em casa: escolha a partida pelo tamanho e pelo clima do grupo.
     </SectionHead>
     <div className="landing-use-strip">
       {USE_CASES.map(({ icon, title }) => (

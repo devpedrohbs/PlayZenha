@@ -17,7 +17,6 @@ import GameIconButton from '../shared/components/GameIconButton'
 import { useContatoGame } from './hooks/useContatoGame'
 
 interface ContatoGameProps {
-  onBackToHome: () => void
   onBackToGames: () => void
   words: string[]
 }
@@ -37,7 +36,7 @@ const formatElapsedTime = (seconds: number | null) => {
   return `${minutes}min ${remainingSeconds.toString().padStart(2, '0')}s`
 }
 
-const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToGames, onBackToHome, words }) => {
+const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToGames, words }) => {
   const {
     canStartGame,
     currentWord,
@@ -66,7 +65,7 @@ const ContatoGame: React.FC<ContatoGameProps> = ({ onBackToGames, onBackToHome, 
   return (
     <div className="playzenha-game playzenha-game-contato min-h-screen bg-dark-bg text-white font-sans overflow-hidden relative selection:bg-emerald-400/60 selection:text-white">
       <nav className="absolute top-0 w-full p-4 flex justify-between items-center z-50">
-        <GameIconButton label="Voltar para a home" onClick={onBackToHome} className="bg-white/10 hover:bg-white/20">
+        <GameIconButton label="Voltar para a biblioteca de jogos" onClick={onBackToGames} className="bg-white/10 hover:bg-white/20">
           <ArrowLeft size={24} />
         </GameIconButton>
         <div className="flex items-center gap-2 rounded-2xl border border-emerald-300/30 bg-emerald-400/10 px-4 py-2 shadow-lg shadow-emerald-400/10">

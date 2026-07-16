@@ -8,7 +8,7 @@ const ImpostorGamePage = () => {
 
   return (
     <GameAccessGate<ImpostorContent> slug="impostor">
-      {({ content }) => <ImpostorGame themes={content.themes} onBackToGames={() => navigate('/jogos')} onBackToHome={() => navigate('/')} />}
+      {({ content }) => <ImpostorGame themes={content.themes} onBackToGames={() => navigate('/jogos')} />}
     </GameAccessGate>
   )
 }

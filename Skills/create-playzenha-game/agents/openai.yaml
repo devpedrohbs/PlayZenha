@@ -1,0 +1,4 @@
+interface:
+  display_name: "PlayZenha Game Creator"
+  short_description: "Cria jogos no padrão completo do Impostor"
+  default_prompt: "Use $create-playzenha-game para implementar um novo jogo completo no padrão PlayZenha."

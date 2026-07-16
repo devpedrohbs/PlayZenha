@@ -1,11 +1,12 @@
-import type { CSSProperties, KeyboardEvent } from 'react'
+import type { CSSProperties } from 'react'
 import type { GameCatalogItem } from '../../games-catalog'
 import { formatDuration, formatPlayersRange, getGamePath } from '../../games-catalog'
 import { GAME_FILTERS } from '../../../pages/HomePage/model/constants'
 import type { GameCategory } from '../../../pages/HomePage/model/models'
-import { isActivationKey } from '../../../shared/utils/keyboard'
 import { AsyncContentState } from '../../../shared/components/ui'
 import { SectionHead } from './SectionHead'
+import GameRulesCard from '../../../games/shared/components/GameRulesCard'
+import { getGameRules } from '../../../games/shared/game-rules'
 
 interface FeaturedGamesSectionProps {
   activeFilter: GameCategory
@@ -35,17 +36,10 @@ export const FeaturedGamesSection = ({
     if (path) onGameNavigate(path)
   }
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLElement>, game: GameCatalogItem) => {
-    if (isActivationKey(event.key)) {
-      event.preventDefault()
-      handleGameOpen(game)
-    }
-  }
-
   return (
     <section className="landing-section reveal" id="jogos">
       <SectionHead eyebrow="Jogos disponiveis" title="Escolha o jogo que salva o role">
-        Cards tocaveis, com microinteracao e feedback no mockup. No celular, o usuario entende a variedade sem precisar ler demais.
+        Veja quantas pessoas jogam, quanto dura e qual combina com o momento. O Impostor e gratis; os outros jogos disponiveis entram no Premium.
       </SectionHead>
       <div className="landing-games-shell">
         <div className="landing-filter-row" aria-label="Filtros de jogos">
@@ -82,25 +76,35 @@ export const FeaturedGamesSection = ({
           />
         ) : (
           <div className="landing-game-grid">
-            {filteredGames.map((game) => (
-            <article
-              className={`landing-game-card ${selectedGame?.id === game.id ? 'is-selected' : ''}`}
-              key={game.id}
-              style={{ '--card-color': game.colors?.[1] ?? 'var(--brand-blue)' } as CSSProperties}
-              role="button"
-              tabIndex={0}
-              aria-label={`Jogar ${game.name}`}
-              onMouseEnter={() => onGameSelect(game)}
-              onFocus={() => onGameSelect(game)}
-              onClick={() => handleGameOpen(game)}
-              onKeyDown={(event) => handleKeyDown(event, game)}
-            >
-              <span className="landing-card-tag">{game.category} - {formatPlayersRange(game)} jogadores</span>
-              <h3>{game.name}</h3>
-              <p>{game.shortDescription}</p>
-              <span className="landing-card-play">Jogar - {formatDuration(game)}</span>
-            </article>
-            ))}
+            {filteredGames.map((game) => {
+              const rules = getGameRules(game.slug)
+              const gamePath = getGamePath(game)
+
+              return (
+                <article
+                  className={`landing-game-card ${selectedGame?.id === game.id ? 'is-selected' : ''}`}
+                  key={game.id}
+                  style={{ '--card-color': game.colors?.[1] ?? 'var(--brand-blue)' } as CSSProperties}
+                  onMouseEnter={() => onGameSelect(game)}
+                  onFocus={() => onGameSelect(game)}
+                >
+                  <span className="landing-card-tag">{game.category} - {formatPlayersRange(game)} jogadores</span>
+                  <h3>{game.name}</h3>
+                  <p>{game.shortDescription}</p>
+                  <div className={`landing-card-actions ${rules && gamePath ? '' : 'single'}`}>
+                    {rules && gamePath && <GameRulesCard {...rules} triggerLabel="Regras" />}
+                    <button
+                      className="landing-card-play"
+                      type="button"
+                      disabled={!gamePath}
+                      onClick={() => handleGameOpen(game)}
+                    >
+                      {gamePath ? `Jogar - ${formatDuration(game)}` : 'Em breve'}
+                    </button>
+                  </div>
+                </article>
+              )
+            })}
           </div>
         )}
       </div>

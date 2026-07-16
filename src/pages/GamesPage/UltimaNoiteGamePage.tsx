@@ -7,7 +7,7 @@ const UltimaNoiteGamePage = () => {
 
   return (
     <GameAccessGate<Record<string, never>> slug="ultima-noite">
-      {() => <UltimaNoiteGame onBackToGames={() => navigate('/jogos')} onBackToHome={() => navigate('/')} />}
+      {() => <UltimaNoiteGame onBackToGames={() => navigate('/jogos')} />}
     </GameAccessGate>
   )
 }
