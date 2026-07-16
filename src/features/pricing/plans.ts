@@ -3,86 +3,70 @@ import type { PricingPlanCard } from './types'
 export const PRICING_PLAN_CARDS: PricingPlanCard[] = [
   {
     planCode: 'free',
-    description: 'Perfeito para quem esta comecando e quer experimentar o PlayZenha com os amigos.',
-    cta: 'Comecar Gratuitamente',
+    description: 'Para testar o Playzenha em uma resenha real antes de decidir.',
+    cta: 'Jogar Impostor gratis',
     variant: 'ghost',
-    label: 'Para conhecer a diversao.',
+    label: '1 jogo disponivel agora. Sem cartao.',
     sections: [
       {
         title: 'Beneficios',
         items: [
-          { text: 'Jogos gratuitos' },
-          { text: 'Ate 3 partidas por dia' },
-          { text: 'Ranking Global' },
-          { text: 'Perfil do jogador' },
-          { text: 'Favoritar jogos' },
-          { text: 'Atualizacoes gratuitas' }
+          { text: 'Impostor para 3 a 16 jogadores' },
+          { text: 'Partidas direto no navegador' },
+          { text: 'Conta e perfil do jogador' },
+          { text: 'Acesso gratuito sem prazo' }
         ]
       },
       {
         title: 'Limitacoes',
         items: [
-          { text: 'Jogos Premium', tone: 'excluded' },
-          { text: 'Jogos After Party', tone: 'excluded' },
-          { text: 'IA personalizada', tone: 'excluded' },
-          { text: 'Estatisticas avancadas', tone: 'excluded' },
-          { text: 'Exibicao de anuncios', tone: 'note' }
+          { text: 'Ultima Noite, Contato e Quem Sou Eu', tone: 'excluded' }
         ]
       }
     ]
   },
   {
     planCode: 'premium',
-    description: 'Ideal para quem joga frequentemente e quer acesso completo aos jogos do PlayZenha.',
-    cta: 'Assinar Premium',
+    description: 'Para a galera que quer variar o jogo sem trocar de aplicativo.',
+    cta: 'Desbloquear 4 jogos',
     variant: 'primary',
     badge: 'Mais Popular',
-    label: 'Toda a biblioteca de jogos para qualquer resenha.',
+    label: 'Os 4 jogos disponiveis agora em uma assinatura.',
     featured: true,
     sections: [
       {
         title: 'Beneficios',
         items: [
-          { text: 'Todos os jogos' },
-          { text: 'Todos os temas' },
-          { text: 'Jogos lancados primeiro' },
-          { text: 'IA para criar temas personalizados' },
-          { text: 'IA para gerar perguntas e desafios' },
-          { text: 'Sem anuncios' },
-          { text: 'Estatisticas completas' },
-          { text: 'Perfil Premium' },
-          { text: 'Ranking Premium' }
+          { text: 'Impostor, Ultima Noite, Contato e Quem Sou Eu' },
+          { text: 'Uma conta libera a partida para o grupo' },
+          { text: 'Jogos de 2 a 16 jogadores' },
+          { text: 'Acesso antecipado aos proximos lancamentos' },
+          { text: 'Experiencia sem anuncios' }
         ]
       },
       {
-        title: 'Nao inclui',
+        title: 'Em desenvolvimento',
         items: [
-          { text: 'Jogos exclusivos After Party', tone: 'excluded' }
+          { text: 'Modos adultos e para casais', tone: 'note' }
         ]
       }
     ]
   },
   {
     planCode: 'ultimate',
-    description: 'Aproximadamente R$ 3 por pessoa em uma mesa com 10 amigos.',
-    cta: 'Assinar Ultimate',
+    description: 'Para acompanhar os futuros modos adultos, para casais e eventos especiais.',
+    cta: 'Conhecer o Ultimate',
     variant: 'blue',
-    badge: 'Melhor plano para resenha',
-    label: 'Uma assinatura libera toda a diversao para a sua resenha.',
-    highlighted: true,
+    badge: 'Para quem quer tudo',
+    label: 'Inclui o Premium e os proximos modos especiais.',
     sections: [
       {
         title: 'Beneficios',
         items: [
-          { text: 'Jogos com bebidas' },
-          { text: 'Jogos +18' },
-          { text: 'Jogos para casais' },
-          { text: 'Eventos exclusivos' },
-          { text: 'IA ilimitada (uso justo)' },
-          { text: 'Campeonatos privados' },
-          { text: 'Pacotes Premium' },
-          { text: 'Acesso antecipado a novidades' },
-          { text: 'Todos que participarem da sua partida aproveitam os recursos Premium durante a sessao.' }
+          { text: 'Tudo do plano Premium' },
+          { text: 'Acesso aos futuros jogos Ultimate quando forem publicados' },
+          { text: 'Prioridade nos proximos lancamentos' },
+          { text: 'Uma conta libera a partida para o grupo' }
         ]
       }
     ]

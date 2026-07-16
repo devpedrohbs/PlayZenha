@@ -36,6 +36,28 @@ const protectedGameContent: Record<string, Prisma.InputJsonValue> = {
       'ESTOJO', 'TOMATE', 'SORVETE', 'FUTEBOL', 'LANTERNA', 'CACHORRO', 'JANELA',
       'VIOLAO', 'PANELA', 'TRAVESSEIRO', 'MELANCIA', 'PIRULITO', 'LIVRARIA'
     ]
+  },
+  'quem-esta-mentindo': {
+    questions: [
+      { category: 'Cotidiano', text: 'Qual foi a última coisa que você pesquisou?', personal: false, difficulty: 'Leve' },
+      { category: 'Cotidiano', text: 'Qual comida você nunca dividiria?', personal: false, difficulty: 'Leve' },
+      { category: 'Preferências', text: 'Qual filme você poderia assistir dez vezes?', personal: false, difficulty: 'Leve' },
+      { category: 'Preferências', text: 'Qual música sempre melhora seu humor?', personal: false, difficulty: 'Leve' },
+      { category: 'Situações absurdas', text: 'Em qual profissão você seria péssimo?', personal: false, difficulty: 'Leve' },
+      { category: 'Situações absurdas', text: 'Qual superpoder seria inútil nas suas mãos?', personal: false, difficulty: 'Leve' },
+      { category: 'Trabalho e estudos', text: 'Qual tarefa você evitaria para sempre?', personal: false, difficulty: 'Médio' },
+      { category: 'Trabalho e estudos', text: 'Qual foi seu maior improviso em uma apresentação?', personal: false, difficulty: 'Médio' },
+      { category: 'Cotidiano', text: 'Qual foi a compra mais inútil que já fez?', personal: false, difficulty: 'Médio' },
+      { category: 'Situações absurdas', text: 'Qual regra estranha você criaria para todo mundo seguir?', personal: false, difficulty: 'Médio' },
+      { category: 'Relacionamentos', text: 'Qual foi o conselho amoroso mais estranho que já recebeu?', personal: true, difficulty: 'Sem filtro' },
+      { category: 'Relacionamentos', text: 'Qual detalhe faz você gostar de alguém?', personal: true, difficulty: 'Sem filtro' },
+      { category: 'Constrangedoras', text: 'Qual mentira boba você já contou para escapar de algo?', personal: true, difficulty: 'Sem filtro' },
+      { category: 'Constrangedoras', text: 'Qual mensagem você gostaria de apagar da memória?', personal: true, difficulty: 'Sem filtro' },
+      { category: 'Trabalho e estudos', text: 'Qual foi a desculpa mais criativa que você já usou para um atraso?', personal: true, difficulty: 'Sem filtro' },
+      { category: 'Preferências', text: 'Qual lugar você quer conhecer logo?', personal: false, difficulty: 'Médio' },
+      { category: 'Cotidiano', text: 'Qual hábito seu ninguém entende?', personal: false, difficulty: 'Médio' },
+      { category: 'Constrangedoras', text: 'Qual foi a situação mais aleatória que viveu esta semana?', personal: true, difficulty: 'Sem filtro' }
+    ]
   }
 }
 
@@ -146,6 +168,22 @@ const games = [
     tags: ['Adivinhacao', 'Premium', 'Disponivel'],
     colors: ['#06112f', '#ffc603'],
     icon: 'brain'
+  },
+  {
+    slug: 'quem-esta-mentindo',
+    name: 'Quem Está Mentindo?',
+    shortDescription: 'Uma pessoa inventa a resposta e o grupo precisa descobrir quem está blefando.',
+    category: 'Blefe',
+    minPlayers: 3,
+    maxPlayers: 12,
+    averageDurationMinutes: 18,
+    difficulty: 'medium',
+    status: 'available',
+    requiredPlan: 'free',
+    tags: ['Blefe', 'Voto secreto', 'Disponível'],
+    colors: ['#34120a', '#ff7a45'],
+    icon: 'mask',
+    isNew: true
   },
   {
     slug: 'verdade-desafio',

@@ -12,17 +12,20 @@ export const HeroSection = ({ selectedGame, onShowToast }: HeroSectionProps) => 
   <section className="landing-hero">
     <div className="landing-hero-panel">
       <div className="landing-hero-copy">
-        <p className="landing-eyebrow">Jogos presenciais pelo celular</p>
-        <h1>Transforme qualquer role em um jogo</h1>
-        <p className="landing-hero-lead">Jogos rapidos, engracados e interativos para jogar com seus amigos direto pelo celular. Sem baixar nada, sem explicar demais, sem deixar o role morrer.</p>
+        <p className="landing-eyebrow">A resenha esfriou?</p>
+        <h1>Coloque todo mundo no jogo.</h1>
+        <p className="landing-hero-lead">Abra no celular, escolha uma partida e comece a jogar com a galera. Sem download, sem regras longas e com um jogo gratis para testar agora.</p>
         <div className="landing-hero-actions">
-          <Link className="landing-button landing-button-primary" to="/cadastro">Comecar a jogar</Link>
-          <Link className="landing-button landing-button-ghost" to="/jogos">Ver jogos disponiveis</Link>
+          <div className="landing-primary-action">
+            <Link className="landing-button landing-button-primary" to="/cadastro" state={{ from: '/jogos/impostor' }}>Criar conta gratis e jogar</Link>
+            <small>3 campos, sem cartao. Depois, voce entra direto no Impostor.</small>
+          </div>
+          <Link className="landing-button landing-button-ghost" to="/jogos">Ver os jogos primeiro</Link>
         </div>
         <div className="landing-hero-proof">
+          <span className="landing-proof-pill">1 jogo gratis agora</span>
+          <span className="landing-proof-pill">De 2 a 16 jogadores</span>
           <span className="landing-proof-pill">Direto no navegador</span>
-          <span className="landing-proof-pill">Feito para jogar em grupo</span>
-          <span className="landing-proof-pill">Planos gratis, premium e festa</span>
         </div>
       </div>
 

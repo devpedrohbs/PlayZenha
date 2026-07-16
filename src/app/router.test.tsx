@@ -19,9 +19,9 @@ describe('application routes', () => {
     const user = userEvent.setup()
     renderRoute('/')
 
-    expect(screen.getByRole('heading', { name: 'Transforme qualquer role em um jogo' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Coloque todo mundo no jogo.' })).toBeInTheDocument()
 
-    await user.click(screen.getByRole('link', { name: 'Ver jogos disponiveis' }))
+    await user.click(screen.getByRole('link', { name: 'Ver os jogos primeiro' }))
 
     expect(screen.getByRole('heading', { name: 'Biblioteca de Jogos' })).toBeInTheDocument()
   })

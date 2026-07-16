@@ -7,12 +7,11 @@ import { IMPOSTOR_MAX_PLAYERS } from './domain/impostor.constants'
 import { useImpostorGame } from './hooks/useImpostorGame'
 
 interface ImpostorGameProps {
-  onBackToHome: () => void
   onBackToGames: () => void
   themes: string[]
 }
 
-const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToGames, onBackToHome, themes }) => {
+const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToGames, themes }) => {
   const {
     addDiscussionMinute,
     addPlayerSlot,
@@ -49,9 +48,9 @@ const ImpostorGame: React.FC<ImpostorGameProps> = ({ onBackToGames, onBackToHome
     <div className="impostor-game">
       <div className="impostor-shell">
         <header className="impostor-topbar">
-          <button className="impostor-home-link" type="button" onClick={onBackToHome} aria-label="Voltar para a home">
+          <button className="impostor-home-link" type="button" onClick={onBackToGames} aria-label="Voltar para a biblioteca de jogos">
             <ArrowLeft size={16} />
-            Home
+            Jogos
           </button>
           <div className="impostor-brand">
             <span className="impostor-brand-mark"><Icon name="mask" /></span>

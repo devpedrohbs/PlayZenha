@@ -13,9 +13,9 @@ export const GAME_FILTERS: ReadonlyArray<{ value: GameCategory; label: string }>
 ]
 
 export const STEPS: LandingStep[] = [
-  { number: '01', title: 'Abra no celular', text: 'Nada de instalacao. O link abre rapido e ja coloca o grupo no clima.' },
-  { number: '02', title: 'Escolha o jogo', text: 'Verdade, desafio, quiz ou modo festa conforme a energia do momento.' },
-  { number: '03', title: 'Comece a resenha', text: 'As rodadas sao curtas, faceis de entender e feitas para gerar assunto.' }
+  { number: '01', title: 'Crie sua conta', text: 'Sao apenas 3 campos e nenhum cartao para comecar no plano gratis.' },
+  { number: '02', title: 'Abra o Impostor', text: 'Escolha a quantidade de jogadores e deixe o celular guiar a rodada.' },
+  { number: '03', title: 'Passe o celular', text: 'Cada pessoa ve seu papel em segredo e a resenha comeca de verdade.' }
 ]
 
 export const USE_CASES: UseCase[] = [
@@ -30,11 +30,11 @@ export const USE_CASES: UseCase[] = [
 
 export const BENEFITS: Benefit[] = [
   { title: 'Sem baixar nada', text: 'Abriu o link, escolheu o jogo e pronto.' },
-  { title: 'Direto no celular', text: 'Interface pensada para polegar, toque e mesa cheia.' },
-  { title: 'Jogos rapidos', text: 'Rodadas curtas para manter o grupo junto.' },
-  { title: 'Facil de explicar', text: 'Qualquer pessoa entende a primeira rodada.' },
-  { title: 'Quebra o gelo', text: 'Perfeito quando o grupo ainda nao se soltou.' },
-  { title: 'Grupo mais animado', text: 'Ideal para festas, churrascos e resenhas.' }
+  { title: 'Uma conta por grupo', text: 'Quem puxa a partida abre o jogo e passa o celular.' },
+  { title: 'De 2 a 16 pessoas', text: 'Escolha o jogo que cabe no tamanho da sua galera.' },
+  { title: 'Rodadas sem manual', text: 'A propria tela conduz cada passo da partida.' },
+  { title: 'Teste antes de assinar', text: 'O Impostor fica liberado no plano gratis.' },
+  { title: 'Premium para variar', text: 'Desbloqueie os quatro jogos disponiveis quando quiser.' }
 ]
 
 export const DEFAULT_TOAST_MESSAGE = 'Link de jogo pronto para a galera.'

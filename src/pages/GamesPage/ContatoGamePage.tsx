@@ -8,7 +8,7 @@ const ContatoGamePage = () => {
 
   return (
     <GameAccessGate<ContatoContent> slug="contato">
-      {({ content }) => <ContatoGame words={content.words} onBackToGames={() => navigate('/jogos')} onBackToHome={() => navigate('/')} />}
+      {({ content }) => <ContatoGame words={content.words} onBackToGames={() => navigate('/jogos')} />}
     </GameAccessGate>
   )
 }

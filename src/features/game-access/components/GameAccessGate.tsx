@@ -68,7 +68,7 @@ const GameAccessGate = <TContent,>({ slug, children }: GameAccessGateProps<TCont
               <p className="game-access-copy mt-6 leading-relaxed"><strong className="text-dark-bg">{details.gameName}</strong> está liberado a partir do plano <strong className="text-dark-bg">{getPlanLabel(details.requiredPlan)}</strong>. Escolha um plano para destravar a próxima resenha.</p>
             </div>
             <div className="relative flex flex-wrap gap-3">
-              <button className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-playzenha-blue px-5 text-sm font-bold text-white shadow-[0_18px_36px_rgba(4,65,242,0.28)] transition hover:-translate-y-0.5 hover:bg-dark-bg" type="button" onClick={() => navigate('/planos')}>Desbloquear agora</button>
+              <button className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-playzenha-blue px-5 text-sm font-bold text-white shadow-[0_18px_36px_rgba(4,65,242,0.28)] transition hover:-translate-y-0.5 hover:bg-dark-bg" type="button" onClick={() => navigate(`/assinatura?plano=${details.requiredPlan}`)}>Desbloquear {details.gameName}</button>
               <Link className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-slate-200 bg-white px-5 text-sm font-bold text-dark-bg transition hover:-translate-y-0.5 hover:border-playzenha-blue" to="/jogos">Ver jogos grátis</Link>
             </div>
           </article>
@@ -92,7 +92,7 @@ const GameAccessGate = <TContent,>({ slug, children }: GameAccessGateProps<TCont
           <PricingPlanCards
             currentPlanCode={currentPlan}
             recommendedPlanCode={details.requiredPlan}
-            onPlanClick={() => navigate('/planos')}
+            onPlanClick={(planCode) => navigate(`/assinatura?plano=${planCode}`)}
           />
         </section>
 

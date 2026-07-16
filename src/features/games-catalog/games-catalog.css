@@ -387,6 +387,26 @@
   box-shadow: 0 18px 38px rgba(4, 65, 242, 0.24);
 }
 
+.game-library-card-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+  gap: 10px;
+  margin-top: auto;
+}
+
+.game-library-card-actions .game-library-play,
+.game-library-card-actions .playzenha-rules-trigger {
+  min-height: 48px;
+  margin: 0;
+  padding-inline: 12px;
+  border-radius: 16px;
+  font-size: 0.9rem;
+}
+
+.game-library-card.locked .game-library-card-actions {
+  grid-template-columns: 1fr;
+}
+
 .game-library-play:disabled {
   color: var(--library-muted);
   background: rgba(4, 22, 86, 0.08);

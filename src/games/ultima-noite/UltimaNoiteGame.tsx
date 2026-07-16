@@ -11,7 +11,6 @@ import GameIconButton from '../shared/components/GameIconButton'
 import { useUltimaNoiteGame } from './hooks/useUltimaNoiteGame'
 
 interface UltimaNoiteGameProps {
-  onBackToHome: () => void
   onBackToGames: () => void
 }
 
@@ -32,7 +31,7 @@ const ROLES_CONFIG = {
   Mediador: { color: 'text-purple-400', bg: 'bg-purple-500/20', border: 'border-purple-400', icon: '🗣️' },
 }
 
-const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToGames, onBackToHome }) => {
+const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToGames }) => {
   const {
     addPlayerSlot,
     angelSave,
@@ -76,7 +75,7 @@ const UltimaNoiteGame: React.FC<UltimaNoiteGameProps> = ({ onBackToGames, onBack
         {/* Header - Minimalist */}
         {phase !== 'night-intro' && !phase.startsWith('night-') && (
             <nav className="absolute top-0 w-full p-4 flex justify-between items-center z-50">
-                <GameIconButton label="Voltar para a home" onClick={onBackToHome} className="bg-white/10 hover:bg-white/20">
+                <GameIconButton label="Voltar para a biblioteca de jogos" onClick={onBackToGames} className="bg-white/10 hover:bg-white/20">
                     <ArrowLeft size={24} />
                 </GameIconButton>
                 <div className="flex items-center gap-2 rounded-2xl border border-purple-400/30 bg-purple-500/10 px-4 py-2 shadow-lg shadow-purple-500/10">

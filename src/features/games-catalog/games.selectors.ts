@@ -49,5 +49,5 @@ export const filterGamesCatalog = (games: GameCatalogItem[], activeFilter: Games
     ].join(' '))
 
     return matchesFilter && (!normalizedQuery || searchable.includes(normalizedQuery))
-  })
+  }).sort((first, second) => Number(second.status === 'available') - Number(first.status === 'available'))
 }

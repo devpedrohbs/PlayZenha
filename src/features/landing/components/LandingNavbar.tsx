@@ -36,7 +36,7 @@ export const LandingNavbar = ({
             <button className="landing-nav-logout" type="button" onClick={onLogout}>Sair</button>
           </>
         ) : <NavLink to="/perfil">Perfil</NavLink>}
-        <a href="#depoimentos" onClick={(event) => { event.preventDefault(); onSectionLinkClick('#depoimentos') }}>Depoimentos</a>
+        <a href="#duvidas" onClick={(event) => { event.preventDefault(); onSectionLinkClick('#duvidas') }}>Duvidas</a>
       </div>
       <div className="landing-nav-actions">
         {user ? (
@@ -48,7 +48,7 @@ export const LandingNavbar = ({
             <button className="landing-logout-button" type="button" onClick={onLogout}>Sair</button>
           </>
         ) : (
-          <Link className="landing-button landing-button-blue" to="/cadastro">Comecar a jogar</Link>
+          <Link className="landing-button landing-button-blue" to="/cadastro" state={{ from: '/jogos/impostor' }}>Jogar gratis</Link>
         )}
         <button className="landing-menu-button" type="button" aria-label="Abrir menu" aria-expanded={menuOpen} onClick={onMenuToggle}>
           <LandingIcon name="menu" />
